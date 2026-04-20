@@ -26,7 +26,7 @@
                     <div class="icon">
                         <i class="fas fa-truck"></i>
                     </div>
-                    <a href="{{ action('App\Http\Controllers\POSController@pos_main') }}" class="small-box-footer">
+                    <a href="" class="small-box-footer">
                         Create New Delivery <i class="fas fa-arrow-circle-right"></i>
                     </a>
                 </div>
@@ -45,7 +45,7 @@
                     <div class="icon">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <a href="{{ action('App\Http\Controllers\POSController@pos_purchase_main') }}"
+                    <a href=""
                         class="small-box-footer">
                         Create New Purchase <i class="fas fa-arrow-circle-right"></i>
                     </a>
@@ -65,7 +65,7 @@
                     <div class="icon">
                         <i class="fas fa-chain-broken"></i>
                     </div>
-                    <a href="{{ action('App\Http\Controllers\POSController@pos_damages_main') }}"
+                    <a href=""
                         class="small-box-footer">
                         Record New Damages <i class="fas fa-arrow-circle-right"></i>
                     </a>

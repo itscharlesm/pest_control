@@ -2,12 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\POSController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\MessageController;
 
@@ -38,7 +36,20 @@ Route::post('announcement/save', [AnnouncementController::class, 'save']);
 Route::post('announcement/delete/{ann_uuid}', [AnnouncementController::class, 'delete']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------------------------------------------------------ //
-
+// MESSAGES
+// - Main
+Route::get('messages', [MessageController::class, 'main']);
+ 
+// Individual chat view
+Route::get('messages/chat/{mesg_group_id}', [MessageController::class, 'personal']);
+ 
+// Send message to existing group (POST)
+Route::post('messages/send', [MessageController::class, 'send']);
+ 
+// Compose new message — find or create group then send (POST)
+Route::post('messages/compose', [MessageController::class, 'compose']);
+// - Personal Message
+// ------------------------------------------------------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // LARAVEL COMMANDS //
 Route::get('/laravel/clear-all', function () {

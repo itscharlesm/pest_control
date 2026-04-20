@@ -26,17 +26,10 @@
 
         @php
             // Define roles per tab (EASY TO UPDATE)
-            $dashboardRoles = ['ADMIN', 'OWNER']; // can see dashboard
+            $dashboardRoles = ['SUPERADMIN', 'ADMIN']; // can see dashboard
             $announcementRoles = [
-                'ADMIN',
-                'OWNER',
-                'MANAGER',
-                'BILLING_SUPERVISOR',
-                'BILLING',
-                'CASHIER_SUPERVISOR',
-                'CASHIER',
-                'HRIS_MANAGER',
-                'EMPLOYEE',
+                'SUPERADMIN',
+                'ADMIN'
             ]; // can see announcements
 
             // Check access
@@ -99,7 +92,7 @@
                                     <div class="timeline">
                                         <div class="time-label">
                                             <span class="bg-info"><i class="fa fa-bullhorn"></i> Announcements</span>
-                                            @if (session('ADMIN') == '1' || session('OWNER') == '1' || session('MANAGER') == '1')
+                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                                                 <a class="btn btn-primary float-right" href="javascript:void(0)"
                                                     data-toggle="modal" data-target="#newAnnouncementModal"><i
                                                         class="fa fa-comment"></i> Compose</a>
@@ -140,14 +133,12 @@
                                                             @endif
                                                         </div>
                                                         <div class="timeline-footer">
-                                                            @if (session('ADMIN') == '1' || session('OWNER') == '1' || session('MANAGER') == '1')
-                                                                @if (session('ADMIN') == '1' || session('OWNER') == '1' || session('MANAGER') == '1')
-                                                                    <a class="btn btn-danger btn-sm"
-                                                                        href="javascript:void(0)" data-toggle="modal"
-                                                                        data-target="#deleteModal-{{ $announcement->ann_uuid }}">
-                                                                        <i class="fa fa-trash"></i> Delete
-                                                                    </a>
-                                                                @endif
+                                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                                <a class="btn btn-danger btn-sm" href="javascript:void(0)"
+                                                                    data-toggle="modal"
+                                                                    data-target="#deleteModal-{{ $announcement->ann_uuid }}">
+                                                                    <i class="fa fa-trash"></i> Delete
+                                                                </a>
                                                             @endif
                                                         </div>
 
