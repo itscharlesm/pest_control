@@ -1,9 +1,13 @@
 <aside class="main-sidebar sidebar-dark-green elevation-4">
     {{-- Brand Logo --}}
-    <a href="" class="brand-link">
-        <img src="{{ asset('images/logos/logo.png') }}" alt="Mendoza Cafe logo" class="brand-image text-center"
-            style="width:35px;height:35px;">
-        <span class="brand-text font-weight-light">MENDOZA CAFE</span>
+    <a href="#" class="brand-link d-flex align-items-center">
+        <img src="{{ asset('images/logos/logo.jpg') }}" alt="Mendoza Cafe logo" class="brand-image"
+            style="width:35px; height:35px; object-fit:cover; margin-right:10px;">
+
+        <span class="brand-text font-weight-light" style="line-height:1.2;">
+            GO FORWARD <br>
+            <small style="font-size: 12px;">PEST CONTROL</small>
+        </span>
     </a>
 
     {{-- Sidebar --}}
