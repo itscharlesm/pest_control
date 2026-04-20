@@ -1,0 +1,258 @@
+=TABLES=
+messages:
+mes_id
+mes_uuid = generateuuid(),
+mesg_group_id
+mes_content
+mes_date_created = Carbon::now(),
+mes_created_by = session('usr_id'),
+mes_date_modified
+mes_modified_by
+mes_active = 1
+
+message_groups:
+mesg_id
+mesg_uuid = generateuuid(),
+mesg_group_id = starts with 1, get the latest
+mesg_group_name
+mesg_group_photo
+usr_id
+mesg_date_created = Carbon::now(),
+mesg_created_by = session('usr_id'),
+mesg_date_modified
+mesg_modified_by
+mesg_active = 1
+
+message_group_updates:
+mesu_id
+mesu_uuid
+mesg_group_id
+mesu_update
+mesu_date_created = Carbon::now(),
+mesu_created_by = session('usr_id'),
+mesu_date_modified
+mesu_modified_by
+mesu_active = 1
+
+users:
+usr_id
+usr_first_name
+usr_middle_name
+usr_last_name
+
+sample code in save:
+public function products_add(Request $request)
+{
+    // Validate the request
+    $request->validate([
+        'prd_name' => 'required|string|max:255',
+        'cat_id' => 'required|exists:product_categories,cat_id',
+        'prd_description' => 'nullable|string|max:500',
+        'prd_unit_cost' => 'required|numeric|min:0',
+        'prd_image' => 'nullable|file|mimes:webp,png,jpg,jpeg|max:8192', // 8MB max
+    ]);
+
+    // Ensure variables exist even when no file is uploaded
+    $imageName = null;
+    $destinationPath = public_path('images/products');
+
+    // Handle the product image upload with compression
+    if ($request->hasFile('prd_image')) {
+        $attachment = $request->file('prd_image');
+        // sanitize filename a bit
+        $imageName = uniqid() . '_' . preg_replace('/\s+/', '_', $attachment->getClientOriginalName());
+
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+
+        $imagePath = $destinationPath . DIRECTORY_SEPARATOR . $imageName;
+        $extension = strtolower($attachment->getClientOriginalExtension());
+
+        try {
+            if (in_array($extension, ['jpeg', 'jpg'])) {
+                $source = @imagecreatefromjpeg($attachment->getPathname());
+                if ($source !== false) {
+                    imagejpeg($source, $imagePath, 75);
+                } else {
+                    // fallback: move as-is
+                    $attachment->move($destinationPath, $imageName);
+                }
+            } elseif ($extension === 'png') {
+                $source = @imagecreatefrompng($attachment->getPathname());
+                if ($source !== false) {
+                    if (function_exists('imagepalettetotruecolor') && !imageistruecolor($source)) {
+                        imagepalettetotruecolor($source);
+                    }
+                    imagepng($source, $imagePath, 7); // compression level 0-9
+                } else {
+                    $attachment->move($destinationPath, $imageName);
+                }
+            } elseif ($extension === 'webp') {
+                if (function_exists('imagecreatefromwebp') && function_exists('imagewebp')) {
+                    $source = @imagecreatefromwebp($attachment->getPathname());
+                    if ($source !== false) {
+                        imagewebp($source, $imagePath, 75);
+                    } else {
+                        $attachment->move($destinationPath, $imageName);
+                    }
+                } else {
+                    // If webp functions aren't available on the server, just move the file
+                    $attachment->move($destinationPath, $imageName);
+                }
+            } else {
+                // unsupported/other: move as-is
+                $attachment->move($destinationPath, $imageName);
+            }
+        } finally {
+            // free GD resource if created (works for both resource and GdImage)
+            if (isset($source) && (is_resource($source) || $source instanceof \GdImage)) {
+                imagedestroy($source);
+            }
+        }
+    }
+
+    // Insert data into the database
+    DB::table('products')->insert([
+        'prd_uuid' => generateuuid(),
+        'cat_id' => $request->cat_id,
+        'prd_name' => $request->prd_name,
+        'prd_code' => generateProductCode(),
+        'prd_description' => $request->prd_description,
+        'prd_unit_cost' => $request->prd_unit_cost,
+        'prd_image' => $imageName, // will be null when no image uploaded
+        'prd_qty' => 0,
+        'prd_date_created' => Carbon::now(),
+        'prd_created_by' => session('usr_id'),
+        'prd_active' => 1
+    ]);
+
+    logUserActivity('Manage Products', 'Added product ' . $request->prd_name . ' ' . $request->prd_name);
+    session()->flash('successMessage', 'Product added successfully.');
+
+    return redirect()->back();
+}
+
+query search sample:
+
+// Apply search filter
+if (!empty($search)) {
+    $query->where(function ($q) use ($search) {
+        $q->where('prd_name', 'LIKE', "%$search%")
+            ->orWhere('prd_code', 'LIKE', "%$search%")
+            ->orWhere('product_categories.cat_name', 'LIKE', "%$search%");
+    });
+}
+
+// Paginate results
+$products = $query->paginate(300);
+
+
+<form method="GET" action="{{ url('inventory/products/lists/active') }}" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="search" class="form-control" id="searchInput"
+            placeholder="Search product..." value="{{ request('search') }}">
+        <div class="input-group-append">
+            <button type="submit" class="btn btn-primary">
+                <span class="fa fa-search"></span> Search
+            </button>
+        </div>
+    </div>
+</form>
+
+
+Route::post('/validate', [LoginController::class, 'validateUser']);
+
+using the same style approach (dont include logUserActivity), dont use name in route, we just use URL
+
+Make me a message module using bootstrap
+
+so it starts off with a landing page with list of chats from latest to oldest like messenger app
+layout is on the left side is the list and on the right is blank so two columns the name is usr_first_name usr_last_name but there are group chats that is 1 to many so we just usr_first_name usr_lastname, usr_first_name usr_lastname if it exceeds it is like this usr_first_name usr_la... so that it is unified in design spacing, or if the chat group has mesg_group_name, display mesg_group_name
+
+so the design also is the image circle like in messenger is <img src="{{ asset(getAvatar(session('usr_id'))) }}" class="img-circle elevation-2" alt="User Image" style="width:40px; height:40px;"> for private message but if group (1 or more users we use mesg_group_photo assests images/messages/group_photo/mesg_group_photo) then beside it is two rows name, then below name is the message (but if it is group message usr_first_name: message but cut it if too much in the size...) 
+
+above the list of messages, we add search bar since we limit to 10 list per page but if we search there is no limit (get, then it reloads if we search we use query)
+
+so add also an <a modal for the compose message
+
+the receipient (drop_down: usr_first_name usr_last_name) - select2 after selecting, it can be one to many
+
+the content text field
+
+NOTE: THE GROUP CHAT IS EXAMPLE THERE IS EXISTING GROUP CHAT ALREADY, USER 1-30 SELECTED, BUT THE USER SELECT 1-29 IT IS MISSING 1 USER SO IT MEANS IT IS ANOTHER GROUP
+
+so in saving the compose message:
+mesg_uuid = generateuuid(),
+mesg_group_id = it starts with 1 but if there is existing already it needs to fetch the last number
+usr_id
+mesg_date_created = Carbon::now(),
+mesg_created_by = session('usr_id'),
+mesg_active = 1
+
+mes_uuid = generateuuid(),
+mesg_group_id = it starts with 1 but if there is existing already it needs to fetch the last number
+mes_content = the content
+mes_date_created = Carbon::now(),
+mes_created_by = session('usr_id'),
+mes_active = 1
+
+messages.main = location of the blade for the whole chat with search usr_first_name usr_last_name
+main.blade.php
+@extends('layouts.themes.main')
+@section('content')
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Messages</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a
+                                href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <section class="content">
+
+        @include('layouts.partials.onclick')
+        @include('layouts.partials.alerts')
+
+    </section>
+@endsection
+
+messages.personal = location of the blade for the personal chat
+personal.blade.php:
+@extends('layouts.themes.main')
+@section('content')
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Messages</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a
+                                href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <section class="content">
+
+        @include('layouts.partials.onclick')
+        @include('layouts.partials.alerts')
+
+    </section>
+@endsection
+
+i hope you understand my relations of the table and the logic I want
