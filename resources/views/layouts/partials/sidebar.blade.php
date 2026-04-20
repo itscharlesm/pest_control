@@ -83,8 +83,9 @@
                 {{-- PROFILING --}}
                 @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                     <li class="nav-header">PROFILING</li>
-                    <li class="nav-item {{ request()->is('admin/setup*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('admin/setup*') ? 'active' : '' }}">
+
+                    <li class="nav-item {{ request()->is('profiling*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->is('profiling*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-users"></i>
                             <p>
                                 MANAGE
@@ -93,25 +94,30 @@
                         </a>
 
                         <ul class="nav nav-treeview">
-                            <a href="{{ action('App\Http\Controllers\AdminController@setup') }}"
-                                class="nav-link {{ request()->is('admin/setup') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>CLIENTS</p>
-                            </a>
-                        </ul>
-                        <ul class="nav nav-treeview">
-                            <a href="{{ action('App\Http\Controllers\AdminController@setup') }}"
-                                class="nav-link {{ request()->is('admin/setup') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>TECHNICIANS</p>
-                            </a>
-                        </ul>
-                        <ul class="nav nav-treeview">
-                            <a href="{{ action('App\Http\Controllers\AdminController@setup') }}"
-                                class="nav-link {{ request()->is('admin/setup') ? 'active' : '' }}">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>USERS</p>
-                            </a>
+
+                            <li class="nav-item">
+                                <a href="{{ action('App\Http\Controllers\AdminController@setup') }}"
+                                    class="nav-link {{ request()->is('admin/setup') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>CLIENTS</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="{{ action('App\Http\Controllers\AdminController@setup') }}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>TECHNICIANS</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="{{ action('App\Http\Controllers\ProfilingController@users_active') }}"
+                                    class="nav-link {{ request()->is('profiling/users*') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>USERS</p>
+                                </a>
+                            </li>
+
                         </ul>
                     </li>
                 @endif

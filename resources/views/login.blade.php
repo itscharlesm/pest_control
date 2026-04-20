@@ -35,7 +35,7 @@
                                     <p style="color:red;"><small>{{ session('errorMessage') }}</small></p>
                                 @endif
                                
-                                <form method="POST" action="{{ action('App\Http\Controllers\LoginController@validateUser') }}">
+                                <form method="POST" action="{{ action('App\Http\Controllers\LoginController@validate_user') }}">
                                 {{ csrf_field() }}
                                     <div class="row">
                                         <div class="col-md-12">

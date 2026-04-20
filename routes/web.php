@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ProfilingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,7 @@ Route::get('setup', [AdminController::class, 'setup']);
 Route::post('announcement/save', [AnnouncementController::class, 'save']);
 Route::post('announcement/delete/{ann_uuid}', [AnnouncementController::class, 'delete']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
+
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // MESSAGES
 Route::get('messages', [MessageController::class, 'main']);
@@ -42,6 +44,15 @@ Route::get('messages/chat/{mesg_group_id}', [MessageController::class, 'personal
 Route::post('messages/send', [MessageController::class, 'send']);
 Route::post('messages/compose', [MessageController::class, 'compose']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
+
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+// PROFILING
+// - Users
+Route::get('profiling/users/active', [ProfilingController::class, 'users_active']);
+Route::get('profiling/users/deleted', [ProfilingController::class, 'users_deleted']);
+Route::post('profiling/users/reset/password/{usr_uuid}', [UserController::class, 'users_reset_password']);
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // LARAVEL COMMANDS //
 Route::get('/laravel/clear-all', function () {
@@ -59,3 +70,4 @@ Route::get('/laravel/clear-all', function () {
 
     return response()->json(['message' => 'All caches and configurations cleared successfully!']);
 });
+// ------------------------------------------------------------------------------------------------------------------------------------ //

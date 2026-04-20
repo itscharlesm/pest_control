@@ -304,7 +304,7 @@ function getAvatar($usr_id)
 
 function getLastLogin($usr_id)
 {
-    $login = DB::table('logins')
+    $login = DB::table('user_login_logs')
         ->where('usr_id', '=', $usr_id)
         ->orderBy('log_date', 'desc')
         ->first();
@@ -313,6 +313,19 @@ function getLastLogin($usr_id)
         return $login->log_date;
     } else {
         return '-never-';
+    }
+}
+
+if (!function_exists('logUserActivity')) {
+    function logUserActivity($role_name, $log_details)
+    {
+        DB::table('user_activity_logs')->insert([
+            'usr_id' => session('usr_id'),
+            'log_date' => \Carbon\Carbon::now(),
+            'log_title' => $role_name,
+            'log_details' => $log_details,
+            'log_active' => 1,
+        ]);
     }
 }
 
