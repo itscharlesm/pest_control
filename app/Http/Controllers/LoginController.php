@@ -12,7 +12,7 @@ class LoginController extends Controller
         return view('login');
     }
 
-    public function validateUser(Request $request)
+    public function validate_user(Request $request)
     {
         $usr_email = $request->email;
         $usr_password = $request->password;
