@@ -37,18 +37,10 @@ Route::post('announcement/delete/{ann_uuid}', [AnnouncementController::class, 'd
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // MESSAGES
-// - Main
 Route::get('messages', [MessageController::class, 'main']);
- 
-// Individual chat view
 Route::get('messages/chat/{mesg_group_id}', [MessageController::class, 'personal']);
- 
-// Send message to existing group (POST)
 Route::post('messages/send', [MessageController::class, 'send']);
- 
-// Compose new message — find or create group then send (POST)
 Route::post('messages/compose', [MessageController::class, 'compose']);
-// - Personal Message
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // LARAVEL COMMANDS //

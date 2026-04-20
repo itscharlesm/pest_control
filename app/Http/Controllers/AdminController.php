@@ -10,11 +10,11 @@ class AdminController extends Controller
 {
     public function home()
     {
-        $logins = DB::table('logins')
-            ->select('users.usr_last_name', 'users.usr_first_name', 'users.usr_image_path', 'logins.*', DB::raw('max(logins.log_date) as log_date_max'))
-            ->join('users', 'users.usr_id', 'logins.usr_id')
+        $logins = DB::table('user_login_logs')
+            ->select('users.usr_last_name', 'users.usr_first_name', 'users.usr_image_path', 'user_login_logs.*', DB::raw('max(user_login_logs.log_date) as log_date_max'))
+            ->join('users', 'users.usr_id', 'user_login_logs.usr_id')
             ->orderBy('log_date_max', 'desc')
-            ->groupby('logins.usr_id')
+            ->groupby('user_login_logs.usr_id')
             ->limit(3)
             ->get();
 

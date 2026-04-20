@@ -277,7 +277,7 @@ function resetUserLoginCounter($usr_email)
 
 function recordLogin($usr_id)
 {
-    DB::table('logins')
+    DB::table('user_login_logs')
         ->insert([
             'usr_id' => $usr_id,
             'log_date' => \Carbon\Carbon::now(),
