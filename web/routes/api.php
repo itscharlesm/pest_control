@@ -9,6 +9,7 @@ use App\Http\Controllers\api\v1\InnovationController;
 use App\Http\Controllers\api\v1\MailController;
 use App\Http\Controllers\api\v1\NewsController;
 use App\Http\Controllers\api\v1\ProfileController;
+use App\Http\Controllers\api\v1\mobile_controllers\MobileSignUpController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -112,3 +113,15 @@ Route::get('send-mail', [MailController::class, 'index']);
 
 
 Route::get('/yawa', [InnovationController::class, 'yawa']);
+
+
+////////////////////
+//                //
+// Mobile Routes  //
+//                //
+////////////////////
+
+// Mobile API Routes
+Route::prefix('mobile')->group(function () {
+    Route::post('/register', [MobileSignUpController::class, 'register']);
+});
