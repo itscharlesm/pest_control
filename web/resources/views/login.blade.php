@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
     <head>
-        <title>Login | Mendoza Cafe</title>
+        <title>Login | Go Forward Pest Control</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="description" content="CQA Review Center">
@@ -28,7 +28,7 @@
                                     <img src="{{ asset('images/logos/logo.jpg') }}" class="img-circle elevation-2" style="width:80px;height:80px;" alt="">
                                 </div>
                                 <div class="d-flex justify-content-center">
-                                    <h5 class="text-center" style="color:gray;">Mendoza Cafe</h5>
+                                    <h5 class="text-center" style="color:gray;">Go Forward Pest Control</h5>
                                 </div>
                                 <p><small>PLEASE LOGIN YOUR ACCOUNT</small></p>
                                 @if(session('errorMessage'))
