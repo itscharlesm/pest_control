@@ -45,6 +45,8 @@ Route::post('announcement/delete/{ann_uuid}', [AnnouncementController::class, 'd
 // ACCOUNT
 Route::get('account', [UserController::class, 'account']);
 Route::post('account/update', [UserController::class, 'account_update']);
+Route::post('account/address/add',  [UserController::class, 'address_add']);
+Route::post('account/address/edit',  [UserController::class, 'address_edit']);
 Route::post('user/update-password', [UserController::class, 'update_password']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
