@@ -62,6 +62,7 @@
                                 <thead>
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
+                                        <th style="vertical-align: middle; text-align: center">Branch</th>
                                         <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @if (session('rol_admin') == '1' || session('rol_manager') == '1')
@@ -80,6 +81,9 @@
                                                 <small>{{ $user->usr_email }}</small>
                                                 <br />
                                                 <em><small>Last login: {{ getLastLogin($user->usr_id) }}</small></em>
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $user->branch_name }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if (!empty($user->roles))
