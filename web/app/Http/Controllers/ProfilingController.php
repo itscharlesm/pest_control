@@ -462,6 +462,7 @@ class ProfilingController extends Controller
             ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
             ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('user_availabilities', 'users.usr_id', '=', 'user_availabilities.usr_id')
             ->where('users.utyp_id', '=', '2')
             ->where('users.usr_active', '=', '0');
 
@@ -480,7 +481,8 @@ class ProfilingController extends Controller
             'users.usr_email',
             'users.usr_mobile',
             'users.usr_active',
-            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles')
+            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles'),
+            DB::raw('GROUP_CONCAT(CASE WHEN user_availabilities.uavail_active = 1 THEN user_availabilities.uavail_name END ORDER BY FIELD(user_availabilities.uavail_name, "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") SEPARATOR ", ") as availabilities')
         )
             ->groupBy(
                 'users.usr_id',
