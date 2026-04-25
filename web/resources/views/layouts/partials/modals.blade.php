@@ -8,7 +8,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form method="POST" action="{{ action('App\Http\Controllers\UserController@update_password') }}">
+            <form method="POST" action="{{ action('App\Http\Controllers\UserController@account_update_password') }}">
                 {{ csrf_field() }}
                 <div class="modal-body">
                     <div class="form-group">
@@ -29,8 +29,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Update password</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><span class="fa fa-close"></span> Close</button>
+                    <button type="submit" class="btn btn-primary"><span class="fa fa-save"></span> Update password</button>
                 </div>
             </form>
         </div>

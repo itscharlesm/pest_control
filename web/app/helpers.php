@@ -206,6 +206,8 @@ function setUserSessionVariables($user)
 {
     Session::put('usr_id', $user->usr_id);
     Session::put('usr_uuid', $user->usr_uuid);
+    Session::put('branch_id', $user->branch_id);
+    Session::put('utyp_id', $user->utyp_id);
     Session::put('usr_last_name', $user->usr_last_name);
     Session::put('usr_first_name', $user->usr_first_name);
     Session::put('usr_middle_name', $user->usr_middle_name);
