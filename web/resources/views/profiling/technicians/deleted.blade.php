@@ -6,7 +6,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Users</h1>
+                    <h1 class="m-0">Technicians</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
@@ -14,7 +14,7 @@
                             <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
                         </li>
                         <li class="breadcrumb-item">Profiling</li>
-                        <li class="breadcrumb-item">Users</li>
+                        <li class="breadcrumb-item">Technicians</li>
                         <li class="breadcrumb-item active">Deleted</li>
                     </ol>
                 </div>
@@ -33,8 +33,8 @@
                     <div class="row">
                         <div class="col-md-12">
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <a class="btn btn-success btn-md mb-3" href="{{ url('profiling/users/active') }}">
-                                    <span class="fa fa-users"></span> Users
+                                <a class="btn btn-success btn-md mb-3" href="{{ url('profiling/technicians/active') }}">
+                                    <span class="fa fa-users"></span> Technicians
                                 </a>
                             @endif
                         </div>
@@ -43,10 +43,10 @@
                     <div class="row">
                         <!-- Table Column -->
                         <div class="col-lg-9 col-md-7">
-                            <form method="GET" action="{{ url('profiling/users/active') }}" class="mb-3">
+                            <form method="GET" action="{{ url('profiling/technicians/deleted') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search deleted users..." value="{{ request('search') }}">
+                                        placeholder="Search deleted technicians..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">
                                             <span class="fa fa-search"></span> Search
@@ -68,19 +68,19 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($users as $user)
+                                    @foreach ($technicians as $technician)
                                         <tr>
                                             <td style="vertical-align: middle; text-align: left">
-                                                {{ $user->usr_last_name }}, {{ $user->usr_first_name }}
-                                                {{ $user->usr_middle_name }}
+                                                {{ $technician->usr_last_name }}, {{ $technician->usr_first_name }}
+                                                {{ $technician->usr_middle_name }}
                                                 <br />
-                                                <small>{{ $user->usr_email }}</small>
+                                                <small>{{ $technician->usr_email }}</small>
                                                 <br />
-                                                <em><small>Last login: {{ getLastLogin($user->usr_id) }}</small></em>
+                                                <em><small>Last login: {{ getLastLogin($technician->usr_id) }}</small></em>
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($user->roles))
-                                                    @foreach (explode(', ', $user->roles) as $role)
+                                                @if (!empty($technician->roles))
+                                                    @foreach (explode(', ', $technician->roles) as $role)
                                                         <span class="badge bg-success">{{ $role }}</span>
                                                     @endforeach
                                                 @else
@@ -89,18 +89,20 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 <a class="btn btn-success btn-sm" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#restoreModal-{{ $user->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#restoreModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-refresh"></span>
                                                 </a>
                                             </td>
 
                                             {{-- Restore Modal --}}
-                                            <div class="modal fade" id="restoreModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="restoreModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_restore', [$user->usr_id]) }}">
+                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_restore', [$technician->usr_id]) }}">
                                                             @csrf
                                                             <div class="modal-header bg-success text-white">
                                                                 <h5 class="modal-title text-white" id="exampleModalLabel">
@@ -112,9 +114,10 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p>Are you sure you want to <strong>RESTORE</strong> user
-                                                                    <strong>{{ $user->usr_first_name }}
-                                                                        {{ $user->usr_last_name }}</strong>
+                                                                <p>Are you sure you want to <strong>RESTORE</strong>
+                                                                    technician
+                                                                    <strong>{{ $technician->usr_first_name }}
+                                                                        {{ $technician->usr_last_name }}</strong>
                                                                     ?
                                                                 </p>
                                                             </div>

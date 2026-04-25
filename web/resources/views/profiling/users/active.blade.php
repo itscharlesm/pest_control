@@ -220,8 +220,7 @@
                                                             <div class="modal-body">
                                                                 <p><strong>Are you sure you want to DELETE user
                                                                         {{ $user->usr_first_name }}
-                                                                        {{ $user->usr_last_name }}
-                                                                        ?</strong>
+                                                                        {{ $user->usr_last_name }}</strong>?
                                                                 </p>
                                                             </div>
                                                             <div class="modal-footer">

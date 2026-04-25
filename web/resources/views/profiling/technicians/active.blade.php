@@ -6,7 +6,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Users</h1>
+                    <h1 class="m-0">Technicians</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
@@ -14,7 +14,7 @@
                             <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
                         </li>
                         <li class="breadcrumb-item">Profiling</li>
-                        <li class="breadcrumb-item active">Users</li>
+                        <li class="breadcrumb-item active">Technicians</li>
                     </ol>
                 </div>
             </div>
@@ -32,12 +32,12 @@
                     <div class="row">
                         <div class="col-md-12">
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/users/deleted') }}">
-                                    <span class="fa fa-archive"></span> Deleted Users
+                                <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/technicians/deleted') }}">
+                                    <span class="fa fa-archive"></span> Deleted Technicians
                                 </a>
                                 <button type="button" class="btn btn-success mb-3" data-toggle="modal"
-                                    data-target="#addUserModal">
-                                    <span class="fa fa-plus"></span> Add User
+                                    data-target="#addTechnicianModal">
+                                    <span class="fa fa-plus"></span> Add Technician
                                 </button>
                             @endif
                         </div>
@@ -46,10 +46,10 @@
                     <div class="row">
                         <!-- Table Column -->
                         <div class="col-lg-9 col-md-7">
-                            <form method="GET" action="{{ url('profiling/users/active') }}" class="mb-3">
+                            <form method="GET" action="{{ url('profiling/technicians/active') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search users..." value="{{ request('search') }}">
+                                        placeholder="Search technicians..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">
                                             <span class="fa fa-search"></span> Search
@@ -96,24 +96,29 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#updateRoleModal-{{ $technician->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#updateRoleModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-edit"></span>
                                                 </a>
                                                 <a class="btn btn-info btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#resetModal-{{ $technician->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#resetModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-key"></span>
                                                 </a>
                                                 <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#deleteModal-{{ $technician->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#deleteModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-trash"></span>
                                                 </a>
                                             </td>
 
                                             {{-- Update Role Modal --}}
-                                            <div class="modal fade" id="updateRoleModal-{{ $technician->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="updateRoleModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
-                                                    <form action="{{ url('profiling/users/update/role', $technician->usr_id) }}"
+                                                    <form
+                                                        action="{{ url('profiling/technicians/update/role', $technician->usr_id) }}"
                                                         method="POST">
                                                         @csrf
                                                         <div class="modal-content">
@@ -163,12 +168,13 @@
                                             </div>
 
                                             {{-- Reset Password Modal --}}
-                                            <div class="modal fade" id="resetModal-{{ $technician->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="resetModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_reset_password', [$technician->usr_id]) }}">
+                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_reset_password', [$technician->usr_id]) }}">
                                                             @csrf
                                                             <div class="modal-header bg-info text-white">
                                                                 <h5 class="modal-title text-black" id="exampleModalLabel">
@@ -180,7 +186,8 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p>Are you sure you want to RESET this user's password to
+                                                                <p>Are you sure you want to RESET this technician's password
+                                                                    to
                                                                     <strong>123456</strong>?
                                                                 </p>
                                                                 <small>{{ $technician->usr_first_name }}
@@ -201,12 +208,13 @@
                                             </div>
 
                                             {{-- Delete Modal --}}
-                                            <div class="modal fade" id="deleteModal-{{ $technician->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="deleteModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_delete', [$technician->usr_id]) }}">
+                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_delete', [$technician->usr_id]) }}">
                                                             @csrf
                                                             <div class="modal-header bg-danger text-white">
                                                                 <h5 class="modal-title text-white" id="exampleModalLabel">
@@ -218,10 +226,9 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p><strong>Are you sure you want to DELETE user
+                                                                <p><strong>Are you sure you want to DELETE technician
                                                                         {{ $technician->usr_first_name }}
-                                                                        {{ $technician->usr_last_name }}
-                                                                        ?</strong>
+                                                                        {{ $technician->usr_last_name }}</strong>?
                                                                 </p>
                                                             </div>
                                                             <div class="modal-footer">
@@ -270,11 +277,11 @@
         </div>
     </section>
 
-    {{-- Add User Modal --}}
-    <div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel"
-        aria-hidden="true">
+    {{-- Add Technician Modal --}}
+    <div class="modal fade" id="addTechnicianModal" tabindex="-1" role="dialog"
+        aria-labelledby="addTechnicianModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-            <form action="{{ url('profiling/users/add') }}" method="POST">
+            <form action="{{ url('profiling/technicians/add') }}" method="POST">
                 @csrf
                 {{-- Hidden fields --}}
                 <input type="hidden" name="usr_password" value="{{ md5('123456') }}">
@@ -286,8 +293,8 @@
 
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white" id="addUserModalLabel">
-                            <span class="fa fa-plus text-white"></span> Add User
+                        <h5 class="modal-title text-white" id="addTechnicianModalLabel">
+                            <span class="fa fa-plus text-white"></span> Add Technician
                         </h5>
                         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -397,7 +404,7 @@
                             <span class="fa fa-close"></span> Close
                         </button>
                         <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save User
+                            <span class="fa fa-save"></span> Save Technician
                         </button>
                     </div>
                 </div>
@@ -537,7 +544,7 @@
             });
 
             // Reset modal fields on close
-            document.getElementById('addUserModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('addTechnicianModal').addEventListener('hidden.bs.modal', function() {
                 this.querySelector('form').reset();
                 addResetSelect(addProvSel, '-- SELECT PROVINCE --');
                 addResetSelect(addMuniSel, '-- SELECT MUNICIPALITY --');

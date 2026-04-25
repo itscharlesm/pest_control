@@ -43,7 +43,7 @@
                     <div class="row">
                         <!-- Table Column -->
                         <div class="col-lg-9 col-md-7">
-                            <form method="GET" action="{{ url('profiling/users/active') }}" class="mb-3">
+                            <form method="GET" action="{{ url('profiling/users/deleted') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
                                         placeholder="Search deleted users..." value="{{ request('search') }}">
@@ -114,8 +114,7 @@
                                                             <div class="modal-body">
                                                                 <p>Are you sure you want to <strong>RESTORE</strong> user
                                                                     <strong>{{ $user->usr_first_name }}
-                                                                        {{ $user->usr_last_name }}</strong>
-                                                                    ?
+                                                                        {{ $user->usr_last_name }}</strong>?
                                                                 </p>
                                                             </div>
                                                             <div class="modal-footer">
