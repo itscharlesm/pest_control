@@ -79,7 +79,12 @@ class ProfilingController extends Controller
             ->orderBy('reg_name')
             ->get(['reg_id', 'reg_name']);
 
-        return view('profiling.users.active', compact('users', 'search', 'roles', 'regions'));
+        $branches = DB::table('branches')
+            ->select('branch_id', 'branch_name')
+            ->where('branch_active', 1)
+            ->get();
+
+        return view('profiling.users.active', compact('users', 'search', 'roles', 'regions', 'branches'));
     }
 
     public function users_deleted(Request $request)
@@ -146,7 +151,75 @@ class ProfilingController extends Controller
             ->where('rol_id', '!=', 1)
             ->get();
 
-        return view('profiling.users.deleted', compact('users', 'search', 'roles'));
+        $regions = DB::table('location_regions')
+            ->where('reg_active', 1)
+            ->orderBy('reg_name')
+            ->get(['reg_id', 'reg_name']);
+
+        $branches = DB::table('branches')
+            ->select('branch_id', 'branch_name')
+            ->where('branch_active', 1)
+            ->get();
+
+        return view('profiling.users.deleted', compact('users', 'search', 'roles', 'regions', 'branches'));
+    }
+
+     public function users_add(Request $request)
+    {
+        $request->validate([
+            'usr_first_name' => 'required|string|max:255',
+            'usr_middle_name' => 'nullable|string|max:255',
+            'usr_last_name' => 'required|string|max:255',
+            'usr_email' => 'required|email|max:255|unique:users,usr_email',
+            'usr_mobile' => 'nullable|string|max:20',
+            'branch_id' => 'required|string|max:255',
+
+            // address validation
+            'street' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'municipality' => 'nullable|string|max:100',
+            'barangay' => 'nullable|string|max:100',
+        ]);
+
+        $code = '123456';
+
+        DB::beginTransaction();
+
+        // Insert user
+        $usr_id = DB::table('users')->insertGetId([
+            'usr_uuid' => generateuuid(),
+            'utyp_id' => 1,
+            'usr_first_name' => strtoupper($request->usr_first_name),
+            'usr_middle_name' => $request->usr_middle_name ? strtoupper($request->usr_middle_name) : null,
+            'usr_last_name' => strtoupper($request->usr_last_name),
+            'usr_email' => $request->usr_email,
+            'usr_mobile' => $request->usr_mobile ?: null,
+            'branch_id' => $request->branch_id,
+            'usr_password' => md5($code),
+            'usr_code' => $code,
+            'usr_date_created' => Carbon::now(),
+            'usr_created_by' => session('usr_id'),
+            'usr_active' => 1
+        ]);
+
+        // Insert address (if any field is filled)
+        if ($request->street || $request->barangay || $request->municipality || $request->province || $request->region) {
+            DB::table('user_addresses')->insert([
+                'usr_id' => $usr_id,
+                'add_id' => 1,
+                'uadd_street' => $request->street,
+                'uadd_barangay' => $request->barangay,
+                'uadd_city' => $request->municipality,
+                'uadd_province' => $request->province,
+                'uadd_region' => $request->region,
+                'uadd_active' => 1,
+            ]);
+        }
+
+        DB::commit();
+
+        return back()->with('successMessage', 'The user has been created and the password has been set to 123456.');
     }
 
     public function users_update_role(Request $request, $usr_id)
@@ -250,63 +323,7 @@ class ProfilingController extends Controller
         session()->flash('successMessage', 'Password has been reset to 123456.');
         return redirect()->back();
     }
-
-    public function users_add(Request $request)
-    {
-        $request->validate([
-            'usr_first_name' => 'required|string|max:255',
-            'usr_middle_name' => 'nullable|string|max:255',
-            'usr_last_name' => 'required|string|max:255',
-            'usr_email' => 'required|email|max:255|unique:users,usr_email',
-            'usr_mobile' => 'nullable|string|max:20',
-
-            // address validation
-            'street' => 'nullable|string|max:255',
-            'region' => 'nullable|string|max:100',
-            'province' => 'nullable|string|max:100',
-            'municipality' => 'nullable|string|max:100',
-            'barangay' => 'nullable|string|max:100',
-        ]);
-
-        $code = '123456';
-
-        DB::beginTransaction();
-
-        // Insert user
-        $usr_id = DB::table('users')->insertGetId([
-            'usr_uuid' => generateuuid(),
-            'utyp_id' => 1,
-            'usr_first_name' => strtoupper($request->usr_first_name),
-            'usr_middle_name' => $request->usr_middle_name ? strtoupper($request->usr_middle_name) : null,
-            'usr_last_name' => strtoupper($request->usr_last_name),
-            'usr_email' => $request->usr_email,
-            'usr_mobile' => $request->usr_mobile ?: null,
-            'usr_password' => md5($code),
-            'usr_code' => $code,
-            'usr_date_created' => Carbon::now(),
-            'usr_created_by' => session('usr_id'),
-            'usr_active' => 1
-        ]);
-
-        // Insert address (if any field is filled)
-        if ($request->street || $request->barangay || $request->municipality || $request->province || $request->region) {
-            DB::table('user_addresses')->insert([
-                'usr_id' => $usr_id,
-                'add_id' => 1,
-                'uadd_street' => $request->street,
-                'uadd_barangay' => $request->barangay,
-                'uadd_city' => $request->municipality,
-                'uadd_province' => $request->province,
-                'uadd_region' => $request->region,
-                'uadd_active' => 1,
-            ]);
-        }
-
-        DB::commit();
-
-        return back()->with('successMessage', 'The user has been created and the password has been set to 123456.');
-    }
-
+   
     public function users_delete(Request $request, $usr_id)
     {
         $user = DB::table('users')

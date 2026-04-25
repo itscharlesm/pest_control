@@ -334,6 +334,18 @@
                                     placeholder="Mobile Number" oninput="this.value=this.value.slice(0,10)">
                             </div>
 
+                            {{-- Branch --}}
+                            <div class="col-md-12 mb-3">
+                                <label for="branch_id">Branch <span class="text-danger">*</span></label>
+                                <select class="form-control" id="branch_id" name="branch_id" required>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->branch_id }}">
+                                            {{ $branch->branch_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             {{-- Street --}}
                             <div class="col-md-12 mb-3">
                                 <label for="add_street">Street</label>
