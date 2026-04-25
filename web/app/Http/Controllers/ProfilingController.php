@@ -149,6 +149,85 @@ class ProfilingController extends Controller
         return view('profiling.users.deleted', compact('users', 'search', 'roles'));
     }
 
+    public function users_update_role(Request $request, $usr_id)
+    {
+        $request->validate([
+            'roles' => 'array',
+            'roles.*' => 'exists:roles,rol_id',
+        ]);
+
+        $selectedRoles = $request->roles ?? [];
+
+        // Get the user's first and last name
+        $user = DB::table('users')
+            ->where('usr_id', $usr_id)
+            ->select('usr_first_name', 'usr_last_name')
+            ->first();
+
+        if (!$user) {
+            alert()->error('Error', 'User not found.');
+            return redirect()->back();
+        }
+
+        // Get all current roles of the user
+        $existingRoles = DB::table('user_roles')
+            ->where('usr_id', $usr_id)
+            ->pluck('rol_id')
+            ->toArray();
+
+        // Fetch old active roles (before update)
+        $oldRoles = DB::table('roles')
+            ->whereIn('rol_id', DB::table('user_roles')
+                ->where('usr_id', $usr_id)
+                ->where('url_active', 1)
+                ->pluck('rol_id'))
+            ->pluck('rol_name')
+            ->toArray();
+
+        // Step 1: Update or deactivate existing roles
+        foreach ($existingRoles as $rol_id) {
+            $isActive = in_array($rol_id, $selectedRoles) ? 1 : 0;
+
+            DB::table('user_roles')
+                ->where('usr_id', $usr_id)
+                ->where('rol_id', $rol_id)
+                ->update(['url_active' => $isActive]);
+        }
+
+        // Step 2: Insert new roles (those in selectedRoles but not in existingRoles)
+        $newRolesToInsert = array_diff($selectedRoles, $existingRoles);
+        foreach ($newRolesToInsert as $rol_id) {
+            DB::table('user_roles')->insert([
+                'usr_id' => $usr_id,
+                'rol_id' => $rol_id,
+                'url_active' => 1,
+            ]);
+        }
+
+        // Fetch new active roles (after update)
+        $newRoles = DB::table('roles')
+            ->whereIn('rol_id', DB::table('user_roles')
+                ->where('usr_id', $usr_id)
+                ->where('url_active', 1)
+                ->pluck('rol_id'))
+            ->pluck('rol_name')
+            ->toArray();
+
+        // Convert roles array to comma-separated string
+        $oldRolesString = implode(', ', $oldRoles);
+        $newRolesString = implode(', ', $newRoles);
+
+        // Log user activity
+        logUserActivity(
+            'Manage Users',
+            'Updated roles for user ' . $user->usr_last_name . ', ' . $user->usr_first_name .
+            ' FROM [' . $oldRolesString . '] TO [' . $newRolesString . ']'
+        );
+
+        alert()->success('Success', 'User roles updated successfully.');
+        return redirect()->back();
+    }
+
     public function users_reset_password(Request $request, $usr_id)
     {
         $user = DB::table('users')
