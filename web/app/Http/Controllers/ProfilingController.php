@@ -21,6 +21,7 @@ class ProfilingController extends Controller
             ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
             ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->where('users.utyp_id', '=', '1')
             ->where('users.usr_active', '=', '1');
 
         // Branch filter (unless super admin)
@@ -92,6 +93,7 @@ class ProfilingController extends Controller
             ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
             ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->where('users.utyp_id', '=', '1')
             ->where('users.usr_active', '=', '0');
 
         // Branch filter (unless super admin)
