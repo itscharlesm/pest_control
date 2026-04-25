@@ -113,7 +113,7 @@
                                             <div class="modal fade" id="updateRoleModal-{{ $user->usr_id }}" tabindex="-1"
                                                 role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
-                                                    <form action="{{ url('user/update/role', $user->usr_id) }}"
+                                                    <form action="{{ url('profiling/users/update/role', $user->usr_id) }}"
                                                         method="POST">
                                                         @csrf
                                                         <div class="modal-content">

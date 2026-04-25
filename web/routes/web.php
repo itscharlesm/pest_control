@@ -64,9 +64,10 @@ Route::post('messages/compose', [MessageController::class, 'compose']);
 Route::get('profiling/users/active', [ProfilingController::class, 'users_active']);
 Route::get('profiling/users/deleted', [ProfilingController::class, 'users_deleted']);
 Route::post('profiling/users/add', [ProfilingController::class, 'users_add']);
+Route::post('profiling/users/update/role/{usr_id}', [ProfilingController::class, 'users_update_role']);
+Route::post('profiling/users/reset/password/{usr_id}', [ProfilingController::class, 'users_reset_password']);
 Route::post('profiling/users/delete/{usr_id}', [ProfilingController::class, 'users_delete']);
 Route::post('profiling/users/restore/{usr_id}', [ProfilingController::class, 'users_restore']);
-Route::post('profiling/users/reset/password/{usr_id}', [ProfilingController::class, 'users_reset_password']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //
