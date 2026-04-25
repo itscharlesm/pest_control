@@ -259,12 +259,23 @@ class ProfilingController extends Controller
             'usr_last_name' => 'required|string|max:255',
             'usr_email' => 'required|email|max:255|unique:users,usr_email',
             'usr_mobile' => 'nullable|string|max:20',
+
+            // address validation
+            'street' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'municipality' => 'nullable|string|max:100',
+            'barangay' => 'nullable|string|max:100',
         ]);
 
         $code = '123456';
 
-        DB::table('users')->insert([
+        DB::beginTransaction();
+
+        // Insert user
+        $usr_id = DB::table('users')->insertGetId([
             'usr_uuid' => generateuuid(),
+            'utyp_id' => 1,
             'usr_first_name' => strtoupper($request->usr_first_name),
             'usr_middle_name' => $request->usr_middle_name ? strtoupper($request->usr_middle_name) : null,
             'usr_last_name' => strtoupper($request->usr_last_name),
@@ -272,20 +283,28 @@ class ProfilingController extends Controller
             'usr_mobile' => $request->usr_mobile ?: null,
             'usr_password' => md5($code),
             'usr_code' => $code,
-            'usr_address' => collect([
-                $request->street,
-                $request->barangay,
-                $request->municipality,
-                $request->province,
-                $request->region,
-            ])->filter()->implode(', '),
             'usr_date_created' => Carbon::now(),
             'usr_created_by' => session('usr_id'),
             'usr_active' => 1
         ]);
 
-        session()->flash('successMessage', 'The user has been created and the password has been set to 123456.');
-        return redirect()->back();
+        // Insert address (if any field is filled)
+        if ($request->street || $request->barangay || $request->municipality || $request->province || $request->region) {
+            DB::table('user_addresses')->insert([
+                'usr_id' => $usr_id,
+                'add_id' => 1,
+                'uadd_street' => $request->street,
+                'uadd_barangay' => $request->barangay,
+                'uadd_city' => $request->municipality,
+                'uadd_province' => $request->province,
+                'uadd_region' => $request->region,
+                'uadd_active' => 1,
+            ]);
+        }
+
+        DB::commit();
+
+        return back()->with('successMessage', 'The user has been created and the password has been set to 123456.');
     }
 
     public function users_delete(Request $request, $usr_id)
