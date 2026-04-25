@@ -85,7 +85,8 @@
                             </li>
 
                             <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\AdminController@setup') }}" class="nav-link">
+                                <a href="{{ action('App\Http\Controllers\ProfilingController@technicians_active') }}"
+                                    class="nav-link {{ request()->is('profiling/technicians*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>TECHNICIANS</p>
                                 </a>
