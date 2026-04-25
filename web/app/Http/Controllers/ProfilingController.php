@@ -432,12 +432,6 @@ class ProfilingController extends Controller
 
         $technicians = $query->paginate(500);
 
-        $roles = DB::table('roles')
-            ->select('rol_id', 'rol_name', 'rol_description')
-            ->where('rol_active', 1)
-            ->where('rol_id', '!=', 1)
-            ->get();
-
         $regions = DB::table('location_regions')
             ->where('reg_active', 1)
             ->orderBy('reg_name')
@@ -510,12 +504,6 @@ class ProfilingController extends Controller
         }
 
         $technicians = $query->paginate(500);
-
-        $roles = DB::table('roles')
-            ->select('rol_id', 'rol_name', 'rol_description')
-            ->where('rol_active', 1)
-            ->where('rol_id', '!=', 1)
-            ->get();
 
         $regions = DB::table('location_regions')
             ->where('reg_active', 1)
