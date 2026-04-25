@@ -79,12 +79,12 @@
                                                 <em><small>Last login: {{ getLastLogin($technician->usr_id) }}</small></em>
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($technician->roles))
-                                                    @foreach (explode(', ', $technician->roles) as $role)
-                                                        <span class="badge bg-success">{{ $role }}</span>
-                                                    @endforeach
+                                                @if (!empty($technician->availabilities))
+                                                    <span class="badge badge-success">
+                                                        {{ $technician->availabilities }}
+                                                    </span>
                                                 @else
-                                                    <span class="badge bg-danger">No Role Assigned</span>
+                                                    <span class="badge badge-secondary">None</span>
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
