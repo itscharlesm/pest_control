@@ -442,7 +442,7 @@ class ProfilingController extends Controller
             ->where('branch_active', 1)
             ->get();
 
-        return view('profiling.technicians.active', compact('technicians', 'search', 'roles', 'regions', 'branches'));
+        return view('profiling.technicians.active', compact('technicians', 'search', 'regions', 'branches'));
     }
 
     public function technicians_deleted(Request $request)
@@ -515,7 +515,7 @@ class ProfilingController extends Controller
             ->where('branch_active', 1)
             ->get();
 
-        return view('profiling.technicians.deleted', compact('technicians', 'search', 'roles', 'regions', 'branches'));
+        return view('profiling.technicians.deleted', compact('technicians', 'search', 'regions', 'branches'));
     }
 
     public function technicians_add(Request $request)
