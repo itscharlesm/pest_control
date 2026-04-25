@@ -526,7 +526,7 @@ class ProfilingController extends Controller
         return view('profiling.technicians.deleted', compact('technicians', 'search', 'roles', 'regions', 'branches'));
     }
 
-     public function technicians_add(Request $request)
+    public function technicians_add(Request $request)
     {
         $request->validate([
             'usr_first_name' => 'required|string|max:255',
@@ -576,6 +576,22 @@ class ProfilingController extends Controller
                 'uadd_province' => $request->province,
                 'uadd_region' => $request->region,
                 'uadd_active' => 1,
+            ]);
+        }
+
+        // Insert availability
+        $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+        $selected = $request->availability ?? [];
+
+        foreach ($days as $day) {
+            DB::table('user_availabilities')->insert([
+                'uavail_uuid' => generateuuid(),
+                'usr_id' => $usr_id,
+                'uavail_name' => $day,
+                'uavail_date_created' => Carbon::now(),
+                'uavail_created_by' => session('usr_id'),
+                'uavail_active' => in_array($day, $selected) ? 1 : 0,
             ]);
         }
 
