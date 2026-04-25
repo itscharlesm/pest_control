@@ -46,7 +46,7 @@
                             <form method="GET" action="{{ url('profiling/users/active') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search users..." value="{{ request('search') }}">
+                                        placeholder="Search deleted users..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">
                                             <span class="fa fa-search"></span> Search
