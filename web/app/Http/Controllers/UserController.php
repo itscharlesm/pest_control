@@ -86,7 +86,7 @@ class UserController extends Controller
         return back()->with('successMessage', 'Account updated successfully.');
     }
 
-    public function address_add(Request $request)
+    public function account_address_add(Request $request)
     {
         $request->validate([
             'add_id' => 'nullable|integer|exists:addresses,add_id',
@@ -111,7 +111,7 @@ class UserController extends Controller
         return back()->with('successMessage', 'Address added successfully.');
     }
 
-    public function address_edit(Request $request)
+    public function account_address_edit(Request $request)
     {
         $request->validate([
             'uadd_id' => 'required|integer',
@@ -141,7 +141,7 @@ class UserController extends Controller
         return back()->with('successMessage', 'Address updated successfully.');
     }
 
-    public function update_password(Request $request)
+    public function account_update_password(Request $request)
     {
         $current_password = $request->current_password;
         $new_password1 = $request->new_password1;
