@@ -59,7 +59,7 @@
                                 <thead>
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
-                                        <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
+                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities</th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @if (session('rol_admin') == '1' || session('rol_manager') == '1')
                                             <th style="vertical-align: middle; text-align: center" width="70px">Active

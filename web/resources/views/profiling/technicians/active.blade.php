@@ -63,7 +63,7 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
+                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities</th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @if (session('rol_admin') == '1' || session('rol_manager') == '1')
                                             <th style="vertical-align: middle; text-align: center" width="70px">Active
@@ -142,7 +142,7 @@
                                                                     <label for="rol_id">Roles: <span
                                                                             style="color:red;">*</span></label>
                                                                     <select class="select2" multiple="multiple"
-                                                                        data-placeholder="Select Role(s)"
+                                                                        data-placeholder="Select Availabilities"
                                                                         style="width:100%;" name="roles[]">
                                                                         @foreach ($roles as $role)
                                                                             <option value="{{ $role->rol_id }}"
@@ -395,6 +395,30 @@
                                 <select id="add_barangay" class="form-control" disabled>
                                     <option value="">-- SELECT BARANGAY --</option>
                                 </select>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="add_barangay">Availability</label>
+                                <div class="row">
+                                    @php
+                                        $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                                    @endphp
+
+                                    @foreach ($days as $day)
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" 
+                                                    type="checkbox" 
+                                                    name="availability[]" 
+                                                    value="{{ $day }}"
+                                                    id="avail_{{ $day }}">
+                                                <label class="form-check-label" for="avail_{{ $day }}">
+                                                    {{ $day }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
