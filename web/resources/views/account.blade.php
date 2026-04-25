@@ -27,6 +27,12 @@
         @include('layouts.partials.modal_style')
         <div class="container-fluid">
             <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-alt text-warning mr-2"></i>
+                        My Personal Information
+                    </h5>
+                </div>
                 <div class="card-body">
 
                     <form method="POST" action="{{ url('account/update') }}" enctype="multipart/form-data">
@@ -80,57 +86,6 @@
                                     value="{{ \Carbon\Carbon::parse($user->usr_birth_date)->age }} years old" readonly>
                             </div>
 
-                            {{-- ADDRESS (READONLY) --}}
-                            <div class="col-md-12 mb-3">
-                                <label>Address</label>
-                                <input type="text" class="form-control" value="{{ $user->usr_address }}" readonly>
-                            </div>
-
-                        </div>
-
-                        {{-- EDITABLE ADDRESS SECTION (HIDDEN INITIALLY) --}}
-                        <div id="editAddressSection" style="display:none;">
-                            <div class="row">
-
-                                <div class="col-md-12 mb-3">
-                                    <label>Street</label>
-                                    <input type="text" name="street" class="form-control">
-                                </div>
-
-                                <div class="col-md-3 mb-3">
-                                    <label>Region</label>
-                                    <select id="add_region" class="form-control">
-                                        <option value="">-- SELECT REGION --</option>
-                                        @foreach ($regions as $r)
-                                            <option value="{{ $r->reg_id }}" data-name="{{ $r->reg_name }}">
-                                                {{ $r->reg_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="col-md-3 mb-3">
-                                    <label>Province</label>
-                                    <select id="add_province" class="form-control" disabled></select>
-                                </div>
-
-                                <div class="col-md-3 mb-3">
-                                    <label>Municipality</label>
-                                    <select id="add_municipality" class="form-control" disabled></select>
-                                </div>
-
-                                <div class="col-md-3 mb-3">
-                                    <label>Barangay</label>
-                                    <select id="add_barangay" class="form-control" disabled></select>
-                                </div>
-
-                                {{-- hidden --}}
-                                <input type="hidden" name="region" id="add_hidden_region">
-                                <input type="hidden" name="province" id="add_hidden_province">
-                                <input type="hidden" name="municipality" id="add_hidden_municipality">
-                                <input type="hidden" name="barangay" id="add_hidden_barangay">
-
-                            </div>
                         </div>
 
                         {{-- BUTTONS --}}
@@ -151,145 +106,340 @@
                     </form>
                 </div>
             </div>
+
+            {{-- ADDRESS SECTION --}}
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt text-warning mr-2"></i>
+                        My Addresses
+                        <span class="badge badge-success ml-1">{{ $addresses->where('uadd_active', 1)->count() }}</span>
+                    </h5>
+                    <button type="button" class="btn btn-success btn-sm ml-auto" data-toggle="modal"
+                        data-target="#addAddressModal">
+                        <i class="fas fa-plus mr-1"></i> Add Address
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    @if ($addresses->isEmpty())
+                        <div class="text-center py-4">
+                            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No addresses yet. Click <strong>Add Address</strong> to save your first
+                                location.</p>
+                            <button type="button" class="btn btn-outline-warning btn-sm" data-toggle="modal"
+                                data-target="#addAddressModal">
+                                <i class="fas fa-plus mr-1"></i> Add Address
+                            </button>
+                        </div>
+                    @else
+                        <div class="row">
+                            @foreach ($addresses as $addr)
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    {{-- Address Card --}}
+                                    <div
+                                        class="card h-100 {{ $addr->uadd_active ? 'border-success' : 'border-secondary' }}">
+                                        <div
+                                            class="card-header py-2 {{ $addr->uadd_active ? 'bg-success text-white' : 'bg-secondary text-white' }}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="font-weight-bold">
+                                                    <i class="fas fa-home mr-1"></i>
+                                                    {{ $addr->add_name ?? 'Address #' . $loop->iteration }}
+                                                </span>
+                                                @if ($addr->uadd_active)
+                                                    <span class="badge badge-light text-success">
+                                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-light text-secondary">Inactive</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            @if ($addr->uadd_street)
+                                                <p class="mb-1 small">
+                                                    <i class="fas fa-road text-muted mr-1"></i>
+                                                    {{ $addr->uadd_street }}
+                                                </p>
+                                            @endif
+
+                                            @php
+                                                $locationLine = collect([
+                                                    $addr->uadd_barangay,
+                                                    $addr->uadd_city,
+                                                    $addr->uadd_province,
+                                                ])
+                                                    ->filter()
+                                                    ->implode(', ');
+                                            @endphp
+
+                                            @if ($locationLine)
+                                                <p class="mb-1 small">
+                                                    <i class="fas fa-map-marker-alt text-muted mr-1"></i>
+                                                    {{ $locationLine }}
+                                                </p>
+                                            @endif
+
+                                            @if ($addr->uadd_region)
+                                                <p class="mb-0 small text-muted">
+                                                    <i class="fas fa-globe-asia mr-1"></i>
+                                                    {{ $addr->uadd_region }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                        <div class="card-footer py-2">
+                                            <button type="button" class="btn btn-outline-warning btn-sm btn-block"
+                                                data-toggle="modal" data-target="#editAddressModal-{{ $addr->uadd_id }}">
+                                                <i class="fas fa-edit mr-1"></i> Edit Address
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- EDIT ADDRESS MODAL --}}
+                                <div class="modal fade" id="editAddressModal-{{ $addr->uadd_id }}" tabindex="-1"
+                                    role="dialog">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <form method="POST" action="{{ url('account/address/edit') }}">
+                                                @csrf
+                                                <input type="hidden" name="uadd_id" value="{{ $addr->uadd_id }}">
+
+                                                <div class="modal-header bg-warning">
+                                                    <h5 class="modal-title">
+                                                        <i class="fas fa-edit mr-2"></i> Edit Address
+                                                    </h5>
+                                                    <button type="button" class="close"
+                                                        data-dismiss="modal">&times;</button>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                    <div class="row">
+
+                                                        {{-- ADDRESS LABEL --}}
+                                                        <div class="col-md-12 mb-3">
+                                                            <label class="font-weight-bold">Address Label</label>
+                                                            <select name="add_id" class="form-control">
+                                                                <option value="">-- KEEP CURRENT --</option>
+                                                                @foreach ($address_labels as $al)
+                                                                    <option value="{{ $al->add_id }}"
+                                                                        {{ $addr->add_id == $al->add_id ? 'selected' : '' }}>
+                                                                        {{ $al->add_name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+
+                                                        {{-- STREET --}}
+                                                        <div class="col-md-12 mb-3">
+                                                            <label class="font-weight-bold">Street / House No.</label>
+                                                            <input type="text" name="street" class="form-control"
+                                                                value="{{ $addr->uadd_street }}">
+                                                        </div>
+
+                                                        {{-- CURRENT LOCATION DISPLAY --}}
+                                                        <div class="col-md-12 mb-3">
+                                                            <label class="font-weight-bold">Current Location</label>
+                                                            <div class="form-control bg-light text-muted">
+                                                                <i class="fas fa-map-marker-alt text-warning mr-1"></i>
+                                                                {{ collect([$addr->uadd_barangay, $addr->uadd_city, $addr->uadd_province, $addr->uadd_region])->filter()->implode(', ') ?:'—' }}
+                                                            </div>
+                                                            <small class="text-muted">Select new dropdowns below only if
+                                                                you want to change the location.</small>
+                                                        </div>
+
+                                                        {{-- REGION --}}
+                                                        <div class="col-md-3 mb-3">
+                                                            <label class="font-weight-bold">Region</label>
+                                                            <select id="edit_region_{{ $addr->uadd_id }}"
+                                                                class="form-control">
+                                                                <option value="">-- KEEP CURRENT --</option>
+                                                                @foreach ($regions as $r)
+                                                                    <option value="{{ $r->reg_id }}"
+                                                                        data-name="{{ $r->reg_name }}">
+                                                                        {{ $r->reg_name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <input type="hidden" name="region"
+                                                                id="edit_hidden_region_{{ $addr->uadd_id }}">
+                                                        </div>
+
+                                                        {{-- PROVINCE --}}
+                                                        <div class="col-md-3 mb-3">
+                                                            <label class="font-weight-bold">Province</label>
+                                                            <select id="edit_province_{{ $addr->uadd_id }}"
+                                                                class="form-control" disabled>
+                                                                <option value="">-- SELECT PROVINCE --</option>
+                                                            </select>
+                                                            <input type="hidden" name="province"
+                                                                id="edit_hidden_province_{{ $addr->uadd_id }}">
+                                                        </div>
+
+                                                        {{-- MUNICIPALITY --}}
+                                                        <div class="col-md-3 mb-3">
+                                                            <label class="font-weight-bold">Municipality / City</label>
+                                                            <select id="edit_municipality_{{ $addr->uadd_id }}"
+                                                                class="form-control" disabled>
+                                                                <option value="">-- SELECT MUNICIPALITY --</option>
+                                                            </select>
+                                                            <input type="hidden" name="municipality"
+                                                                id="edit_hidden_municipality_{{ $addr->uadd_id }}">
+                                                        </div>
+
+                                                        {{-- BARANGAY --}}
+                                                        <div class="col-md-3 mb-3">
+                                                            <label class="font-weight-bold">Barangay</label>
+                                                            <select id="edit_barangay_{{ $addr->uadd_id }}"
+                                                                class="form-control" disabled>
+                                                                <option value="">-- SELECT BARANGAY --</option>
+                                                            </select>
+                                                            <input type="hidden" name="barangay"
+                                                                id="edit_hidden_barangay_{{ $addr->uadd_id }}">
+                                                        </div>
+
+                                                        {{-- ACTIVE TOGGLE --}}
+                                                        <div class="col-md-12 mt-1">
+                                                            <div class="custom-control custom-switch">
+                                                                <input type="checkbox" class="custom-control-input"
+                                                                    id="edit_active_{{ $addr->uadd_id }}"
+                                                                    name="uadd_active" value="1"
+                                                                    {{ $addr->uadd_active ? 'checked' : '' }}>
+                                                                <label class="custom-control-label font-weight-bold"
+                                                                    for="edit_active_{{ $addr->uadd_id }}">
+                                                                    Mark as Active Address
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-dismiss="modal">
+                                                        <i class="fas fa-times mr-1"></i> Cancel
+                                                    </button>
+                                                    <button type="submit" id="saveBtn" class="btn btn-warning">
+                                                        <span class="fa fa-save"></span> Update Address
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- END EDIT MODAL --}}
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </section>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const addRegionSel = document.getElementById('add_region');
-            const addProvSel = document.getElementById('add_province');
-            const addMuniSel = document.getElementById('add_municipality');
-            const addBrgySel = document.getElementById('add_barangay');
+    {{-- ADD ADDRESS MODAL --}}
+    <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form method="POST" action="{{ url('account/address/add') }}">
+                    @csrf
+                    <div class="modal-header bg-success">
+                        <h5 class="modal-title text-white">
+                            <i class="fas fa-plus mr-2 text-white"></i> Add New Address
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
 
-            const addHiddenRegion = document.getElementById('add_hidden_region');
-            const addHiddenProv = document.getElementById('add_hidden_province');
-            const addHiddenMuni = document.getElementById('add_hidden_municipality');
-            const addHiddenBrgy = document.getElementById('add_hidden_barangay');
+                            {{-- ADDRESS LABEL --}}
+                            <div class="col-md-12 mb-3">
+                                <label class="font-weight-bold">Address Label</label>
+                                <select name="add_id" class="form-control">
+                                    @foreach ($address_labels as $al)
+                                        <option value="{{ $al->add_id }}">{{ $al->add_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-            const baseUrl = window.location.origin;
+                            {{-- STREET --}}
+                            <div class="col-md-12 mb-3">
+                                <label class="font-weight-bold">Street / House No.</label>
+                                <input type="text" name="street" class="form-control"
+                                    placeholder="e.g. 123 Rizal Street">
+                            </div>
 
-            function addResetSelect(el, placeholder) {
-                el.innerHTML = `<option value="">${placeholder}</option>`;
-                el.disabled = true;
-            }
+                            {{-- REGION --}}
+                            <div class="col-md-3 mb-3">
+                                <label class="font-weight-bold">Region</label>
+                                <select id="modal_add_region" class="form-control">
+                                    <option value="">-- SELECT REGION --</option>
+                                    @foreach ($regions as $r)
+                                        <option value="{{ $r->reg_id }}" data-name="{{ $r->reg_name }}">
+                                            {{ $r->reg_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <input type="hidden" name="region" id="modal_add_hidden_region">
+                            </div>
 
-            async function addLoadOptions(el, endpoint, textKey, valueKey, placeholder) {
-                el.innerHTML = '<option value="">Loading...</option>';
-                try {
-                    const response = await fetch(`${baseUrl}${endpoint}`, {
-                        method: 'GET',
-                        credentials: 'same-origin',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const data = await response.json();
-                    el.innerHTML = `<option value="">${placeholder}</option>`;
-                    if (data && data.length > 0) {
-                        data.forEach(item => {
-                            el.insertAdjacentHTML('beforeend',
-                                `<option value="${item[valueKey]}" data-name="${item[textKey]}">${item[textKey]}</option>`
-                            );
-                        });
-                        el.disabled = false;
-                    } else {
-                        el.innerHTML = `<option value="">No options available</option>`;
-                    }
-                } catch (err) {
-                    console.error(`Error loading ${el.id}:`, err);
-                    el.innerHTML = `<option value="">Error loading data</option>`;
-                }
-            }
+                            {{-- PROVINCE --}}
+                            <div class="col-md-3 mb-3">
+                                <label class="font-weight-bold">Province</label>
+                                <select id="modal_add_province" class="form-control" disabled>
+                                    <option value="">-- SELECT PROVINCE --</option>
+                                </select>
+                                <input type="hidden" name="province" id="modal_add_hidden_province">
+                            </div>
 
-            addRegionSel.addEventListener('change', function() {
-                const regionId = this.value;
-                const regionName = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
-                addHiddenRegion.value = regionName;
+                            {{-- MUNICIPALITY --}}
+                            <div class="col-md-3 mb-3">
+                                <label class="font-weight-bold">Municipality / City</label>
+                                <select id="modal_add_municipality" class="form-control" disabled>
+                                    <option value="">-- SELECT MUNICIPALITY --</option>
+                                </select>
+                                <input type="hidden" name="municipality" id="modal_add_hidden_municipality">
+                            </div>
 
-                addResetSelect(addProvSel, '-- SELECT PROVINCE --');
-                addResetSelect(addMuniSel, '-- SELECT MUNICIPALITY --');
-                addResetSelect(addBrgySel, '-- SELECT BARANGAY --');
-                addHiddenProv.value = '';
-                addHiddenMuni.value = '';
-                addHiddenBrgy.value = '';
+                            {{-- BARANGAY --}}
+                            <div class="col-md-3 mb-3">
+                                <label class="font-weight-bold">Barangay</label>
+                                <select id="modal_add_barangay" class="form-control" disabled>
+                                    <option value="">-- SELECT BARANGAY --</option>
+                                </select>
+                                <input type="hidden" name="barangay" id="modal_add_hidden_barangay">
+                            </div>
 
-                if (regionId) {
-                    addLoadOptions(addProvSel, `/locations/${regionId}/provinces`, 'prov_name', 'prov_id',
-                        '-- SELECT PROVINCE --');
-                }
-            });
-
-            addProvSel.addEventListener('change', function() {
-                const provId = this.value;
-                const provName = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
-                addHiddenProv.value = provName;
-
-                addResetSelect(addMuniSel, '-- SELECT MUNICIPALITY --');
-                addResetSelect(addBrgySel, '-- SELECT BARANGAY --');
-                addHiddenMuni.value = '';
-                addHiddenBrgy.value = '';
-
-                if (provId) {
-                    addLoadOptions(addMuniSel, `/locations/${provId}/municipalities`, 'mun_name', 'mun_id',
-                        '-- SELECT MUNICIPALITY --');
-                }
-            });
-
-            addMuniSel.addEventListener('change', function() {
-                const muniId = this.value;
-                const muniName = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
-                addHiddenMuni.value = muniName;
-
-                addResetSelect(addBrgySel, '-- SELECT BARANGAY --');
-                addHiddenBrgy.value = '';
-
-                if (muniId) {
-                    addLoadOptions(addBrgySel, `/locations/${muniId}/barangays`, 'brg_name', 'brg_id',
-                        '-- SELECT BARANGAY --');
-                }
-            });
-
-            addBrgySel.addEventListener('change', function() {
-                addHiddenBrgy.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
-            });
-
-            // Reset modal fields on close
-            document.getElementById('addUserModal').addEventListener('hidden.bs.modal', function() {
-                this.querySelector('form').reset();
-                addResetSelect(addProvSel, '-- SELECT PROVINCE --');
-                addResetSelect(addMuniSel, '-- SELECT MUNICIPALITY --');
-                addResetSelect(addBrgySel, '-- SELECT BARANGAY --');
-                addHiddenRegion.value = '';
-                addHiddenProv.value = '';
-                addHiddenMuni.value = '';
-                addHiddenBrgy.value = '';
-            });
-        });
-    </script>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </button>
+                        <button type="submit" id="saveBtn" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save Address
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         const editBtn = document.getElementById('editBtn');
         const saveBtn = document.getElementById('saveBtn');
         const cancelBtn = document.getElementById('cancelBtn');
         const editableFields = document.querySelectorAll('.editable');
-        const addressSection = document.getElementById('editAddressSection');
 
         editBtn.addEventListener('click', () => {
             editableFields.forEach(el => el.removeAttribute('readonly'));
-
-            addressSection.style.display = 'block';
-
             editBtn.style.display = 'none';
             saveBtn.style.display = 'inline-block';
             cancelBtn.style.display = 'inline-block';
         });
 
         cancelBtn.addEventListener('click', () => {
-            location.reload(); // simplest way to reset everything
+            location.reload();
         });
     </script>
 
@@ -322,7 +472,6 @@
         editBtn.addEventListener('click', () => {
             editMode = true;
 
-            // remove download behavior
             avatarLink.removeAttribute('href');
             avatarLink.removeAttribute('download');
         });
@@ -339,6 +488,147 @@
             if (file) {
                 avatarPreview.src = URL.createObjectURL(file);
             }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const baseUrl = window.location.origin;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            function resetSelect(el, placeholder) {
+                el.innerHTML = `<option value="">${placeholder}</option>`;
+                el.disabled = true;
+            }
+
+            async function loadOptions(el, endpoint, textKey, valueKey, placeholder) {
+                el.innerHTML = '<option value="">Loading...</option>';
+                try {
+                    const res = await fetch(`${baseUrl}${endpoint}`, {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    el.innerHTML = `<option value="">${placeholder}</option>`;
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+                            el.insertAdjacentHTML('beforeend',
+                                `<option value="${item[valueKey]}" data-name="${item[textKey]}">${item[textKey]}</option>`
+                            );
+                        });
+                        el.disabled = false;
+                    } else {
+                        el.innerHTML = `<option value="">No options available</option>`;
+                    }
+                } catch (e) {
+                    el.innerHTML = `<option value="">Error loading</option>`;
+                }
+            }
+
+            // ---- ADD ADDRESS MODAL ----
+            const maRegion = document.getElementById('modal_add_region');
+            const maProv = document.getElementById('modal_add_province');
+            const maMuni = document.getElementById('modal_add_municipality');
+            const maBrgy = document.getElementById('modal_add_barangay');
+            const maHR = document.getElementById('modal_add_hidden_region');
+            const maHP = document.getElementById('modal_add_hidden_province');
+            const maHM = document.getElementById('modal_add_hidden_municipality');
+            const maHB = document.getElementById('modal_add_hidden_barangay');
+
+            maRegion.addEventListener('change', function() {
+                maHR.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                resetSelect(maProv, '-- SELECT PROVINCE --');
+                resetSelect(maMuni, '-- SELECT MUNICIPALITY --');
+                resetSelect(maBrgy, '-- SELECT BARANGAY --');
+                maHP.value = maHM.value = maHB.value = '';
+                if (this.value) loadOptions(maProv, `/locations/${this.value}/provinces`, 'prov_name',
+                    'prov_id', '-- SELECT PROVINCE --');
+            });
+            maProv.addEventListener('change', function() {
+                maHP.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                resetSelect(maMuni, '-- SELECT MUNICIPALITY --');
+                resetSelect(maBrgy, '-- SELECT BARANGAY --');
+                maHM.value = maHB.value = '';
+                if (this.value) loadOptions(maMuni, `/locations/${this.value}/municipalities`, 'mun_name',
+                    'mun_id', '-- SELECT MUNICIPALITY --');
+            });
+            maMuni.addEventListener('change', function() {
+                maHM.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                resetSelect(maBrgy, '-- SELECT BARANGAY --');
+                maHB.value = '';
+                if (this.value) loadOptions(maBrgy, `/locations/${this.value}/barangays`, 'brg_name',
+                    'brg_id', '-- SELECT BARANGAY --');
+            });
+            maBrgy.addEventListener('change', function() {
+                maHB.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+            });
+
+            // Reset Add modal on close
+            document.getElementById('addAddressModal').addEventListener('hidden.bs.modal', function() {
+                this.querySelector('form').reset();
+                resetSelect(maProv, '-- SELECT PROVINCE --');
+                resetSelect(maMuni, '-- SELECT MUNICIPALITY --');
+                resetSelect(maBrgy, '-- SELECT BARANGAY --');
+                maHR.value = maHP.value = maHM.value = maHB.value = '';
+            });
+
+            // ---- EDIT ADDRESS MODALS (one per address, identified by uadd_id) ----
+            @foreach ($addresses as $addr)
+                (function() {
+                    const id = '{{ $addr->uadd_id }}';
+                    const edReg = document.getElementById(`edit_region_${id}`);
+                    const edProv = document.getElementById(`edit_province_${id}`);
+                    const edMuni = document.getElementById(`edit_municipality_${id}`);
+                    const edBrgy = document.getElementById(`edit_barangay_${id}`);
+                    const edHR = document.getElementById(`edit_hidden_region_${id}`);
+                    const edHP = document.getElementById(`edit_hidden_province_${id}`);
+                    const edHM = document.getElementById(`edit_hidden_municipality_${id}`);
+                    const edHB = document.getElementById(`edit_hidden_barangay_${id}`);
+
+                    edReg.addEventListener('change', function() {
+                        edHR.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                        resetSelect(edProv, '-- SELECT PROVINCE --');
+                        resetSelect(edMuni, '-- SELECT MUNICIPALITY --');
+                        resetSelect(edBrgy, '-- SELECT BARANGAY --');
+                        edHP.value = edHM.value = edHB.value = '';
+                        if (this.value) loadOptions(edProv, `/locations/${this.value}/provinces`,
+                            'prov_name', 'prov_id', '-- SELECT PROVINCE --');
+                    });
+                    edProv.addEventListener('change', function() {
+                        edHP.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                        resetSelect(edMuni, '-- SELECT MUNICIPALITY --');
+                        resetSelect(edBrgy, '-- SELECT BARANGAY --');
+                        edHM.value = edHB.value = '';
+                        if (this.value) loadOptions(edMuni, `/locations/${this.value}/municipalities`,
+                            'mun_name', 'mun_id', '-- SELECT MUNICIPALITY --');
+                    });
+                    edMuni.addEventListener('change', function() {
+                        edHM.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                        resetSelect(edBrgy, '-- SELECT BARANGAY --');
+                        edHB.value = '';
+                        if (this.value) loadOptions(edBrgy, `/locations/${this.value}/barangays`,
+                            'brg_name', 'brg_id', '-- SELECT BARANGAY --');
+                    });
+                    edBrgy.addEventListener('change', function() {
+                        edHB.value = this.options[this.selectedIndex]?.getAttribute('data-name') || '';
+                    });
+
+                    // Reset on modal close
+                    document.getElementById(`editAddressModal-${id}`).addEventListener('hidden.bs.modal',
+                        function() {
+                            resetSelect(edProv, '-- SELECT PROVINCE --');
+                            resetSelect(edMuni, '-- SELECT MUNICIPALITY --');
+                            resetSelect(edBrgy, '-- SELECT BARANGAY --');
+                            edReg.value = '';
+                            edHR.value = edHP.value = edHM.value = edHB.value = '';
+                        });
+                })();
+            @endforeach
+
         });
     </script>
 @endsection

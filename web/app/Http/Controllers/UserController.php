@@ -19,7 +19,17 @@ class UserController extends Controller
             ->orderBy('reg_name')
             ->get(['reg_id', 'reg_name']);
 
-        return view('account', compact('user', 'regions'));
+        $addresses = DB::table('user_addresses as ua')
+            ->leftJoin('addresses as a', 'ua.add_id', '=', 'a.add_id')
+            ->where('ua.usr_id', session('usr_id'))
+            ->select('ua.*', 'a.add_name')
+            ->get();
+
+        $address_labels = DB::table('addresses')
+            ->orderBy('add_name')
+            ->get(['add_id', 'add_name']);
+
+        return view('account', compact('user', 'regions', 'addresses', 'address_labels'));
     }
 
     public function account_update(Request $request)
@@ -41,7 +51,6 @@ class UserController extends Controller
             $file = $request->file('avatar');
             $fileName = uniqid() . '_' . $file->getClientOriginalName();
             $path = public_path('images/users/' . $fileName);
-
             $ext = strtolower($file->getClientOriginalExtension());
 
             if (in_array($ext, ['jpg', 'jpeg'])) {
@@ -67,25 +76,7 @@ class UserController extends Controller
                 imagedestroy($source);
             }
 
-            // SAVE TO DB
             $updateData['usr_image_path'] = $fileName;
-        }
-
-        // ADDRESS LOGIC
-        if (
-            $request->street ||
-            $request->barangay ||
-            $request->municipality ||
-            $request->province ||
-            $request->region
-        ) {
-            $updateData['usr_address'] = collect([
-                $request->street,
-                $request->barangay,
-                $request->municipality,
-                $request->province,
-                $request->region,
-            ])->filter()->implode(', ');
         }
 
         DB::table('users')
@@ -95,7 +86,62 @@ class UserController extends Controller
         return back()->with('successMessage', 'Account updated successfully.');
     }
 
-    public function update_password(Request $request)
+    public function account_address_add(Request $request)
+    {
+        $request->validate([
+            'add_id' => 'nullable|integer|exists:addresses,add_id',
+            'street' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:100',
+            'province' => 'nullable|string|max:100',
+            'municipality' => 'nullable|string|max:100',
+            'barangay' => 'nullable|string|max:100',
+        ]);
+
+        DB::table('user_addresses')->insert([
+            'usr_id' => session('usr_id'),
+            'add_id' => $request->add_id ?: null,
+            'uadd_street' => $request->street,
+            'uadd_barangay' => $request->barangay,
+            'uadd_city' => $request->municipality,
+            'uadd_province' => $request->province,
+            'uadd_region' => $request->region,
+            'uadd_active' => 1,
+        ]);
+
+        return back()->with('successMessage', 'Address added successfully.');
+    }
+
+    public function account_address_edit(Request $request)
+    {
+        $request->validate([
+            'uadd_id' => 'required|integer',
+            'street' => 'nullable|string|max:255',
+        ]);
+
+        $updateData = [
+            'uadd_street' => $request->street,
+            'uadd_active' => $request->has('uadd_active') ? 1 : 0,
+        ];
+
+        // Only update location fields if the user selected new ones
+        if ($request->region)
+            $updateData['uadd_region'] = $request->region;
+        if ($request->province)
+            $updateData['uadd_province'] = $request->province;
+        if ($request->municipality)
+            $updateData['uadd_city'] = $request->municipality;
+        if ($request->barangay)
+            $updateData['uadd_barangay'] = $request->barangay;
+
+        DB::table('user_addresses')
+            ->where('uadd_id', $request->uadd_id)
+            ->where('usr_id', session('usr_id')) // security: ensure ownership
+            ->update($updateData);
+
+        return back()->with('successMessage', 'Address updated successfully.');
+    }
+
+    public function account_update_password(Request $request)
     {
         $current_password = $request->current_password;
         $new_password1 = $request->new_password1;

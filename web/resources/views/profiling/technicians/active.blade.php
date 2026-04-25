@@ -6,7 +6,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Users</h1>
+                    <h1 class="m-0">Technicians</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
@@ -14,7 +14,7 @@
                             <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
                         </li>
                         <li class="breadcrumb-item">Profiling</li>
-                        <li class="breadcrumb-item active">Users</li>
+                        <li class="breadcrumb-item active">Technicians</li>
                     </ol>
                 </div>
             </div>
@@ -32,12 +32,12 @@
                     <div class="row">
                         <div class="col-md-12">
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/users/deleted') }}">
-                                    <span class="fa fa-archive"></span> Deleted Users
+                                <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/technicians/deleted') }}">
+                                    <span class="fa fa-archive"></span> Deleted Technicians
                                 </a>
                                 <button type="button" class="btn btn-success mb-3" data-toggle="modal"
-                                    data-target="#addUserModal">
-                                    <span class="fa fa-plus"></span> Add User
+                                    data-target="#addTechnicianModal">
+                                    <span class="fa fa-plus"></span> Add Technician
                                 </button>
                             @endif
                         </div>
@@ -45,11 +45,11 @@
 
                     <div class="row">
                         <!-- Table Column -->
-                        <div class="col-lg-9 col-md-7">
-                            <form method="GET" action="{{ url('profiling/users/active') }}" class="mb-3">
+                        <div class="col-lg-12 col-md-7">
+                            <form method="GET" action="{{ url('profiling/technicians/active') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search users..." value="{{ request('search') }}">
+                                        placeholder="Search technicians..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">
                                             <span class="fa fa-search"></span> Search
@@ -63,7 +63,8 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
+                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities
+                                        </th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @if (session('rol_admin') == '1' || session('rol_manager') == '1')
                                             <th style="vertical-align: middle; text-align: center" width="70px">Active
@@ -72,54 +73,59 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($users as $user)
+                                    @foreach ($technicians as $technician)
                                         <tr>
                                             <td style="vertical-align: middle; text-align: left">
-                                                {{ $user->usr_last_name }}, {{ $user->usr_first_name }}
-                                                {{ $user->usr_middle_name }}
+                                                {{ $technician->usr_last_name }}, {{ $technician->usr_first_name }}
+                                                {{ $technician->usr_middle_name }}
                                                 <br />
-                                                <small>{{ $user->usr_email }}</small>
+                                                <small>{{ $technician->usr_email }}</small>
                                                 <br />
-                                                <em><small>Last login: {{ getLastLogin($user->usr_id) }}</small></em>
+                                                <em><small>Last login: {{ getLastLogin($technician->usr_id) }}</small></em>
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                {{ $user->branch_name }}
+                                                {{ $technician->branch_name }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($user->roles))
-                                                    @foreach (explode(', ', $user->roles) as $role)
-                                                        <span class="badge bg-success">{{ $role }}</span>
-                                                    @endforeach
+                                                @if (!empty($technician->availabilities))
+                                                    <span class="badge badge-success">
+                                                        {{ $technician->availabilities }}
+                                                    </span>
                                                 @else
-                                                    <span class="badge bg-danger">No Role Assigned</span>
+                                                    <span class="badge badge-secondary">None</span>
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#updateRoleModal-{{ $user->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#updateAvailabilityModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-edit"></span>
                                                 </a>
                                                 <a class="btn btn-info btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#resetModal-{{ $user->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#resetModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-key"></span>
                                                 </a>
                                                 <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#deleteModal-{{ $user->usr_id }}">
+                                                    data-toggle="modal"
+                                                    data-target="#deleteModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-trash"></span>
                                                 </a>
                                             </td>
 
-                                            {{-- Update Role Modal --}}
-                                            <div class="modal fade" id="updateRoleModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            {{-- Update Availability Modal --}}
+                                            <div class="modal fade" id="updateAvailabilityModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
-                                                    <form action="{{ url('profiling/users/update/role', $user->usr_id) }}"
+                                                    <form
+                                                        action="{{ url('profiling/technicians/update/availability', $technician->usr_id) }}"
                                                         method="POST">
                                                         @csrf
                                                         <div class="modal-content">
                                                             <div class="modal-header bg-warning text-white">
                                                                 <h5 class="modal-title text-black" id="exampleModalLabel">
-                                                                    Update Role
+                                                                    Update Avaialability
                                                                 </h5>
                                                                 <button type="button" class="close" data-dismiss="modal"
                                                                     aria-label="Close">
@@ -127,25 +133,49 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <div class="form-group">
-                                                                    <label for="rol_id">Name: <span
-                                                                            style="color:black;">{{ $user->usr_first_name }}
-                                                                            {{ $user->usr_last_name }}</span></label>
+                                                                @php
+                                                                    $days = [
+                                                                        'Monday',
+                                                                        'Tuesday',
+                                                                        'Wednesday',
+                                                                        'Thursday',
+                                                                        'Friday',
+                                                                        'Saturday',
+                                                                        'Sunday',
+                                                                    ];
 
-                                                                </div>
+                                                                    $userAvail = DB::table('user_availabilities')
+                                                                        ->where('usr_id', $technician->usr_id)
+                                                                        ->pluck('uavail_active', 'uavail_name')
+                                                                        ->toArray();
+                                                                @endphp
+
                                                                 <div class="form-group">
-                                                                    <label for="rol_id">Roles: <span
-                                                                            style="color:red;">*</span></label>
-                                                                    <select class="select2" multiple="multiple"
-                                                                        data-placeholder="Select Role(s)"
-                                                                        style="width:100%;" name="roles[]">
-                                                                        @foreach ($roles as $role)
-                                                                            <option value="{{ $role->rol_id }}"
-                                                                                @if (isset($user->roles) && in_array($role->rol_name, explode(', ', $user->roles))) selected @endif>
-                                                                                {{ $role->rol_name }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
+                                                                    <label>Availability for:
+                                                                        <span style="color:black;">
+                                                                            {{ $technician->usr_first_name }}
+                                                                            {{ $technician->usr_last_name }}
+                                                                        </span>
+                                                                    </label>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    @foreach ($days as $day)
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input"
+                                                                                    type="checkbox" name="availability[]"
+                                                                                    value="{{ $day }}"
+                                                                                    id="edit_avail_{{ $technician->usr_id }}_{{ $day }}"
+                                                                                    {{ !empty($userAvail[$day]) && $userAvail[$day] == 1 ? 'checked' : '' }}>
+
+                                                                                <label class="form-check-label"
+                                                                                    for="edit_avail_{{ $technician->usr_id }}_{{ $day }}">
+                                                                                    {{ $day }}
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    @endforeach
                                                                 </div>
                                                             </div>
                                                             <div class="modal-footer">
@@ -163,12 +193,13 @@
                                             </div>
 
                                             {{-- Reset Password Modal --}}
-                                            <div class="modal fade" id="resetModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="resetModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_reset_password', [$user->usr_id]) }}">
+                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_reset_password', [$technician->usr_id]) }}">
                                                             @csrf
                                                             <div class="modal-header bg-info text-white">
                                                                 <h5 class="modal-title text-black" id="exampleModalLabel">
@@ -180,11 +211,12 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p>Are you sure you want to RESET this user's password to
+                                                                <p>Are you sure you want to RESET this technician's password
+                                                                    to
                                                                     <strong>123456</strong>?
                                                                 </p>
-                                                                <small>{{ $user->usr_first_name }}
-                                                                    {{ $user->usr_last_name }}<br>{{ $user->usr_email }}</small>
+                                                                <small>{{ $technician->usr_first_name }}
+                                                                    {{ $technician->usr_last_name }}<br>{{ $technician->usr_email }}</small>
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary"
@@ -201,12 +233,13 @@
                                             </div>
 
                                             {{-- Delete Modal --}}
-                                            <div class="modal fade" id="deleteModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="deleteModal-{{ $technician->usr_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_delete', [$user->usr_id]) }}">
+                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_delete', [$technician->usr_id]) }}">
                                                             @csrf
                                                             <div class="modal-header bg-danger text-white">
                                                                 <h5 class="modal-title text-white" id="exampleModalLabel">
@@ -218,9 +251,9 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p><strong>Are you sure you want to DELETE user
-                                                                        {{ $user->usr_first_name }}
-                                                                        {{ $user->usr_last_name }}</strong>?
+                                                                <p><strong>Are you sure you want to DELETE technician
+                                                                        {{ $technician->usr_first_name }}
+                                                                        {{ $technician->usr_last_name }}</strong>?
                                                                 </p>
                                                             </div>
                                                             <div class="modal-footer">
@@ -241,39 +274,17 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Role Info Column -->
-                        <div class="col-lg-3 col-md-5">
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <strong><i class="fa fa-info-circle"></i> Role Information</strong>
-                                </div>
-                                <div class="card-body" style="overflow-y: auto;">
-                                    @foreach ($roles as $role)
-                                        <div class="mb-3">
-                                            <h6 class="text-dark mb-1">
-                                                <i class="fa fa-user-tag"></i> {{ $role->rol_name }}
-                                            </h6>
-                                            <p class="text-muted small mb-0">
-                                                {{ $role->rol_description ?? 'No description available' }}
-                                            </p>
-                                            <hr>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- Add User Modal --}}
-    <div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-labelledby="addUserModalLabel"
-        aria-hidden="true">
+    {{-- Add Technician Modal --}}
+    <div class="modal fade" id="addTechnicianModal" tabindex="-1" role="dialog"
+        aria-labelledby="addTechnicianModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-            <form action="{{ url('profiling/users/add') }}" method="POST">
+            <form action="{{ url('profiling/technicians/add') }}" method="POST">
                 @csrf
                 {{-- Hidden fields --}}
                 <input type="hidden" name="usr_password" value="{{ md5('123456') }}">
@@ -285,8 +296,8 @@
 
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white" id="addUserModalLabel">
-                            <span class="fa fa-plus text-white"></span> Add User
+                        <h5 class="modal-title text-white" id="addTechnicianModalLabel">
+                            <span class="fa fa-plus text-white"></span> Add Technician
                         </h5>
                         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -388,6 +399,35 @@
                                     <option value="">-- SELECT BARANGAY --</option>
                                 </select>
                             </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="add_barangay">Availability</label>
+                                <div class="row">
+                                    @php
+                                        $days = [
+                                            'Monday',
+                                            'Tuesday',
+                                            'Wednesday',
+                                            'Thursday',
+                                            'Friday',
+                                            'Saturday',
+                                            'Sunday',
+                                        ];
+                                    @endphp
+
+                                    @foreach ($days as $day)
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="availability[]"
+                                                    value="{{ $day }}" id="avail_{{ $day }}">
+                                                <label class="form-check-label" for="avail_{{ $day }}">
+                                                    {{ $day }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -396,7 +436,7 @@
                             <span class="fa fa-close"></span> Close
                         </button>
                         <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save User
+                            <span class="fa fa-save"></span> Save Technician
                         </button>
                     </div>
                 </div>
@@ -536,7 +576,7 @@
             });
 
             // Reset modal fields on close
-            document.getElementById('addUserModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('addTechnicianModal').addEventListener('hidden.bs.modal', function() {
                 this.querySelector('form').reset();
                 addResetSelect(addProvSel, '-- SELECT PROVINCE --');
                 addResetSelect(addMuniSel, '-- SELECT MUNICIPALITY --');
