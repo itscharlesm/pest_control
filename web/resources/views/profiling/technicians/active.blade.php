@@ -63,7 +63,8 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities</th>
+                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities
+                                        </th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @if (session('rol_admin') == '1' || session('rol_manager') == '1')
                                             <th style="vertical-align: middle; text-align: center" width="70px">Active
@@ -86,18 +87,18 @@
                                                 {{ $technician->branch_name }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($technician->roles))
-                                                    @foreach (explode(', ', $technician->roles) as $role)
-                                                        <span class="badge bg-success">{{ $role }}</span>
-                                                    @endforeach
+                                                @if (!empty($technician->availabilities))
+                                                    <span class="badge badge-success">
+                                                        {{ $technician->availabilities }}
+                                                    </span>
                                                 @else
-                                                    <span class="badge bg-danger">No Role Assigned</span>
+                                                    <span class="badge badge-secondary">None</span>
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
                                                     data-toggle="modal"
-                                                    data-target="#updateRoleModal-{{ $technician->usr_id }}">
+                                                    data-target="#updateAvailabilityModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-edit"></span>
                                                 </a>
                                                 <a class="btn btn-info btn-sm mb-1" href="javascript:void(0)"
@@ -112,19 +113,19 @@
                                                 </a>
                                             </td>
 
-                                            {{-- Update Role Modal --}}
-                                            <div class="modal fade" id="updateRoleModal-{{ $technician->usr_id }}"
+                                            {{-- Update Availability Modal --}}
+                                            <div class="modal fade" id="updateAvailabilityModal-{{ $technician->usr_id }}"
                                                 tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                                                 aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <form
-                                                        action="{{ url('profiling/technicians/update/role', $technician->usr_id) }}"
+                                                        action="{{ url('profiling/technicians/update/availability', $technician->usr_id) }}"
                                                         method="POST">
                                                         @csrf
                                                         <div class="modal-content">
                                                             <div class="modal-header bg-warning text-white">
                                                                 <h5 class="modal-title text-black" id="exampleModalLabel">
-                                                                    Update Role
+                                                                    Update Avaialability
                                                                 </h5>
                                                                 <button type="button" class="close" data-dismiss="modal"
                                                                     aria-label="Close">
@@ -132,25 +133,49 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <div class="form-group">
-                                                                    <label for="rol_id">Name: <span
-                                                                            style="color:black;">{{ $technician->usr_first_name }}
-                                                                            {{ $technician->usr_last_name }}</span></label>
+                                                                @php
+                                                                    $days = [
+                                                                        'Monday',
+                                                                        'Tuesday',
+                                                                        'Wednesday',
+                                                                        'Thursday',
+                                                                        'Friday',
+                                                                        'Saturday',
+                                                                        'Sunday',
+                                                                    ];
 
-                                                                </div>
+                                                                    $userAvail = DB::table('user_availabilities')
+                                                                        ->where('usr_id', $technician->usr_id)
+                                                                        ->pluck('uavail_active', 'uavail_name')
+                                                                        ->toArray();
+                                                                @endphp
+
                                                                 <div class="form-group">
-                                                                    <label for="rol_id">Roles: <span
-                                                                            style="color:red;">*</span></label>
-                                                                    <select class="select2" multiple="multiple"
-                                                                        data-placeholder="Select Availabilities"
-                                                                        style="width:100%;" name="roles[]">
-                                                                        @foreach ($roles as $role)
-                                                                            <option value="{{ $role->rol_id }}"
-                                                                                @if (isset($technician->roles) && in_array($role->rol_name, explode(', ', $technician->roles))) selected @endif>
-                                                                                {{ $role->rol_name }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
+                                                                    <label>Availability for:
+                                                                        <span style="color:black;">
+                                                                            {{ $technician->usr_first_name }}
+                                                                            {{ $technician->usr_last_name }}
+                                                                        </span>
+                                                                    </label>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    @foreach ($days as $day)
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-check">
+                                                                                <input class="form-check-input"
+                                                                                    type="checkbox" name="availability[]"
+                                                                                    value="{{ $day }}"
+                                                                                    id="edit_avail_{{ $technician->usr_id }}_{{ $day }}"
+                                                                                    {{ !empty($userAvail[$day]) && $userAvail[$day] == 1 ? 'checked' : '' }}>
+
+                                                                                <label class="form-check-label"
+                                                                                    for="edit_avail_{{ $technician->usr_id }}_{{ $day }}">
+                                                                                    {{ $day }}
+                                                                                </label>
+                                                                            </div>
+                                                                        </div>
+                                                                    @endforeach
                                                                 </div>
                                                             </div>
                                                             <div class="modal-footer">
@@ -401,17 +426,22 @@
                                 <label for="add_barangay">Availability</label>
                                 <div class="row">
                                     @php
-                                        $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                                        $days = [
+                                            'Monday',
+                                            'Tuesday',
+                                            'Wednesday',
+                                            'Thursday',
+                                            'Friday',
+                                            'Saturday',
+                                            'Sunday',
+                                        ];
                                     @endphp
 
                                     @foreach ($days as $day)
                                         <div class="col-md-3">
                                             <div class="form-check">
-                                                <input class="form-check-input" 
-                                                    type="checkbox" 
-                                                    name="availability[]" 
-                                                    value="{{ $day }}"
-                                                    id="avail_{{ $day }}">
+                                                <input class="form-check-input" type="checkbox" name="availability[]"
+                                                    value="{{ $day }}" id="avail_{{ $day }}">
                                                 <label class="form-check-label" for="avail_{{ $day }}">
                                                     {{ $day }}
                                                 </label>

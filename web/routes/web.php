@@ -72,6 +72,7 @@ Route::post('profiling/users/restore/{usr_id}', [ProfilingController::class, 'us
 Route::get('profiling/technicians/active', [ProfilingController::class, 'technicians_active']);
 Route::get('profiling/technicians/deleted', [ProfilingController::class, 'technicians_deleted']);
 Route::post('profiling/technicians/add', [ProfilingController::class, 'technicians_add']);
+Route::post('profiling/technicians/update/availability/{usr_id}', [ProfilingController::class, 'technicians_update_availability']);
 Route::post('profiling/technicians/reset/password/{usr_id}', [ProfilingController::class, 'technicians_reset_password']);
 Route::post('profiling/technicians/delete/{usr_id}', [ProfilingController::class, 'technicians_delete']);
 Route::post('profiling/technicians/restore/{usr_id}', [ProfilingController::class, 'technicians_restore']);

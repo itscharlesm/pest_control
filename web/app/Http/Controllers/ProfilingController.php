@@ -383,6 +383,7 @@ class ProfilingController extends Controller
             ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
             ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('user_availabilities', 'users.usr_id', '=', 'user_availabilities.usr_id')
             ->where('users.utyp_id', '=', '2')
             ->where('users.usr_active', '=', '1');
 
@@ -401,7 +402,8 @@ class ProfilingController extends Controller
             'users.usr_email',
             'users.usr_mobile',
             'users.usr_active',
-            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles')
+            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles'),
+            DB::raw('GROUP_CONCAT(CASE WHEN user_availabilities.uavail_active = 1 THEN user_availabilities.uavail_name END ORDER BY FIELD(user_availabilities.uavail_name, "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") SEPARATOR ", ") as availabilities')
         )
             ->groupBy(
                 'users.usr_id',
@@ -580,7 +582,7 @@ class ProfilingController extends Controller
         }
 
         // Insert availability
-        $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
         $selected = $request->availability ?? [];
 
@@ -598,6 +600,27 @@ class ProfilingController extends Controller
         DB::commit();
 
         return back()->with('successMessage', 'The Technicians has been created and the password has been set to 123456.');
+    }
+
+    public function technicians_update_availability(Request $request, $usr_id)
+    {
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        $selected = $request->availability ?? [];
+
+        foreach ($days as $day) {
+
+            DB::table('user_availabilities')
+                ->where('usr_id', $usr_id)
+                ->where('uavail_name', $day)
+                ->update([
+                    'uavail_date_modified' => Carbon::now(),
+                    'uavail_modified_by' => session('usr_id'),
+                    'uavail_active' => in_array($day, $selected) ? 1 : 0,
+                ]);
+        }
+
+        return back()->with('successMessage', 'Availability updated successfully.');
     }
 
     public function technicians_reset_password(Request $request, $usr_id)
@@ -622,7 +645,7 @@ class ProfilingController extends Controller
         session()->flash('successMessage', 'Password has been reset to 123456.');
         return redirect()->back();
     }
-   
+
     public function technicians_delete(Request $request, $usr_id)
     {
         $technician = DB::table('users')
