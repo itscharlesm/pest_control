@@ -45,7 +45,7 @@
 
                     <div class="row">
                         <!-- Table Column -->
-                        <div class="col-lg-9 col-md-7">
+                        <div class="col-lg-12 col-md-7">
                             <form method="GET" action="{{ url('profiling/technicians/active') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
@@ -273,28 +273,6 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
-
-                        <!-- Role Info Column -->
-                        <div class="col-lg-3 col-md-5">
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <strong><i class="fa fa-info-circle"></i> Role Information</strong>
-                                </div>
-                                <div class="card-body" style="overflow-y: auto;">
-                                    @foreach ($roles as $role)
-                                        <div class="mb-3">
-                                            <h6 class="text-dark mb-1">
-                                                <i class="fa fa-user-tag"></i> {{ $role->rol_name }}
-                                            </h6>
-                                            <p class="text-muted small mb-0">
-                                                {{ $role->rol_description ?? 'No description available' }}
-                                            </p>
-                                            <hr>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
