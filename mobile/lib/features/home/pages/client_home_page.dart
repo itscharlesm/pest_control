@@ -10,7 +10,7 @@ class ClientHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: AppDrawer( 
+      drawer: AppDrawer(
         userType: 3,
         email: email,
       ),
