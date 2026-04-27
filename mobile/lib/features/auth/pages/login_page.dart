@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'signup_page.dart';
 import 'forgot_password_page.dart';
-import 'dashboard_page.dart';
-import '../widgets/snackbars/login_snackbar.dart';
+import '../../../shared/widgets/snackbars/login_snackbar.dart';
+import 'package:mobile_app/config/api_config.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:mobile_app/app/theme.dart';
+import '../../home/pages/client_home_page.dart';
+import '../../home/pages/technician_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,105 +24,110 @@ class _LoginPageState extends State<LoginPage> {
     bool isLoading = false;
     bool isPasswordVisible = false;
 
-    Widget build(BuildContext context) {
+    String? emailError;
+    String? passwordError;
 
-    Future<void> login() async {
+   Future<void> login() async {
+    final String email = emailController.text.trim();
+    final String password = passwordController.text;
 
-      String email = emailController.text.trim();
-      String password = passwordController.text;
+    setState(() {
+      emailError = null;
+      passwordError = null;
+    });
 
-      // EMPTY CHECK
-      if (email.isEmpty || password.isEmpty) {
-        showLoginSnackbar(
-          context: context,
-          message: "Please enter both email and password.",
-        );
-        return;
-      }
+    if (email.isEmpty) {
+      setState(() => emailError = 'Email is required.');
+      return;
+    }
 
-      // EMAIL FORMAT CHECK
-      if (!email.contains("@")) {
-        showLoginSnackbar(
-          context: context,
-          message: "Please enter a valid email address.",
-        );
-        return;
-      }
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+      setState(() => emailError = 'Enter a valid email address.');
+      return;
+    }
 
-      // PASSWORD BASIC CHECK
-      if (password.length < 6) {
-        showLoginSnackbar(
-          context: context,
-          message: "Password must be at least 6 characters.",
-        );
-        return;
-      }
+    if (password.isEmpty) {
+      setState(() => passwordError = 'Password is required.');
+      return;
+    }
 
-      // ONLY REACH HERE IF VALID INPUT
-      setState(() {
-        isLoading = true;
-      });
+    try {
+      setState(() => isLoading = true);
 
-      // API CALL
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/mobile/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
 
-      try {
-        String email = emailController.text.trim();
-        String password = passwordController.text;
+      final data = jsonDecode(response.body);
 
-        // ✅ HARD CODED LOGIN (FOR TESTING)
-        if (email == "admin@gmail.com" && password == "123456") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DashboardPage(email: email),
-            ),
-          );
-          return; // stop here, skip API
-        }
+      if (!mounted) return;
 
-        // 🔥 ORIGINAL API LOGIN
-        final response = await http.post(
-          Uri.parse("http://10.0.2.2:8000/api/login"),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode({
-            "email": email,
-            "password": password,
-          }),
-        );
+      if (response.statusCode == 200 && data['success'] == true) {
+        final user = data['user'];
 
-        final data = jsonDecode(response.body);
+        if (user != null) {
+          final int? userType = int.tryParse(user['utyp_id'].toString());
+          final String userEmail = user['usr_email'] ?? '';
 
-        if (!mounted) return;
-
-        if (response.statusCode == 200 && data['success'] == true) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DashboardPage(
-                email: data['user']['usr_email'],
+          if (userType == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ClientHomePage(email: userEmail),
               ),
-            ),
-          );
+            );
+          } else if (userType == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TechnicianHomePage(email: userEmail),
+              ),
+            );
+          } else {
+            showLoginSnackbar(
+              context: context,
+              message: 'User role not recognized.',
+            );
+          }
         } else {
           showLoginSnackbar(
             context: context,
-            message: data['message'] ?? 'Login failed',
+            message: 'Login successful but user data is missing.',
           );
         }
-      } catch (e) {
-        if (!mounted) return;
-          showLoginSnackbar(
-            context: context,
-            message: "Error: $e",
-          );
-      } finally {
-        if (mounted) {
-          setState(() {
-            isLoading = false;
-          });
-        }
+      } else {
+        showLoginSnackbar(
+          context: context,
+          message: data['message'] ?? 'Email or password is incorrect.',
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showLoginSnackbar(
+        context: context,
+        message: 'Unable to connect to the server.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
       }
     }
+  }
+
+    @override
+    void dispose() {
+      emailController.dispose();
+      passwordController.dispose();
+      super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -174,8 +182,9 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: "Email",
+                  decoration: InputDecoration(
+                    labelText: 'Email Address',
+                    errorText: emailError,
                   ),
                 ),
 
@@ -186,7 +195,8 @@ class _LoginPageState extends State<LoginPage> {
                   controller: passwordController,
                   obscureText: !isPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: "Password",
+                    labelText: 'Password',
+                    errorText: passwordError,
                     suffixIcon: IconButton(
                       icon: Icon(
                         isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -221,22 +231,10 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
 
                 // Login button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : login,
-                    child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text("Log in"),
-                  ),
+                LoadingButton(
+                  isLoading: isLoading,
+                  onPressed: isLoading ? null : login,
+                  child: const Text("Log in"),
                 ),
 
                 const SizedBox(height: 20),
