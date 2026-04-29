@@ -740,5 +740,74 @@ class ProfilingController extends Controller
 
         return view('profiling.clients.active', compact('clients', 'search', 'branches'));
     }
+
+    public function clients_reset_password(Request $request, $usr_id)
+    {
+        $client = DB::table('users')
+            ->where('usr_id', '=', $usr_id)
+            ->first();
+
+        if (!$client) {
+            alert()->error('Client not found.');
+            return redirect()->back();
+        }
+
+        DB::table('users')
+            ->where('usr_uuid', '=', $usr_id)
+            ->update([
+                'usr_password' => md5('123456')
+            ]);
+
+        logUserActivity('Manage Clients', 'Reset password for technician ' . $client->usr_last_name . ', ' . $client->usr_first_name);
+
+        session()->flash('successMessage', 'Password has been reset to 123456.');
+        return redirect()->back();
+    }
+
+    public function clients_delete(Request $request, $usr_id)
+    {
+        $client = DB::table('users')
+            ->where('usr_id', '=', $usr_id)
+            ->first();
+
+        if (!$client) {
+            alert()->error('Client not found.');
+            return redirect()->back();
+        }
+
+        DB::table('users')
+            ->where('usr_id', '=', $usr_id)
+            ->update([
+                'usr_active' => 0
+            ]);
+
+        logUserActivity('Manage Clients', 'Deleted client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
+
+        session()->flash('successMessage', 'Technician has been Deleted.');
+        return redirect()->back();
+    }
+
+    public function clients_restore(Request $request, $usr_id)
+    {
+        $client = DB::table('users')
+            ->where('usr_id', '=', $usr_id)
+            ->first();
+
+        if (!$client) {
+            alert()->error('Client not found.');
+            return redirect()->back();
+        }
+
+        DB::table('users')
+            ->where('usr_id', '=', $usr_id)
+            ->update([
+                'usr_active' => 1
+            ]);
+
+        logUserActivity('Manage Clients', 'Restored client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
+
+        session()->flash('successMessage', 'Technician has been restored.');
+        return redirect()->back();
+    }
     // END CLIENTS
 }
