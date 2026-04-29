@@ -380,8 +380,6 @@ class ProfilingController extends Controller
 
         // Base query
         $query = DB::table('users')
-            ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
-            ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
             ->leftJoin('user_availabilities', 'users.usr_id', '=', 'user_availabilities.usr_id')
             ->where('users.utyp_id', '=', '2')
@@ -402,7 +400,6 @@ class ProfilingController extends Controller
             'users.usr_email',
             'users.usr_mobile',
             'users.usr_active',
-            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles'),
             DB::raw('GROUP_CONCAT(CASE WHEN user_availabilities.uavail_active = 1 THEN user_availabilities.uavail_name END ORDER BY FIELD(user_availabilities.uavail_name, "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") SEPARATOR ", ") as availabilities')
         )
             ->groupBy(
@@ -453,8 +450,6 @@ class ProfilingController extends Controller
 
         // Base query
         $query = DB::table('users')
-            ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
-            ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
             ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
             ->leftJoin('user_availabilities', 'users.usr_id', '=', 'user_availabilities.usr_id')
             ->where('users.utyp_id', '=', '2')
@@ -475,7 +470,6 @@ class ProfilingController extends Controller
             'users.usr_email',
             'users.usr_mobile',
             'users.usr_active',
-            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles'),
             DB::raw('GROUP_CONCAT(CASE WHEN user_availabilities.uavail_active = 1 THEN user_availabilities.uavail_name END ORDER BY FIELD(user_availabilities.uavail_name, "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") SEPARATOR ", ") as availabilities')
         )
             ->groupBy(
@@ -682,4 +676,79 @@ class ProfilingController extends Controller
         return redirect()->back();
     }
     // END TECHINICIANS
+
+    // START CLIENTS
+    public function clients_active(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $sessionBranchId = session('branch_id');
+
+        // Base query
+        $query = DB::table('users')
+            ->leftJoin('user_roles', 'users.usr_id', '=', 'user_roles.usr_id')
+            ->leftJoin('roles', 'user_roles.rol_id', '=', 'roles.rol_id')
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('user_availabilities', 'users.usr_id', '=', 'user_availabilities.usr_id')
+            ->where('users.utyp_id', '=', '2')
+            ->where('users.usr_active', '=', '1');
+
+        // Branch filter (unless super admin)
+        if ($sessionBranchId != 1) {
+            $query->where('users.branch_id', $sessionBranchId);
+        }
+
+        $query->select(
+            'users.usr_id',
+            'users.usr_uuid',
+            'branches.branch_name',
+            'users.usr_last_name',
+            'users.usr_first_name',
+            'users.usr_middle_name',
+            'users.usr_email',
+            'users.usr_mobile',
+            'users.usr_active',
+            DB::raw('GROUP_CONCAT(CASE WHEN user_roles.url_active = 1 THEN roles.rol_name END ORDER BY roles.rol_name SEPARATOR ", ") as roles'),
+            DB::raw('GROUP_CONCAT(CASE WHEN user_availabilities.uavail_active = 1 THEN user_availabilities.uavail_name END ORDER BY FIELD(user_availabilities.uavail_name, "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") SEPARATOR ", ") as availabilities')
+        )
+            ->groupBy(
+                'users.usr_id',
+                'users.usr_uuid',
+                'branches.branch_name',
+                'users.usr_last_name',
+                'users.usr_first_name',
+                'users.usr_middle_name',
+                'users.usr_email',
+                'users.usr_mobile',
+                'users.usr_active'
+            )
+            ->orderBy('users.usr_last_name')
+            ->orderBy('users.usr_first_name');
+
+        // Search filter
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_email', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $technicians = $query->paginate(500);
+
+        $regions = DB::table('location_regions')
+            ->where('reg_active', 1)
+            ->orderBy('reg_name')
+            ->get(['reg_id', 'reg_name']);
+
+        $branches = DB::table('branches')
+            ->select('branch_id', 'branch_name')
+            ->where('branch_active', 1)
+            ->get();
+
+        return view('profiling.technicians.active', compact('technicians', 'search', 'regions', 'branches'));
+    }
+    // END CLIENTS
 }
