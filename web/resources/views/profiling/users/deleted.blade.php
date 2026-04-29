@@ -58,7 +58,9 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
-                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                        @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -81,15 +83,15 @@
                                                     <span class="badge bg-danger">No Role Assigned</span>
                                                 @endif
                                             </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                <td style="vertical-align: middle; text-align: center">
                                                     <a class="btn btn-success btn-sm" href="javascript:void(0)"
                                                         data-toggle="modal"
                                                         data-target="#restoreModal-{{ $user->usr_id }}">
                                                         <span class="fa fa-refresh"></span>
                                                     </a>
-                                                @endif
-                                            </td>
+                                                </td>
+                                            @endif
 
                                             {{-- Restore Modal --}}
                                             <div class="modal fade" id="restoreModal-{{ $user->usr_id }}" tabindex="-1"

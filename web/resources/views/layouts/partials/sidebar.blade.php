@@ -62,7 +62,7 @@
                 </li>
 
                 {{-- PROFILING --}}
-                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1' || session('PROFILER') == '1')
                     <li class="nav-header">PROFILING</li>
 
                     <li class="nav-item {{ request()->is('profiling*') ? 'menu-open' : '' }}">
