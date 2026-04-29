@@ -11,6 +11,7 @@ use App\Http\Controllers\api\v1\NewsController;
 use App\Http\Controllers\api\v1\ProfileController;
 use App\Http\Controllers\api\v1\mobile_controllers\MobileSignUpController;
 use App\Http\Controllers\api\v1\mobile_controllers\MobileAuthController;
+use App\Http\Controllers\api\v1\mobile_controllers\MobileProfileController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -126,4 +127,6 @@ Route::get('/yawa', [InnovationController::class, 'yawa']);
 Route::prefix('mobile')->group(function () {
     Route::post('/register', [MobileSignUpController::class, 'register']);
     Route::post('/login', [MobileAuthController::class, 'login']);
+    Route::post('/profile', [MobileProfileController::class, 'getProfile']);
+    Route::post('/profile/update', [MobileProfileController::class, 'updateProfile']);
 });
