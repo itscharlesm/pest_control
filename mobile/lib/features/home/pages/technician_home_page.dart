@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/app/theme.dart';
 import 'package:mobile_app/shared/widgets/navigation/app_drawer.dart';
+import 'package:mobile_app/features/auth/pages/login_page.dart';
 
 class TechnicianHomePage extends StatelessWidget {
   final String email;
@@ -13,9 +14,17 @@ class TechnicianHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       drawer: AppDrawer( 
+      drawer: AppDrawer(
         userType: 2,
         email: email,
+        currentPage: 'home',
+        onLogout: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        },
       ),
       appBar: AppBar(
         title: const Text("Technician Home"),
@@ -61,10 +70,7 @@ class TechnicianHomePage extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.lightGray,
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: AppTheme.softCardDecoration,
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -122,10 +128,7 @@ class TechnicianHomePage extends StatelessWidget {
       child: Container(
         height: 110,
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.lightGray,
-          borderRadius: BorderRadius.circular(10),
-        ),
+        decoration: AppTheme.softCardDecoration,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

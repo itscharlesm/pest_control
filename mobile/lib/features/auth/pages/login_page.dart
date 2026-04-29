@@ -9,6 +9,7 @@ import 'package:mobile_app/app/theme.dart';
 import '../../home/pages/client_home_page.dart';
 import '../../home/pages/technician_home_page.dart';
 
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -28,96 +29,96 @@ class _LoginPageState extends State<LoginPage> {
     String? passwordError;
 
    Future<void> login() async {
-    final String email = emailController.text.trim();
-    final String password = passwordController.text;
+      final String email = emailController.text.trim();
+      final String password = passwordController.text;
 
-    setState(() {
-      emailError = null;
-      passwordError = null;
-    });
+      setState(() {
+        emailError = null;
+        passwordError = null;
+      });
 
-    if (email.isEmpty) {
-      setState(() => emailError = 'Email is required.');
-      return;
-    }
+      if (email.isEmpty) {
+        setState(() => emailError = 'Email is required.');
+        return;
+      }
 
-    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
-      setState(() => emailError = 'Enter a valid email address.');
-      return;
-    }
+      if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email)) {
+        setState(() => emailError = 'Enter a valid email address.');
+        return;
+      }
 
-    if (password.isEmpty) {
-      setState(() => passwordError = 'Password is required.');
-      return;
-    }
+      if (password.isEmpty) {
+        setState(() => passwordError = 'Password is required.');
+        return;
+      }
 
-    try {
-      setState(() => isLoading = true);
+      try {
+        setState(() => isLoading = true);
 
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/api/mobile/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+        final response = await http.post(
+          Uri.parse('${ApiConfig.baseUrl}/api/mobile/login'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+          }),
+        );
 
-      final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (response.statusCode == 200 && data['success'] == true) {
-        final user = data['user'];
+        if (response.statusCode == 200 && data['success'] == true) {
+          final user = data['user'];
 
-        if (user != null) {
-          final int? userType = int.tryParse(user['utyp_id'].toString());
-          final String userEmail = user['usr_email'] ?? '';
+          if (user != null) {
+            final int? userType = int.tryParse(user['utyp_id'].toString());
+            final String userEmail = user['usr_email'] ?? '';
 
-          if (userType == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ClientHomePage(email: userEmail),
-              ),
-            );
-          } else if (userType == 2) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => TechnicianHomePage(email: userEmail),
-              ),
-            );
+            if (userType == 3) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClientHomePage(email: userEmail),
+                ),
+              );
+            } else if (userType == 2) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TechnicianHomePage(email: userEmail),
+                ),
+              );
+            } else {
+              showLoginSnackbar(
+                context: context,
+                message: 'User role not recognized.',
+              );
+            }
           } else {
             showLoginSnackbar(
               context: context,
-              message: 'User role not recognized.',
+              message: 'Login successful but user data is missing.',
             );
           }
         } else {
           showLoginSnackbar(
             context: context,
-            message: 'Login successful but user data is missing.',
+            message: data['message'] ?? 'Email or password is incorrect.',
           );
         }
-      } else {
+      } catch (e) {
+        if (!mounted) return;
         showLoginSnackbar(
           context: context,
-          message: data['message'] ?? 'Email or password is incorrect.',
+          message: 'Unable to connect to the server.',
         );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      showLoginSnackbar(
-        context: context,
-        message: 'Unable to connect to the server.',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
+      } finally {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
       }
     }
-  }
 
     @override
     void dispose() {
