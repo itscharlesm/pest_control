@@ -34,7 +34,7 @@
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                                 <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/clients/deleted') }}">
                                     <span class="fa fa-archive"></span> Deleted Clients
-                                </a
+                                </a>
                             @endif
                         </div>
                     </div>
@@ -59,8 +59,6 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities
-                                        </th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @if (session('rol_admin') == '1' || session('rol_manager') == '1')
                                             <th style="vertical-align: middle; text-align: center" width="70px">Active
@@ -81,15 +79,6 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $client->branch_name }}
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($client->availabilities))
-                                                    <span class="badge badge-success">
-                                                        {{ $client->availabilities }}
-                                                    </span>
-                                                @else
-                                                    <span class="badge badge-secondary">None</span>
-                                                @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 <a class="btn btn-primary btn-sm mb-1" href="javascript:void(0)"
@@ -168,7 +157,7 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p><strong>Are you sure you want to DELETE client
+                                                                <p><strong>Are you sure you want to DELETE technician
                                                                         {{ $client->usr_first_name }}
                                                                         {{ $client->usr_last_name }}</strong>?
                                                                 </p>

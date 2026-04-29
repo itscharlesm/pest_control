@@ -78,7 +78,7 @@
 
                             <li class="nav-item">
                                 <a href="{{ action('App\Http\Controllers\ProfilingController@clients_active') }}"
-                                    class="nav-link {{ request()->is('profiling/clients') ? 'active' : '' }}">
+                                    class="nav-link {{ request()->is('profiling/clients*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>CLIENTS</p>
                                 </a>
