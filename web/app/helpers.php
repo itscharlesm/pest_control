@@ -226,6 +226,14 @@ function setUserSessionVariables($user)
         ->select('r.rol_name')
         ->first();
 
+    // Fetch branch name
+    $branch = DB::table('branches')
+        ->where('branch_id', $user->branch_id)
+        ->select('branch_name')
+        ->first();
+
+    Session::put('branch_name', $branch ? $branch->branch_name : 'No Branch');
+
     // Store highest role name
     Session::put('role_name', $highestRole ? $highestRole->rol_name : 'No Role');
 

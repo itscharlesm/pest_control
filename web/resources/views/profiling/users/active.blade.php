@@ -31,10 +31,10 @@
                 <div class="card-body overflow-auto">
                     <div class="row">
                         <div class="col-md-12">
+                            <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/users/deleted') }}">
+                                <span class="fa fa-archive"></span> Deleted Users
+                            </a>
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/users/deleted') }}">
-                                    <span class="fa fa-archive"></span> Deleted Users
-                                </a>
                                 <button type="button" class="btn btn-success mb-3" data-toggle="modal"
                                     data-target="#addUserModal">
                                     <span class="fa fa-plus"></span> Add User
@@ -65,10 +65,6 @@
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
                                         <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                        @if (session('rol_admin') == '1' || session('rol_manager') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="70px">Active
-                                            </th>
-                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -95,18 +91,23 @@
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#updateRoleModal-{{ $user->usr_id }}">
-                                                    <span class="fa fa-edit"></span>
-                                                </a>
+                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                    <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
+                                                        data-toggle="modal"
+                                                        data-target="#updateRoleModal-{{ $user->usr_id }}">
+                                                        <span class="fa fa-edit"></span>
+                                                    </a>
+                                                @endif
                                                 <a class="btn btn-info btn-sm mb-1" href="javascript:void(0)"
                                                     data-toggle="modal" data-target="#resetModal-{{ $user->usr_id }}">
                                                     <span class="fa fa-key"></span>
                                                 </a>
-                                                <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#deleteModal-{{ $user->usr_id }}">
-                                                    <span class="fa fa-trash"></span>
-                                                </a>
+                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                    <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+                                                        data-toggle="modal" data-target="#deleteModal-{{ $user->usr_id }}">
+                                                        <span class="fa fa-trash"></span>
+                                                    </a>
+                                                @endif
                                             </td>
 
                                             {{-- Update Role Modal --}}
