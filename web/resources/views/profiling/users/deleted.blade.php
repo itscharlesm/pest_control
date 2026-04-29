@@ -32,11 +32,9 @@
                 <div class="card-body overflow-auto">
                     <div class="row">
                         <div class="col-md-12">
-                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <a class="btn btn-success btn-md mb-3" href="{{ url('profiling/users/active') }}">
-                                    <span class="fa fa-users"></span> Users
-                                </a>
-                            @endif
+                            <a class="btn btn-success btn-md mb-3" href="{{ url('profiling/users/active') }}">
+                                <span class="fa fa-users"></span> Users
+                            </a>
                         </div>
                     </div>
 
@@ -60,10 +58,8 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
-                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                        @if (session('rol_admin') == '1' || session('rol_manager') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="70px">Active
-                                            </th>
+                                        @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -87,12 +83,15 @@
                                                     <span class="badge bg-danger">No Role Assigned</span>
                                                 @endif
                                             </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                <a class="btn btn-success btn-sm" href="javascript:void(0)"
-                                                    data-toggle="modal" data-target="#restoreModal-{{ $user->usr_id }}">
-                                                    <span class="fa fa-refresh"></span>
-                                                </a>
-                                            </td>
+                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                <td style="vertical-align: middle; text-align: center">
+                                                    <a class="btn btn-success btn-sm" href="javascript:void(0)"
+                                                        data-toggle="modal"
+                                                        data-target="#restoreModal-{{ $user->usr_id }}">
+                                                        <span class="fa fa-refresh"></span>
+                                                    </a>
+                                                </td>
+                                            @endif
 
                                             {{-- Restore Modal --}}
                                             <div class="modal fade" id="restoreModal-{{ $user->usr_id }}" tabindex="-1"

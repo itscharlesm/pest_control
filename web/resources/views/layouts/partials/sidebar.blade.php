@@ -7,7 +7,7 @@
         <span class="brand-text font-weight-light" style="line-height:1.2;">
             GO FORWARD <br>
             <small style="font-size: 10px;">PEST CONTROL - </small>
-            <small style="font-size: 10px;">DAVAO BRANCH</small>
+            <small style="font-size: 10px;">{{ session('branch_name') }} BRANCH</small>
         </span>
     </a>
 
@@ -62,7 +62,7 @@
                 </li>
 
                 {{-- PROFILING --}}
-                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1' || session('PROFILER') == '1')
                     <li class="nav-header">PROFILING</li>
 
                     <li class="nav-item {{ request()->is('profiling*') ? 'menu-open' : '' }}">
@@ -77,8 +77,8 @@
                         <ul class="nav nav-treeview">
 
                             <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\AdminController@setup') }}"
-                                    class="nav-link {{ request()->is('admin/setup') ? 'active' : '' }}">
+                                <a href="{{ action('App\Http\Controllers\ProfilingController@clients_active') }}"
+                                    class="nav-link {{ request()->is('profiling/clients*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>CLIENTS</p>
                                 </a>
