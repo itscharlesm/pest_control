@@ -7,7 +7,7 @@
         <span class="brand-text font-weight-light" style="line-height:1.2;">
             GO FORWARD <br>
             <small style="font-size: 10px;">PEST CONTROL - </small>
-            <small style="font-size: 10px;">DAVAO BRANCH</small>
+            <small style="font-size: 10px;">{{ session('branch_name') }} BRANCH</small>
         </span>
     </a>
 
