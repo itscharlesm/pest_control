@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/app/theme.dart';
+import 'package:mobile_app/features/home/pages/client_home_page.dart';
+import 'package:mobile_app/features/home/pages/technician_home_page.dart';
+import 'package:mobile_app/features/profiles/pages/client_profile_page.dart';
+import 'package:mobile_app/features/profiles/pages/technician_profile_page.dart';
 
 class AppDrawer extends StatelessWidget {
   final int userType; // 3 = Client, 2 = Technician
   final String email;
   final String? name;
   final VoidCallback? onLogout;
+  final String currentPage;
 
   const AppDrawer({
     super.key,
     required this.userType,
     required this.email,
+    required this.currentPage,
     this.name,
     this.onLogout,
   });
@@ -34,19 +40,42 @@ class AppDrawer extends StatelessWidget {
                 _drawerItem(
                   icon: Icons.home_rounded,
                   title: 'Home',
-                  isSelected: true,
-                  onTap: () => Navigator.pop(context),
+                  isSelected: currentPage == 'home',
+                  onTap: () {
+                    Navigator.pop(context);
+
+                    if (currentPage != 'home') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => userType == 3
+                              ? ClientHomePage(email: email)
+                              : TechnicianHomePage(email: email),
+                        ),
+                      );
+                    }
+                  },
                 ),
 
                 _drawerItem(
                   icon: Icons.person_rounded,
                   title: 'Profile',
+                  isSelected: currentPage == 'profile',
                   onTap: () {
                     Navigator.pop(context);
-                    // TODO: Navigate to Profile Page
+
+                    if (currentPage != 'profile') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => userType == 3
+                              ? ClientProfilePage(email: email)
+                              : TechnicianProfilePage(email: email),
+                        ),
+                      );
+                    }
                   },
                 ),
-
                 if (isClient) ...[
                   _drawerItem(
                     icon: Icons.add_circle_outline_rounded,
