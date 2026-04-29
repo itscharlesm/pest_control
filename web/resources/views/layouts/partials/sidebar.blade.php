@@ -77,8 +77,8 @@
                         <ul class="nav nav-treeview">
 
                             <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\AdminController@setup') }}"
-                                    class="nav-link {{ request()->is('admin/setup') ? 'active' : '' }}">
+                                <a href="{{ action('App\Http\Controllers\ProfilingController@clients_active') }}"
+                                    class="nav-link {{ request()->is('profiling/clients') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>CLIENTS</p>
                                 </a>
