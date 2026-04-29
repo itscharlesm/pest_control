@@ -704,6 +704,7 @@ class ProfilingController extends Controller
             'users.usr_middle_name',
             'users.usr_email',
             'users.usr_mobile',
+            'users.usr_birth_date',
             'users.usr_active',
         )
             ->groupBy(
@@ -715,6 +716,7 @@ class ProfilingController extends Controller
                 'users.usr_middle_name',
                 'users.usr_email',
                 'users.usr_mobile',
+                'users.usr_birth_date',
                 'users.usr_active'
             )
             ->orderBy('users.usr_last_name')
@@ -733,12 +735,25 @@ class ProfilingController extends Controller
 
         $clients = $query->paginate(500);
 
+        // Get all addresses for listed clients
+        $clientIds = collect($clients->items())->pluck('usr_id');
+
+        $addresses = DB::table('user_addresses as ua')
+            ->leftJoin('addresses as a', 'ua.add_id', '=', 'a.add_id')
+            ->whereIn('ua.usr_id', $clientIds)
+            ->select(
+                'ua.*',
+                'a.add_name'
+            )
+            ->get()
+            ->groupBy('usr_id'); // group per client
+
         $branches = DB::table('branches')
             ->select('branch_id', 'branch_name')
             ->where('branch_active', 1)
             ->get();
 
-        return view('profiling.clients.active', compact('clients', 'search', 'branches'));
+        return view('profiling.clients.active', compact('clients', 'search', 'branches', 'addresses'));
     }
 
     public function clients_deleted(Request $request)
@@ -767,6 +782,7 @@ class ProfilingController extends Controller
             'users.usr_middle_name',
             'users.usr_email',
             'users.usr_mobile',
+            'users.usr_birth_date',
             'users.usr_active',
         )
             ->groupBy(
@@ -778,6 +794,7 @@ class ProfilingController extends Controller
                 'users.usr_middle_name',
                 'users.usr_email',
                 'users.usr_mobile',
+                'users.usr_birth_date',
                 'users.usr_active'
             )
             ->orderBy('users.usr_last_name')
@@ -796,12 +813,25 @@ class ProfilingController extends Controller
 
         $clients = $query->paginate(500);
 
+        // Get all addresses for listed clients
+        $clientIds = collect($clients->items())->pluck('usr_id');
+
+        $addresses = DB::table('user_addresses as ua')
+            ->leftJoin('addresses as a', 'ua.add_id', '=', 'a.add_id')
+            ->whereIn('ua.usr_id', $clientIds)
+            ->select(
+                'ua.*',
+                'a.add_name'
+            )
+            ->get()
+            ->groupBy('usr_id'); // group per client
+
         $branches = DB::table('branches')
             ->select('branch_id', 'branch_name')
             ->where('branch_active', 1)
             ->get();
 
-        return view('profiling.clients.deleted', compact('clients', 'search', 'branches'));
+        return view('profiling.clients.deleted', compact('clients', 'search', 'branches', 'addresses'));
     }
 
     public function clients_reset_password(Request $request, $usr_id)
