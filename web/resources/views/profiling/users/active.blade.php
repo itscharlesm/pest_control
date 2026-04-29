@@ -30,9 +30,9 @@
             <div class="card">
                 <div class="card-body overflow-auto">
                     <div class="row">
-                        <div class="col-md-12" <a class="btn btn-danger btn-md mb-3"
-                            href="{{ url('profiling/users/deleted') }}">
-                            <span class="fa fa-archive"></span> Deleted Users
+                        <div class="col-md-12">
+                            <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/users/deleted') }}">
+                                <span class="fa fa-archive"></span> Deleted Users
                             </a>
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                                 <button type="button" class="btn btn-success mb-3" data-toggle="modal"
