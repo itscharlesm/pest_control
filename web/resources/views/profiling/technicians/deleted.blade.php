@@ -61,10 +61,6 @@
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center" width="130px">Availabilities</th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                        @if (session('rol_admin') == '1' || session('rol_manager') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="70px">Active
-                                            </th>
-                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -88,11 +84,13 @@
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                <a class="btn btn-success btn-sm" href="javascript:void(0)"
-                                                    data-toggle="modal"
-                                                    data-target="#restoreModal-{{ $technician->usr_id }}">
-                                                    <span class="fa fa-refresh"></span>
-                                                </a>
+                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                    <a class="btn btn-success btn-sm" href="javascript:void(0)"
+                                                        data-toggle="modal"
+                                                        data-target="#restoreModal-{{ $technician->usr_id }}">
+                                                        <span class="fa fa-refresh"></span>
+                                                    </a>
+                                                @endif
                                             </td>
 
                                             {{-- Restore Modal --}}

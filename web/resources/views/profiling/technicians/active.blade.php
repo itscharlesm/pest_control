@@ -31,10 +31,10 @@
                 <div class="card-body overflow-auto">
                     <div class="row">
                         <div class="col-md-12">
+                            <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/technicians/deleted') }}">
+                                <span class="fa fa-archive"></span> Deleted Technicians
+                            </a>
                             @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/technicians/deleted') }}">
-                                    <span class="fa fa-archive"></span> Deleted Technicians
-                                </a>
                                 <button type="button" class="btn btn-success mb-3" data-toggle="modal"
                                     data-target="#addTechnicianModal">
                                     <span class="fa fa-plus"></span> Add Technician
@@ -66,10 +66,6 @@
                                         <th style="vertical-align: middle; text-align: center" width="130px">Availabilities
                                         </th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                        @if (session('rol_admin') == '1' || session('rol_manager') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="70px">Active
-                                            </th>
-                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -106,11 +102,13 @@
                                                     data-target="#resetModal-{{ $technician->usr_id }}">
                                                     <span class="fa fa-key"></span>
                                                 </a>
-                                                <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal"
-                                                    data-target="#deleteModal-{{ $technician->usr_id }}">
-                                                    <span class="fa fa-trash"></span>
-                                                </a>
+                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                    <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+                                                        data-toggle="modal"
+                                                        data-target="#deleteModal-{{ $technician->usr_id }}">
+                                                        <span class="fa fa-trash"></span>
+                                                    </a>
+                                                @endif
                                             </td>
 
                                             {{-- Update Availability Modal --}}
