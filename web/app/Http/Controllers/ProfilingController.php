@@ -741,6 +741,69 @@ class ProfilingController extends Controller
         return view('profiling.clients.active', compact('clients', 'search', 'branches'));
     }
 
+    public function clients_deleted(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $sessionBranchId = session('branch_id');
+
+        // Base query
+        $query = DB::table('users')
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->where('users.utyp_id', '=', '3')
+            ->where('users.usr_active', '=', '0');
+
+        // Branch filter (unless super admin)
+        if ($sessionBranchId != 1) {
+            $query->where('users.branch_id', $sessionBranchId);
+        }
+
+        $query->select(
+            'users.usr_id',
+            'users.usr_uuid',
+            'branches.branch_name',
+            'users.usr_last_name',
+            'users.usr_first_name',
+            'users.usr_middle_name',
+            'users.usr_email',
+            'users.usr_mobile',
+            'users.usr_active',
+        )
+            ->groupBy(
+                'users.usr_id',
+                'users.usr_uuid',
+                'branches.branch_name',
+                'users.usr_last_name',
+                'users.usr_first_name',
+                'users.usr_middle_name',
+                'users.usr_email',
+                'users.usr_mobile',
+                'users.usr_active'
+            )
+            ->orderBy('users.usr_last_name')
+            ->orderBy('users.usr_first_name');
+
+        // Search filter
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_email', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $clients = $query->paginate(500);
+
+        $branches = DB::table('branches')
+            ->select('branch_id', 'branch_name')
+            ->where('branch_active', 1)
+            ->get();
+
+        return view('profiling.clients.deleted', compact('clients', 'search', 'branches'));
+    }
+
     public function clients_reset_password(Request $request, $usr_id)
     {
         $client = DB::table('users')
@@ -758,7 +821,7 @@ class ProfilingController extends Controller
                 'usr_password' => md5('123456')
             ]);
 
-        logUserActivity('Manage Clients', 'Reset password for technician ' . $client->usr_last_name . ', ' . $client->usr_first_name);
+        logUserActivity('Manage Clients', 'Reset password for client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
 
         session()->flash('successMessage', 'Password has been reset to 123456.');
         return redirect()->back();
@@ -783,7 +846,7 @@ class ProfilingController extends Controller
 
         logUserActivity('Manage Clients', 'Deleted client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
 
-        session()->flash('successMessage', 'Technician has been Deleted.');
+        session()->flash('successMessage', 'Client has been Deleted.');
         return redirect()->back();
     }
 
@@ -806,7 +869,7 @@ class ProfilingController extends Controller
 
         logUserActivity('Manage Clients', 'Restored client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
 
-        session()->flash('successMessage', 'Technician has been restored.');
+        session()->flash('successMessage', 'Client has been restored.');
         return redirect()->back();
     }
     // END CLIENTS
