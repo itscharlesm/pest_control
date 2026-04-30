@@ -114,7 +114,7 @@ class ManagementController extends Controller
         DB::table('branches')
             ->where('branch_id', $branch_id)
             ->update([
-                'branch_name' =>  strtoupper($request->branch_name),
+                'branch_name' => strtoupper($request->branch_name),
                 'branch_date_modified' => Carbon::now(),
                 'branch_modified_by' => session('usr_id'),
             ]);
@@ -342,4 +342,40 @@ class ManagementController extends Controller
         return redirect()->back();
     }
     // END ADDRESSES
+
+    // START LOGS
+    public function login_histories(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $query = DB::table('user_login_logs')
+            ->leftJoin('users', 'user_login_logs.usr_id', '=', 'users.usr_id');
+
+        $query->select(
+            'user_login_logs.log_id',
+            'user_login_logs.log_date',
+            'user_login_logs.log_ip',
+            'user_login_logs.log_mac',
+            'users.usr_first_name',
+            'users.usr_last_name'
+        );
+
+        // SEARCH
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('user_login_logs.log_ip', 'LIKE', "%$search%")
+                    ->orWhere('user_login_logs.log_mac', 'LIKE', "%$search%");
+            });
+        }
+
+        // IMPORTANT: latest first
+        $query->orderBy('user_login_logs.log_date', 'desc');
+
+        $logs = $query->paginate(1000);
+
+        return view('management.logs.login', compact('logs', 'search'));
+    }
+    // END LOGS
 }
