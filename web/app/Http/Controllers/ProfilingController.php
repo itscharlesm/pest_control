@@ -738,12 +738,12 @@ class ProfilingController extends Controller
         // Get all addresses for listed clients
         $clientIds = collect($clients->items())->pluck('usr_id');
 
-        $addresses = DB::table('user_addresses as ua')
-            ->leftJoin('addresses as a', 'ua.add_id', '=', 'a.add_id')
-            ->whereIn('ua.usr_id', $clientIds)
+        $addresses = DB::table('user_addresses')
+            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+            ->whereIn('user_addresses.usr_id', $clientIds)
             ->select(
-                'ua.*',
-                'a.add_name'
+                'user_addresses.*',
+                'addresses.add_name'
             )
             ->get()
             ->groupBy('usr_id'); // group per client
@@ -816,12 +816,12 @@ class ProfilingController extends Controller
         // Get all addresses for listed clients
         $clientIds = collect($clients->items())->pluck('usr_id');
 
-        $addresses = DB::table('user_addresses as ua')
-            ->leftJoin('addresses as a', 'ua.add_id', '=', 'a.add_id')
-            ->whereIn('ua.usr_id', $clientIds)
+        $addresses = DB::table('user_addresses')
+            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+            ->whereIn('user_addresses.usr_id', $clientIds)
             ->select(
-                'ua.*',
-                'a.add_name'
+                'user_addresses.*',
+                'addresses.add_name'
             )
             ->get()
             ->groupBy('usr_id'); // group per client
