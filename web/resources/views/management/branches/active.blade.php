@@ -34,6 +34,12 @@
                             <a class="btn btn-danger btn-md mb-3" href="{{ url('management/branches/deleted') }}">
                                 <span class="fa fa-archive"></span> Deleted Branches
                             </a>
+                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                <button type="button" class="btn btn-success mb-3" data-toggle="modal"
+                                    data-target="#addBranchModal">
+                                    <span class="fa fa-plus"></span> Add Branch
+                                </button>
+                            @endif
                         </div>
                     </div>
 
@@ -60,7 +66,10 @@
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
                                         <th style="vertical-align: middle; text-align: center">Created By</th>
                                         <th style="vertical-align: middle; text-align: center">Modified By</th>
-                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                        @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            <th style="vertical-align: middle; text-align: center" width="110px">Action
+                                            </th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -78,7 +87,7 @@
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if (!empty($branch->created_first_name))
                                                     {{ $branch->created_first_name }} {{ $branch->created_last_name }} -
-                                                    {{ \Carbon\Carbon::parse($branch->branch_date_created)->format('m/d/Y') }}
+                                                    {{ \Carbon\Carbon::parse($branch->branch_date_created)->format('m/d/Y | h:i A') }}
                                                 @else
                                                     -
                                                 @endif
@@ -87,20 +96,20 @@
                                                 @if (!empty($branch->modified_first_name))
                                                     {{ $branch->modified_first_name }}
                                                     {{ $branch->modified_last_name }} -
-                                                    {{ \Carbon\Carbon::parse($branch->branch_date_modified)->format('m/d/Y') }}
+                                                    {{ \Carbon\Carbon::parse($branch->branch_date_modified)->format('m/d/Y | h:i A') }}
                                                 @else
                                                     -
                                                 @endif
                                             </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                <td style="vertical-align: middle; text-align: center">
                                                     <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
                                                         data-toggle="modal"
                                                         data-target="#deleteModal-{{ $branch->branch_id }}">
                                                         <span class="fa fa-trash"></span>
                                                     </a>
-                                                @endif
-                                            </td>
+                                                </td>
+                                            @endif
                                         </tr>
 
                                         {{-- Delete Modal --}}
@@ -148,6 +157,47 @@
             </div>
         </div>
     </section>
+
+    {{-- Add Branch Modal --}}
+    <div class="modal fade" id="addBranchModal" tabindex="-1" role="dialog" aria-labelledby="addBranchModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xs" role="document">
+            <form action="{{ url('management/branches/add') }}" method="POST">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white" id="addBranchModalLabel">
+                            <span class="fa fa-plus text-white"></span> Add Branch
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Branch Name --}}
+                            <div class="col-md-12 mb-3">
+                                <label for="branch_name">Branch Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="add_branch_name" name="branch_name"
+                                    placeholder="Branch Name" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save Branch
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     {{-- Dynamic Search While Typing --}}
     <script>

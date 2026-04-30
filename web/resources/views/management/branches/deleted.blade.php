@@ -60,7 +60,10 @@
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
                                         <th style="vertical-align: middle; text-align: center">Created By</th>
                                         <th style="vertical-align: middle; text-align: center">Modified By</th>
-                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                        @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            <th style="vertical-align: middle; text-align: center" width="110px">Action
+                                            </th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -92,15 +95,15 @@
                                                     -
                                                 @endif
                                             </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                <td style="vertical-align: middle; text-align: center">
                                                     <a class="btn btn-success btn-sm mb-1" href="javascript:void(0)"
                                                         data-toggle="modal"
                                                         data-target="#restoreModal-{{ $branch->branch_id }}">
                                                         <span class="fa fa-refresh"></span>
                                                     </a>
-                                                @endif
-                                            </td>
+                                                </td>
+                                            @endif
                                         </tr>
 
                                         {{-- Delete Modal --}}
