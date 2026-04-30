@@ -77,8 +77,8 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if (!empty($branch->created_first_name))
-                                                    {{ $branch->created_first_name }} {{ $branch->created_last_name }}<br>
-                                                    <small>{{ \Carbon\Carbon::parse($branch->branch_date_created)->format('m/d/Y') }}</small>
+                                                    {{ $branch->created_first_name }} {{ $branch->created_last_name }} -
+                                                    {{ \Carbon\Carbon::parse($branch->branch_date_created)->format('m/d/Y') }}
                                                 @else
                                                     -
                                                 @endif
@@ -86,8 +86,8 @@
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if (!empty($branch->modified_first_name))
                                                     {{ $branch->modified_first_name }}
-                                                    {{ $branch->modified_last_name }}<br>
-                                                    <small>{{ \Carbon\Carbon::parse($branch->branch_date_modified)->format('m/d/Y') }}</small>
+                                                    {{ $branch->modified_last_name }} -
+                                                    {{ \Carbon\Carbon::parse($branch->branch_date_modified)->format('m/d/Y') }}
                                                 @else
                                                     -
                                                 @endif
@@ -122,7 +122,7 @@
                                                         </div>
                                                         <div class="modal-body">
                                                             <p>Are you sure you want to DELETE branch -
-                                                                    <strong>{{ $branch->branch_name }}</strong>?
+                                                                <strong>{{ $branch->branch_name }}</strong>?
                                                             </p>
                                                         </div>
                                                         <div class="modal-footer">

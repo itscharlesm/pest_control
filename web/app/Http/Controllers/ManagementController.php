@@ -15,7 +15,8 @@ class ManagementController extends Controller
         $search = $request->search ?? '';
 
         $query = DB::table('branches')
-            ->leftJoin('users', 'branches.branch_created_by', '=', 'users.usr_id')
+            ->leftJoin('users as creator', 'branches.branch_created_by', '=', 'creator.usr_id')
+            ->leftJoin('users as modifier', 'branches.branch_modified_by', '=', 'modifier.usr_id')
             ->where('branches.branch_active', '=', '1');
 
         $query->select(
@@ -25,16 +26,22 @@ class ManagementController extends Controller
             'branches.branch_date_modified',
             'branches.branch_active',
 
-            'users.usr_first_name',
-            'users.usr_middle_name',
-            'users.usr_last_name'
+            // Created by
+            'creator.usr_first_name as created_first_name',
+            'creator.usr_last_name as created_last_name',
+
+            // Modified by
+            'modifier.usr_first_name as modified_first_name',
+            'modifier.usr_last_name as modified_last_name'
         );
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('branches.branch_name', 'LIKE', "%$search%")
-                ->orWhere('users.usr_first_name', 'LIKE', "%$search%")
-                ->orWhere('users.usr_last_name', 'LIKE', "%$search%");
+                    ->orWhere('creator.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('creator.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_last_name', 'LIKE', "%$search%");
             });
         }
 
@@ -50,7 +57,8 @@ class ManagementController extends Controller
         $search = $request->search ?? '';
 
         $query = DB::table('branches')
-            ->leftJoin('users', 'branches.branch_created_by', '=', 'users.usr_id')
+            ->leftJoin('users as creator', 'branches.branch_created_by', '=', 'creator.usr_id')
+            ->leftJoin('users as modifier', 'branches.branch_modified_by', '=', 'modifier.usr_id')
             ->where('branches.branch_active', '=', '0');
 
         $query->select(
@@ -60,16 +68,22 @@ class ManagementController extends Controller
             'branches.branch_date_modified',
             'branches.branch_active',
 
-            'users.usr_first_name',
-            'users.usr_middle_name',
-            'users.usr_last_name'
+            // Created by
+            'creator.usr_first_name as created_first_name',
+            'creator.usr_last_name as created_last_name',
+
+            // Modified by
+            'modifier.usr_first_name as modified_first_name',
+            'modifier.usr_last_name as modified_last_name'
         );
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('branches.branch_name', 'LIKE', "%$search%")
-                ->orWhere('users.usr_first_name', 'LIKE', "%$search%")
-                ->orWhere('users.usr_last_name', 'LIKE', "%$search%");
+                    ->orWhere('creator.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('creator.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_last_name', 'LIKE', "%$search%");
             });
         }
 
@@ -94,7 +108,7 @@ class ManagementController extends Controller
         DB::table('branches')
             ->where('branch_id', '=', $branch_id)
             ->update([
-                'branch_date_modified' =>  Carbon::now(),
+                'branch_date_modified' => Carbon::now(),
                 'branch_modified_by' => session('usr_id'),
                 'branch_active' => 0
             ]);
@@ -119,7 +133,7 @@ class ManagementController extends Controller
         DB::table('branches')
             ->where('branch_id', '=', $branch_id)
             ->update([
-                'branch_date_modified' =>  Carbon::now(),
+                'branch_date_modified' => Carbon::now(),
                 'branch_modified_by' => session('usr_id'),
                 'branch_active' => 1
             ]);
