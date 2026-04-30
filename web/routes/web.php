@@ -93,6 +93,12 @@ Route::get('management/branches/deleted', [ManagementController::class, 'branche
 Route::post('management/branches/add', [ManagementController::class, 'branches_add']);
 Route::post('management/branches/delete/{usr_id}', [ManagementController::class, 'branches_delete']);
 Route::post('management/branches/restore/{usr_id}', [ManagementController::class, 'branches_restore']);
+// - Addresses
+Route::get('management/addresses/active', [ManagementController::class, 'addresses_active']);
+Route::get('management/addresses/deleted', [ManagementController::class, 'addresses_deleted']);
+Route::post('management/addresses/add', [ManagementController::class, 'addresses_add']);
+Route::post('management/addresses/delete/{usr_id}', [ManagementController::class, 'addresses_delete']);
+Route::post('management/addresses/restore/{usr_id}', [ManagementController::class, 'addresses_restore']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //

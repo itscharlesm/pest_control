@@ -120,18 +120,18 @@
                         <ul class="nav nav-treeview">
 
                             <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
-                                    class="nav-link {{ request()->is('management/branches*') ? 'active' : '' }}">
+                                <a href="{{ action('App\Http\Controllers\ManagementController@addresses_active') }}"
+                                    class="nav-link {{ request()->is('management/addresses*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
-                                    <p>BRANCHES</p>
+                                    <p>ADDRESSESS</p>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\ProfilingController@technicians_active') }}"
-                                    class="nav-link {{ request()->is('management/addressess*') ? 'active' : '' }}">
+                                <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
+                                    class="nav-link {{ request()->is('management/branches*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
-                                    <p>ADDRESSESS</p>
+                                    <p>BRANCHES</p>
                                 </a>
                             </li>
 

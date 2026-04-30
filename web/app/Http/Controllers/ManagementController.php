@@ -159,4 +159,155 @@ class ManagementController extends Controller
         return redirect()->back();
     }
     // END BRANCHES
+
+    // START ADDRESSES
+    public function addresses_active(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $query = DB::table('addresses')
+            ->leftJoin('users as creator', 'addresses.add_created_by', '=', 'creator.usr_id')
+            ->leftJoin('users as modifier', 'addresses.add_modified_by', '=', 'modifier.usr_id')
+            ->where('addresses.add_active', '=', '1');
+
+        $query->select(
+            'addresses.add_id',
+            'addresses.add_name',
+            'addresses.add_date_created',
+            'addresses.add_date_modified',
+            'addresses.add_active',
+
+            // Created by
+            'creator.usr_first_name as created_first_name',
+            'creator.usr_last_name as created_last_name',
+
+            // Modified by
+            'modifier.usr_first_name as modified_first_name',
+            'modifier.usr_last_name as modified_last_name'
+        );
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('addresses.add_name', 'LIKE', "%$search%")
+                    ->orWhere('creator.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('creator.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_last_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $query->orderBy('addresses.add_name', 'asc');
+
+        $addresses = $query->paginate(500);
+
+        return view('management.addresses.active', compact('addresses', 'search'));
+    }
+
+    public function addresses_deleted(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $query = DB::table('addresses')
+            ->leftJoin('users as creator', 'addresses.add_created_by', '=', 'creator.usr_id')
+            ->leftJoin('users as modifier', 'addresses.add_modified_by', '=', 'modifier.usr_id')
+            ->where('addresses.add_active', '=', '0');
+
+        $query->select(
+            'addresses.add_id',
+            'addresses.add_name',
+            'addresses.add_date_created',
+            'addresses.add_date_modified',
+            'addresses.add_active',
+
+            // Created by
+            'creator.usr_first_name as created_first_name',
+            'creator.usr_last_name as created_last_name',
+
+            // Modified by
+            'modifier.usr_first_name as modified_first_name',
+            'modifier.usr_last_name as modified_last_name'
+        );
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('addresses.add_name', 'LIKE', "%$search%")
+                    ->orWhere('creator.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('creator.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('modifier.usr_last_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $query->orderBy('addresses.add_name', 'asc');
+
+        $addresses = $query->paginate(500);
+
+        return view('management.addresses.deleted', compact('addresses', 'search'));
+    }
+
+    public function addresses_add(Request $request)
+    {
+        DB::table('addresses')->insert([
+            'add_name' => $request->add_name,
+            'add_date_created' => Carbon::now(),
+            'add_created_by' => session('usr_id'),
+            'add_active' => 1
+        ]);
+
+        logUserActivity('Manage Addresses', 'Added new address ' . $request->add_name);
+
+        session()->flash('successMessage', 'Address has been added.');
+        return redirect()->back();
+    }
+
+    public function addresses_delete(Request $request, $add_id)
+    {
+        $address = DB::table('addresses')
+            ->where('add_id', '=', $add_id)
+            ->first();
+
+        if (!$address) {
+            alert()->error('Client not found.');
+            return redirect()->back();
+        }
+
+        DB::table('addresses')
+            ->where('add_id', '=', $add_id)
+            ->update([
+                'add_date_modified' => Carbon::now(),
+                'add_modified_by' => session('usr_id'),
+                'add_active' => 0
+            ]);
+
+        logUserActivity('Manage Addresses', 'Deleted address ' . $address->add_name);
+
+        session()->flash('successMessage', 'Address has been Deleted.');
+        return redirect()->back();
+    }
+
+    public function addresses_restore(Request $request, $add_id)
+    {
+        $address = DB::table('addresses')
+            ->where('add_id', '=', $add_id)
+            ->first();
+
+        if (!$address) {
+            alert()->error('Client not found.');
+            return redirect()->back();
+        }
+
+        DB::table('addresses')
+            ->where('add_id', '=', $add_id)
+            ->update([
+                'add_date_modified' => Carbon::now(),
+                'add_modified_by' => session('usr_id'),
+                'add_active' => 1
+            ]);
+
+        logUserActivity('Manage Addresses', 'Restored address ' . $address->add_name);
+
+        session()->flash('successMessage', 'Address has been Restored.');
+        return redirect()->back();
+    }
+    // END ADDRESSES
 }
