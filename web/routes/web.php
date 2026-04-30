@@ -91,14 +91,15 @@ Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, '
 Route::get('management/branches/active', [ManagementController::class, 'branches_active']);
 Route::get('management/branches/deleted', [ManagementController::class, 'branches_deleted']);
 Route::post('management/branches/add', [ManagementController::class, 'branches_add']);
-Route::post('management/branches/delete/{usr_id}', [ManagementController::class, 'branches_delete']);
-Route::post('management/branches/restore/{usr_id}', [ManagementController::class, 'branches_restore']);
+Route::post('management/branches/update/{branch_id}', [ManagementController::class, 'branches_update']);
+Route::post('management/branches/delete/{branch_id}', [ManagementController::class, 'branches_delete']);
+Route::post('management/branches/restore/{branch_id}', [ManagementController::class, 'branches_restore']);
 // - Addresses
 Route::get('management/addresses/active', [ManagementController::class, 'addresses_active']);
 Route::get('management/addresses/deleted', [ManagementController::class, 'addresses_deleted']);
 Route::post('management/addresses/add', [ManagementController::class, 'addresses_add']);
-Route::post('management/addresses/delete/{usr_id}', [ManagementController::class, 'addresses_delete']);
-Route::post('management/addresses/restore/{usr_id}', [ManagementController::class, 'addresses_restore']);
+Route::post('management/addresses/delete/{add_id}', [ManagementController::class, 'addresses_delete']);
+Route::post('management/addresses/restore/{add_id}', [ManagementController::class, 'addresses_restore']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //

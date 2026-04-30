@@ -113,7 +113,7 @@
 
                                             {{-- Update Availability Modal --}}
                                             <div class="modal fade" id="updateAvailabilityModal-{{ $technician->usr_id }}"
-                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                                tabindex="-1" role="dialog" aria-labelledby="updateAvailabilityModalLabel"
                                                 aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <form
@@ -122,7 +122,7 @@
                                                         @csrf
                                                         <div class="modal-content">
                                                             <div class="modal-header bg-warning text-white">
-                                                                <h5 class="modal-title text-black" id="exampleModalLabel">
+                                                                <h5 class="modal-title text-black" id="updateAvailabilityModalLabel">
                                                                     Update Avaialability
                                                                 </h5>
                                                                 <button type="button" class="close" data-dismiss="modal"

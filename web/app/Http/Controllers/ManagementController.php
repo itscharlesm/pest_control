@@ -109,6 +109,22 @@ class ManagementController extends Controller
         return redirect()->back();
     }
 
+    public function branches_update(Request $request, $branch_id)
+    {
+        DB::table('branches')
+            ->where('branch_id', $branch_id)
+            ->update([
+                'branch_name' => $request->branch_name,
+                'branch_date_modified' => Carbon::now(),
+                'branch_modified_by' => session('usr_id'),
+            ]);
+
+        logUserActivity('Manage Branches', 'Updated branch ' . $request->branch_name);
+
+        session()->flash('successMessage', 'Branch has been updated.');
+        return redirect()->back();
+    }
+
     public function branches_delete(Request $request, $branch_id)
     {
         $branch = DB::table('branches')

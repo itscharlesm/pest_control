@@ -112,14 +112,14 @@
 
                                             {{-- Update Role Modal --}}
                                             <div class="modal fade" id="updateRoleModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                role="dialog" aria-labelledby="updateRoleModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <form action="{{ url('profiling/users/update/role', $user->usr_id) }}"
                                                         method="POST">
                                                         @csrf
                                                         <div class="modal-content">
                                                             <div class="modal-header bg-warning text-white">
-                                                                <h5 class="modal-title text-black" id="exampleModalLabel">
+                                                                <h5 class="modal-title text-black" id="updateRoleModalLabel">
                                                                     Update Role
                                                                 </h5>
                                                                 <button type="button" class="close" data-dismiss="modal"
