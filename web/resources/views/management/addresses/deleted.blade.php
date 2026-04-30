@@ -138,7 +138,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>

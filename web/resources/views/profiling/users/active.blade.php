@@ -109,135 +109,135 @@
                                                     </a>
                                                 @endif
                                             </td>
+                                        </tr>
 
-                                            {{-- Update Role Modal --}}
-                                            <div class="modal fade" id="updateRoleModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="updateRoleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <form action="{{ url('profiling/users/update/role', $user->usr_id) }}"
-                                                        method="POST">
+                                        {{-- Update Role Modal --}}
+                                        <div class="modal fade" id="updateRoleModal-{{ $user->usr_id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="updateRoleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <form action="{{ url('profiling/users/update/role', $user->usr_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-white">
+                                                            <h5 class="modal-title text-black" id="updateRoleModalLabel">
+                                                                Update Role
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="form-group">
+                                                                <label for="rol_id">Name: <span
+                                                                        style="color:black;">{{ $user->usr_first_name }}
+                                                                        {{ $user->usr_last_name }}</span></label>
+
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="rol_id">Roles: <span
+                                                                        style="color:red;">*</span></label>
+                                                                <select class="select2" multiple="multiple"
+                                                                    data-placeholder="Select Role(s)" style="width:100%;"
+                                                                    name="roles[]">
+                                                                    @foreach ($roles as $role)
+                                                                        <option value="{{ $role->rol_id }}"
+                                                                            @if (isset($user->roles) && in_array($role->rol_name, explode(', ', $user->roles))) selected @endif>
+                                                                            {{ $role->rol_name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-warning">
+                                                                <span class="fa fa-save"></span> Update
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                        {{-- Reset Password Modal --}}
+                                        <div class="modal fade" id="resetModal-{{ $user->usr_id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ProfilingController@users_reset_password', [$user->usr_id]) }}">
                                                         @csrf
-                                                        <div class="modal-content">
-                                                            <div class="modal-header bg-warning text-white">
-                                                                <h5 class="modal-title text-black" id="updateRoleModalLabel">
-                                                                    Update Role
-                                                                </h5>
-                                                                <button type="button" class="close" data-dismiss="modal"
-                                                                    aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <div class="form-group">
-                                                                    <label for="rol_id">Name: <span
-                                                                            style="color:black;">{{ $user->usr_first_name }}
-                                                                            {{ $user->usr_last_name }}</span></label>
-
-                                                                </div>
-                                                                <div class="form-group">
-                                                                    <label for="rol_id">Roles: <span
-                                                                            style="color:red;">*</span></label>
-                                                                    <select class="select2" multiple="multiple"
-                                                                        data-placeholder="Select Role(s)"
-                                                                        style="width:100%;" name="roles[]">
-                                                                        @foreach ($roles as $role)
-                                                                            <option value="{{ $role->rol_id }}"
-                                                                                @if (isset($user->roles) && in_array($role->rol_name, explode(', ', $user->roles))) selected @endif>
-                                                                                {{ $role->rol_name }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-warning">
-                                                                    <span class="fa fa-save"></span> Update
-                                                                </button>
-                                                            </div>
+                                                        <div class="modal-header bg-info text-white">
+                                                            <h5 class="modal-title text-black" id="exampleModalLabel">
+                                                                Please Confirm
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to RESET this user's password to
+                                                                <strong>123456</strong>?
+                                                            </p>
+                                                            <small>{{ $user->usr_first_name }}
+                                                                {{ $user->usr_last_name }}<br>{{ $user->usr_email }}</small>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-info">
+                                                                <span class="fa fa-refresh"></span> Confirm Reset
+                                                            </button>
                                                         </div>
                                                     </form>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            {{-- Reset Password Modal --}}
-                                            <div class="modal fade" id="resetModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_reset_password', [$user->usr_id]) }}">
-                                                            @csrf
-                                                            <div class="modal-header bg-info text-white">
-                                                                <h5 class="modal-title text-black" id="exampleModalLabel">
-                                                                    Please Confirm
-                                                                </h5>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to RESET this user's password to
-                                                                    <strong>123456</strong>?
-                                                                </p>
-                                                                <small>{{ $user->usr_first_name }}
-                                                                    {{ $user->usr_last_name }}<br>{{ $user->usr_email }}</small>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-info">
-                                                                    <span class="fa fa-refresh"></span> Confirm Reset
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
+                                        {{-- Delete Modal --}}
+                                        <div class="modal fade" id="deleteModal-{{ $user->usr_id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ProfilingController@users_delete', [$user->usr_id]) }}">
+                                                        @csrf
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                                                Please Confirm
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to <strong>DELETE</strong> user
+                                                                <strong>{{ $user->usr_first_name }}
+                                                                    {{ $user->usr_last_name }}</strong>?
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <span class="fa fa-trash"></span> Confirm Delete
+                                                            </button>
+                                                        </div>
+                                                    </form>
                                                 </div>
                                             </div>
-
-                                            {{-- Delete Modal --}}
-                                            <div class="modal fade" id="deleteModal-{{ $user->usr_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@users_delete', [$user->usr_id]) }}">
-                                                            @csrf
-                                                            <div class="modal-header bg-danger text-white">
-                                                                <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                    Please Confirm
-                                                                </h5>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to <strong>DELETE</strong> user
-                                                                    <strong>{{ $user->usr_first_name }}
-                                                                        {{ $user->usr_last_name }}</strong>?
-                                                                </p>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-danger">
-                                                                    <span class="fa fa-trash"></span> Confirm Delete
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </tr>
+                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
