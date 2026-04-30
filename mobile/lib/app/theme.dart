@@ -8,6 +8,48 @@ class AppTheme {
   static const Color lightGray = Color(0xFFF5F5F5);
   static const Color borderGray = Color(0xFFE0E0E0);
 
+  // CLEAN FLAT CONTAINER (matches input fields)
+  static BoxDecoration cardDecoration = BoxDecoration(
+    color: white,
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(
+      color: borderGray,
+      width: 1,
+    ),
+  );
+
+  // LIGHT SECTION (for backgrounds)
+  static BoxDecoration softCardDecoration = BoxDecoration(
+    color: lightGray,
+    borderRadius: BorderRadius.circular(12),
+  );
+
+  static BoxDecoration borderedCardDecoration = BoxDecoration(
+    color: white,
+    borderRadius: BorderRadius.circular(14),
+    border: Border.all(
+      color: borderGray,
+      width: 1,
+    ),
+  );
+
+  static BoxDecoration headerDecoration = BoxDecoration(
+    color: white,
+    border: Border(
+      bottom: BorderSide(
+        color: borderGray.withOpacity(0.8),
+        width: 1,
+      ),
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.025),
+        blurRadius: 8,
+        offset: const Offset(0, 2),
+      ),
+    ],
+  );
+
   static ThemeData lightTheme = ThemeData(
     scaffoldBackgroundColor: white,
 
