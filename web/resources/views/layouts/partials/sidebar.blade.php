@@ -138,9 +138,8 @@
                         </ul>
                     </li>
 
-                    <li class="nav-item {{ request()->is('management*') ? 'menu-open' : '' }}">
-                        <a href="#"
-                            class="nav-link {{ request()->is('management/histories*') ? 'active' : '' }}">
+                    <li class="nav-item {{ request()->is('histories/*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->is('histories/*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-history"></i>
                             <p>
                                 LOGS
@@ -152,15 +151,15 @@
 
                             <li class="nav-item">
                                 <a href="{{ action('App\Http\Controllers\ManagementController@login_histories') }}"
-                                    class="nav-link {{ request()->is('management/histories/login*') ? 'active' : '' }}">
+                                    class="nav-link {{ request()->is('histories/logins*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>LOGINS</p>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
-                                    class="nav-link {{ request()->is('management/histories/user*') ? 'active' : '' }}">
+                                <a href="{{ action('App\Http\Controllers\ManagementController@user_histories') }}"
+                                    class="nav-link {{ request()->is('histories/users*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>USERS</p>
                                 </a>

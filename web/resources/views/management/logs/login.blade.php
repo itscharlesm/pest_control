@@ -32,10 +32,10 @@
                     <div class="row">
                         <!-- Table Column -->
                         <div class="col-lg-12 col-md-7">
-                            <form method="GET" action="{{ url('management/histories/logins') }}" class="mb-3">
+                            <form method="GET" action="{{ url('histories/logins') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search branches..." value="{{ request('search') }}">
+                                        placeholder="Search users..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">
                                             <span class="fa fa-search"></span> Search
