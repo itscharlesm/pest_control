@@ -6,7 +6,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Branches</h1>
+                    <h1 class="m-0">Deleted Branches</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
@@ -94,17 +94,17 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                                    <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+                                                    <a class="btn btn-success btn-sm mb-1" href="javascript:void(0)"
                                                         data-toggle="modal"
-                                                        data-target="#deleteModal-{{ $branch->branch_id }}">
-                                                        <span class="fa fa-trash"></span>
+                                                        data-target="#restoreModal-{{ $branch->branch_id }}">
+                                                        <span class="fa fa-refresh"></span>
                                                     </a>
                                                 @endif
                                             </td>
                                         </tr>
 
                                         {{-- Delete Modal --}}
-                                        <div class="modal fade" id="deleteModal-{{ $branch->branch_id }}" tabindex="-1"
+                                        <div class="modal fade" id="restoreModal-{{ $branch->branch_id }}" tabindex="-1"
                                             role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">
