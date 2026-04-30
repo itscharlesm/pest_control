@@ -59,10 +59,12 @@
                                 <thead>
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Name</th>
-                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities</th>
+                                        <th style="vertical-align: middle; text-align: center" width="130px">Availabilities
+                                        </th>
                                         @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                         @endif
+                                            <th style="vertical-align: middle; text-align: center" width="110px">Action
+                                            </th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>

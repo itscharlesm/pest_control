@@ -126,7 +126,7 @@
                                                             </button>
                                                         </div>
                                                         <div class="modal-body">
-                                                            <p>Are you sure you want to DELETE branch -
+                                                            <p>Are you sure you want to <strong>DELETE</strong> branch -
                                                                 <strong>{{ $branch->branch_name }}</strong>?
                                                             </p>
                                                         </div>

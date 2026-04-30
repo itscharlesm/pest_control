@@ -120,7 +120,7 @@
                                                             </button>
                                                         </div>
                                                         <div class="modal-body">
-                                                            <p>Are you sure you want to RESTORE branch -
+                                                            <p>Are you sure you want to <strong>RESTORE</strong> branch -
                                                                 <strong>{{ $branch->branch_name }}</strong>?
                                                             </p>
                                                         </div>
