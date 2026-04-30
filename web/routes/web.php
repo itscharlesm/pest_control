@@ -98,6 +98,7 @@ Route::post('management/branches/restore/{branch_id}', [ManagementController::cl
 Route::get('management/addresses/active', [ManagementController::class, 'addresses_active']);
 Route::get('management/addresses/deleted', [ManagementController::class, 'addresses_deleted']);
 Route::post('management/addresses/add', [ManagementController::class, 'addresses_add']);
+Route::post('management/addresses/update/{add_id}', [ManagementController::class, 'addresses_update']);
 Route::post('management/addresses/delete/{add_id}', [ManagementController::class, 'addresses_delete']);
 Route::post('management/addresses/restore/{add_id}', [ManagementController::class, 'addresses_restore']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
