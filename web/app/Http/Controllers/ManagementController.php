@@ -377,5 +377,41 @@ class ManagementController extends Controller
 
         return view('management.logs.login', compact('logs', 'search'));
     }
+
+    public function user_histories(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $query = DB::table('user_activity_logs')
+            ->leftJoin('users', 'user_activity_logs.usr_id', '=', 'users.usr_id')
+            ->where('user_activity_logs.log_active', '=', '1');
+
+        $query->select(
+            'user_activity_logs.log_id',
+            'user_activity_logs.log_date',
+            'user_activity_logs.log_title',
+            'user_activity_logs.log_details',
+            'user_activity_logs.log_active',
+            'users.usr_first_name',
+            'users.usr_last_name'
+        );
+
+        // SEARCH
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('user_activity_logs.log_title', 'LIKE', "%$search%")
+                    ->orWhere('user_activity_logs.log_details', 'LIKE', "%$search%");
+            });
+        }
+
+        // IMPORTANT: latest first
+        $query->orderBy('user_activity_logs.log_date', 'desc');
+
+        $logs = $query->paginate(1000);
+
+        return view('management.logs.user', compact('logs', 'search'));
+    }
     // END LOGS
 }
