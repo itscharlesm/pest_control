@@ -104,6 +104,41 @@
                     </li>
                 @endif
 
+                {{-- MANAGEMENT --}}
+                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                    <li class="nav-header">MANAGEMENT</li>
+
+                    <li class="nav-item {{ request()->is('profiling*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->is('profiling*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-users"></i>
+                            <p>
+                                MANAGE
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+
+                        <ul class="nav nav-treeview">
+
+                            <li class="nav-item">
+                                <a href="{{ action('App\Http\Controllers\ProfilingController@clients_active') }}"
+                                    class="nav-link {{ request()->is('management/branches*') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>BRANCHES</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="{{ action('App\Http\Controllers\ProfilingController@technicians_active') }}"
+                                    class="nav-link {{ request()->is('management/addressess*') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>ADDRESSESS</p>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                @endif
+
                 {{-- ! Signout --}}
                 <li class="nav-item">
                     <a href="{{ action('App\Http\Controllers\LoginController@logout') }}" class="nav-link">
