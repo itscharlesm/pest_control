@@ -46,8 +46,8 @@ Route::post('announcement/delete/{ann_uuid}', [AnnouncementController::class, 'd
 // ACCOUNT
 Route::get('account', [UserController::class, 'account']);
 Route::post('account/update', [UserController::class, 'account_update']);
-Route::post('account/address/add',  [UserController::class, 'account_address_add']);
-Route::post('account/address/edit',  [UserController::class, 'account_address_edit']);
+Route::post('account/address/add', [UserController::class, 'account_address_add']);
+Route::post('account/address/edit', [UserController::class, 'account_address_edit']);
 Route::post('account/update/password', [UserController::class, 'account_update_password']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
@@ -90,6 +90,7 @@ Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, '
 // - Branches
 Route::get('management/branches/active', [ManagementController::class, 'branches_active']);
 Route::get('management/branches/deleted', [ManagementController::class, 'branches_deleted']);
+Route::post('management/branches/add', [ManagementController::class, 'branches_add']);
 Route::post('management/branches/delete/{usr_id}', [ManagementController::class, 'branches_delete']);
 Route::post('management/branches/restore/{usr_id}', [ManagementController::class, 'branches_restore']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //

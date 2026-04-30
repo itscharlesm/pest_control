@@ -94,6 +94,21 @@ class ManagementController extends Controller
         return view('management.branches.deleted', compact('branches', 'search'));
     }
 
+    public function branches_add(Request $request)
+    {
+        DB::table('branches')->insert([
+            'branch_name' => $request->branch_name,
+            'branch_date_created' => Carbon::now(),
+            'branch_created_by' => session('usr_id'),
+            'branch_active' => 1
+        ]);
+
+        logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
+
+        session()->flash('successMessage', 'Branch has been added.');
+        return redirect()->back();
+    }
+
     public function branches_delete(Request $request, $branch_id)
     {
         $branch = DB::table('branches')
