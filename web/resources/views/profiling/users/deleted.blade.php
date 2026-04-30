@@ -59,7 +59,8 @@
                                         <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center" width="130px">Role(s)</th>
                                         @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                            <th style="vertical-align: middle; text-align: center" width="110px">Action
+                                            </th>
                                         @endif
                                     </tr>
                                 </thead>

@@ -219,8 +219,8 @@
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p><strong>Are you sure you want to DELETE user
-                                                                        {{ $user->usr_first_name }}
+                                                                <p>Are you sure you want to <strong>DELETE</strong> user
+                                                                    <strong>{{ $user->usr_first_name }}
                                                                         {{ $user->usr_last_name }}</strong>?
                                                                 </p>
                                                             </div>
