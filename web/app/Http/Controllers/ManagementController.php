@@ -80,49 +80,53 @@ class ManagementController extends Controller
         return view('management.branches.deleted', compact('branches', 'search'));
     }
 
-    public function branches_delete(Request $request, $usr_id)
+    public function branches_delete(Request $request, $branch_id)
     {
-        $client = DB::table('users')
-            ->where('usr_id', '=', $usr_id)
+        $branch = DB::table('branches')
+            ->where('branch_id', '=', $branch_id)
             ->first();
 
-        if (!$client) {
+        if (!$branch) {
             alert()->error('Client not found.');
             return redirect()->back();
         }
 
-        DB::table('users')
-            ->where('usr_id', '=', $usr_id)
+        DB::table('branches')
+            ->where('branch_id', '=', $branch_id)
             ->update([
-                'usr_active' => 0
+                'branch_date_modified' =>  Carbon::now(),
+                'branch_modified_by' => session('usr_id'),
+                'branch_active' => 0
             ]);
 
-        logUserActivity('Manage Clients', 'Deleted client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
+        logUserActivity('Manage Branches', 'Deleted branch ' . $branch->branch_name);
 
-        session()->flash('successMessage', 'Client has been Deleted.');
+        session()->flash('successMessage', 'Branch has been Deleted.');
         return redirect()->back();
     }
 
-    public function branches_restore(Request $request, $usr_id)
+    public function branches_restore(Request $request, $branch_id)
     {
-        $client = DB::table('users')
-            ->where('usr_id', '=', $usr_id)
+        $branch = DB::table('branches')
+            ->where('branch_id', '=', $branch_id)
             ->first();
 
-        if (!$client) {
+        if (!$branch) {
             alert()->error('Client not found.');
             return redirect()->back();
         }
 
-        DB::table('users')
-            ->where('usr_id', '=', $usr_id)
+        DB::table('branches')
+            ->where('branch_id', '=', $branch_id)
             ->update([
-                'usr_active' => 1
+                'branch_date_modified' =>  Carbon::now(),
+                'branch_modified_by' => session('usr_id'),
+                'branch_active' => 1
             ]);
 
-        logUserActivity('Manage Clients', 'Restored client ' . $client->usr_last_name . ', ' . $client->usr_first_name);
+        logUserActivity('Manage Branches', 'Restored branch ' . $branch->branch_name);
 
-        session()->flash('successMessage', 'Client has been restored.');
+        session()->flash('successMessage', 'Branch has been Restored.');
         return redirect()->back();
     }
     // END BRANCHES
