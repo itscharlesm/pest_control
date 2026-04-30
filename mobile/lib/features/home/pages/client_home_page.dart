@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/app/theme.dart';
-import 'package:mobile_app/shared/widgets/navigation/app_drawer.dart';
+import 'package:mobile_app/features/auth/pages/login_page.dart';
+import 'package:mobile_app/shared/shared.dart';
 
 class ClientHomePage extends StatelessWidget {
   final String email;
@@ -13,17 +14,17 @@ class ClientHomePage extends StatelessWidget {
       drawer: AppDrawer(
         userType: 3,
         email: email,
+        currentPage: 'home',
+        onLogout: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        },
       ),
-      appBar: AppBar(
-        title: const Text("Client Home"),
-        actions: [
-          IconButton(
-            onPressed: () {
-              // TODO: logout
-            },
-            icon: const Icon(Icons.logout),
-          ),
-        ],
+      appBar: const AppHomeHeader(
+        name: "Sean Barte",
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -87,10 +88,7 @@ class ClientHomePage extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.lightGray,
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: AppTheme.softCardDecoration,
               child: const Text(
                 "No bookings yet.",
                 style: TextStyle(color: Colors.grey),
@@ -107,10 +105,7 @@ class ClientHomePage extends StatelessWidget {
     return Expanded(
       child: Container(
         height: 100,
-        decoration: BoxDecoration(
-          color: AppTheme.lightGray,
-          borderRadius: BorderRadius.circular(10),
-        ),
+        decoration: AppTheme.softCardDecoration,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
