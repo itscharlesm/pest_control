@@ -62,7 +62,6 @@
                                 <thead>
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">No</th>
-                                        <th style="vertical-align: middle; text-align: center">Name</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
                                         <th style="vertical-align: middle; text-align: center">Created By</th>
                                         <th style="vertical-align: middle; text-align: center">Modified By</th>
@@ -77,9 +76,6 @@
                                         <tr>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $loop->iteration }}
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                {{ $branch->branch_name }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $branch->branch_name }}
