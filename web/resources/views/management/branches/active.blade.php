@@ -31,7 +31,7 @@
                 <div class="card-body overflow-auto">
                     <div class="row">
                         <div class="col-md-12">
-                            <a class="btn btn-danger btn-md mb-3" href="{{ url('profiling/branches/deleted') }}">
+                            <a class="btn btn-danger btn-md mb-3" href="{{ url('management/branches/deleted') }}">
                                 <span class="fa fa-archive"></span> Deleted Branches
                             </a>
                         </div>
@@ -40,7 +40,7 @@
                     <div class="row">
                         <!-- Table Column -->
                         <div class="col-lg-12 col-md-7">
-                            <form method="GET" action="{{ url('profiling/branches/active') }}" class="mb-3">
+                            <form method="GET" action="{{ url('management/branches/active') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
                                         placeholder="Search branches..." value="{{ request('search') }}">

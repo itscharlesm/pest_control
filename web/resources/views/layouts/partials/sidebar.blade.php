@@ -56,7 +56,7 @@
                 <li class="nav-item">
                     <a href="{{ action('App\Http\Controllers\UserController@account') }}"
                         class="nav-link  {{ request()->is('account*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-cog"></i>
+                        <i class="nav-icon fas fa-user-shield"></i>
                         <p>ACCOUNT</p>
                     </a>
                 </li>
@@ -108,9 +108,9 @@
                 @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                     <li class="nav-header">MANAGEMENT</li>
 
-                    <li class="nav-item {{ request()->is('profiling*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('profiling*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-cogs"></i>
+                    <li class="nav-item {{ request()->is('management*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->is('management*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-cog"></i>
                             <p>
                                 MANAGE
                                 <i class="right fas fa-angle-left"></i>
