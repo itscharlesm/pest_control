@@ -110,165 +110,165 @@
                                                     </a>
                                                 @endif
                                             </td>
+                                        </tr>
 
-                                            {{-- Update Availability Modal --}}
-                                            <div class="modal fade" id="updateAvailabilityModal-{{ $technician->usr_id }}"
-                                                tabindex="-1" role="dialog" aria-labelledby="updateAvailabilityModalLabel"
-                                                aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <form
-                                                        action="{{ url('profiling/technicians/update/availability', $technician->usr_id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        <div class="modal-content">
-                                                            <div class="modal-header bg-warning text-white">
-                                                                <h5 class="modal-title text-black" id="updateAvailabilityModalLabel">
-                                                                    Update Avaialability
-                                                                </h5>
-                                                                <button type="button" class="close" data-dismiss="modal"
-                                                                    aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
+                                        {{-- Update Availability Modal --}}
+                                        <div class="modal fade" id="updateAvailabilityModal-{{ $technician->usr_id }}"
+                                            tabindex="-1" role="dialog" aria-labelledby="updateAvailabilityModalLabel"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <form
+                                                    action="{{ url('profiling/technicians/update/availability', $technician->usr_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-white">
+                                                            <h5 class="modal-title text-black"
+                                                                id="updateAvailabilityModalLabel">
+                                                                Update Avaialability
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            @php
+                                                                $days = [
+                                                                    'Monday',
+                                                                    'Tuesday',
+                                                                    'Wednesday',
+                                                                    'Thursday',
+                                                                    'Friday',
+                                                                    'Saturday',
+                                                                    'Sunday',
+                                                                ];
+
+                                                                $userAvail = DB::table('user_availabilities')
+                                                                    ->where('usr_id', $technician->usr_id)
+                                                                    ->pluck('uavail_active', 'uavail_name')
+                                                                    ->toArray();
+                                                            @endphp
+
+                                                            <div class="form-group">
+                                                                <label>Availability for:
+                                                                    <span style="color:black;">
+                                                                        {{ $technician->usr_first_name }}
+                                                                        {{ $technician->usr_last_name }}
+                                                                    </span>
+                                                                </label>
                                                             </div>
-                                                            <div class="modal-body">
-                                                                @php
-                                                                    $days = [
-                                                                        'Monday',
-                                                                        'Tuesday',
-                                                                        'Wednesday',
-                                                                        'Thursday',
-                                                                        'Friday',
-                                                                        'Saturday',
-                                                                        'Sunday',
-                                                                    ];
 
-                                                                    $userAvail = DB::table('user_availabilities')
-                                                                        ->where('usr_id', $technician->usr_id)
-                                                                        ->pluck('uavail_active', 'uavail_name')
-                                                                        ->toArray();
-                                                                @endphp
+                                                            <div class="row">
+                                                                @foreach ($days as $day)
+                                                                    <div class="col-md-3">
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input" type="checkbox"
+                                                                                name="availability[]"
+                                                                                value="{{ $day }}"
+                                                                                id="edit_avail_{{ $technician->usr_id }}_{{ $day }}"
+                                                                                {{ !empty($userAvail[$day]) && $userAvail[$day] == 1 ? 'checked' : '' }}>
 
-                                                                <div class="form-group">
-                                                                    <label>Availability for:
-                                                                        <span style="color:black;">
-                                                                            {{ $technician->usr_first_name }}
-                                                                            {{ $technician->usr_last_name }}
-                                                                        </span>
-                                                                    </label>
-                                                                </div>
-
-                                                                <div class="row">
-                                                                    @foreach ($days as $day)
-                                                                        <div class="col-md-3">
-                                                                            <div class="form-check">
-                                                                                <input class="form-check-input"
-                                                                                    type="checkbox" name="availability[]"
-                                                                                    value="{{ $day }}"
-                                                                                    id="edit_avail_{{ $technician->usr_id }}_{{ $day }}"
-                                                                                    {{ !empty($userAvail[$day]) && $userAvail[$day] == 1 ? 'checked' : '' }}>
-
-                                                                                <label class="form-check-label"
-                                                                                    for="edit_avail_{{ $technician->usr_id }}_{{ $day }}">
-                                                                                    {{ $day }}
-                                                                                </label>
-                                                                            </div>
+                                                                            <label class="form-check-label"
+                                                                                for="edit_avail_{{ $technician->usr_id }}_{{ $day }}">
+                                                                                {{ $day }}
+                                                                            </label>
                                                                         </div>
-                                                                    @endforeach
-                                                                </div>
+                                                                    </div>
+                                                                @endforeach
                                                             </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-warning">
-                                                                    <span class="fa fa-save"></span> Update
-                                                                </button>
-                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-warning">
+                                                                <span class="fa fa-save"></span> Update
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                        {{-- Reset Password Modal --}}
+                                        <div class="modal fade" id="resetModal-{{ $technician->usr_id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ProfilingController@technicians_reset_password', [$technician->usr_id]) }}">
+                                                        @csrf
+                                                        <div class="modal-header bg-info text-white">
+                                                            <h5 class="modal-title text-black" id="exampleModalLabel">
+                                                                Please Confirm
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to RESET this technician's password
+                                                                to
+                                                                <strong>123456</strong>?
+                                                            </p>
+                                                            <small>{{ $technician->usr_first_name }}
+                                                                {{ $technician->usr_last_name }}<br>{{ $technician->usr_email }}</small>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-info">
+                                                                <span class="fa fa-refresh"></span> Confirm Reset
+                                                            </button>
                                                         </div>
                                                     </form>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            {{-- Reset Password Modal --}}
-                                            <div class="modal fade" id="resetModal-{{ $technician->usr_id }}"
-                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-                                                aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_reset_password', [$technician->usr_id]) }}">
-                                                            @csrf
-                                                            <div class="modal-header bg-info text-white">
-                                                                <h5 class="modal-title text-black" id="exampleModalLabel">
-                                                                    Please Confirm
-                                                                </h5>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to RESET this technician's password
-                                                                    to
-                                                                    <strong>123456</strong>?
-                                                                </p>
-                                                                <small>{{ $technician->usr_first_name }}
-                                                                    {{ $technician->usr_last_name }}<br>{{ $technician->usr_email }}</small>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-info">
-                                                                    <span class="fa fa-refresh"></span> Confirm Reset
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
+                                        {{-- Delete Modal --}}
+                                        <div class="modal fade" id="deleteModal-{{ $technician->usr_id }}"
+                                            tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ProfilingController@technicians_delete', [$technician->usr_id]) }}">
+                                                        @csrf
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                                                Please Confirm
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to <strong>DELETE</strong>
+                                                                technician
+                                                                <strong>{{ $technician->usr_first_name }}
+                                                                    {{ $technician->usr_last_name }}</strong>?
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <span class="fa fa-trash"></span> Confirm Delete
+                                                            </button>
+                                                        </div>
+                                                    </form>
                                                 </div>
                                             </div>
-
-                                            {{-- Delete Modal --}}
-                                            <div class="modal fade" id="deleteModal-{{ $technician->usr_id }}"
-                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-                                                aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@technicians_delete', [$technician->usr_id]) }}">
-                                                            @csrf
-                                                            <div class="modal-header bg-danger text-white">
-                                                                <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                    Please Confirm
-                                                                </h5>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to <strong>DELETE</strong>
-                                                                    technician
-                                                                    <strong>{{ $technician->usr_first_name }}
-                                                                        {{ $technician->usr_last_name }}</strong>?
-                                                                </p>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-danger">
-                                                                    <span class="fa fa-trash"></span> Confirm Delete
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </tr>
+                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>

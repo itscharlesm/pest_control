@@ -88,196 +88,194 @@
                                                     </a>
                                                 @endif
                                             </td>
+                                        </tr>
 
-                                            {{-- View Client Modal --}}
-                                            <div class="modal fade" id="viewClientModal-{{ $client->usr_id }}"
-                                                tabindex="-1">
-                                                <div class="modal-dialog modal-lg">
-                                                    <div class="modal-content">
+                                        {{-- View Client Modal --}}
+                                        <div class="modal fade" id="viewClientModal-{{ $client->usr_id }}" tabindex="-1">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
 
-                                                        <div class="modal-header bg-primary text-white">
-                                                            <h5 class="modal-title">Client Details</h5>
-                                                            <button type="button" class="close text-white"
-                                                                data-dismiss="modal">
-                                                                &times;
-                                                            </button>
+                                                    <div class="modal-header bg-primary text-white">
+                                                        <h5 class="modal-title">Client Details</h5>
+                                                        <button type="button" class="close text-white"
+                                                            data-dismiss="modal">
+                                                            &times;
+                                                        </button>
+                                                    </div>
+
+                                                    <div class="modal-body">
+
+                                                        {{-- PERSONAL INFO --}}
+                                                        <h6 class="font-weight-bold text-black">Personal Information
+                                                        </h6>
+                                                        <hr class="mt-1 mb-2">
+
+                                                        <div class="row mb-2">
+                                                            <div class="col-md-4">
+                                                                <small class="text-muted">First Name</small>
+                                                                <div>{{ $client->usr_first_name }}</div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <small class="text-muted">Middle Name</small>
+                                                                <div>{{ $client->usr_middle_name ?? '-' }}</div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <small class="text-muted">Last Name</small>
+                                                                <div>{{ $client->usr_last_name }}</div>
+                                                            </div>
                                                         </div>
 
-                                                        <div class="modal-body">
+                                                        <div class="row mb-2">
+                                                            <div class="col-md-4">
+                                                                <small class="text-muted">Branch</small>
+                                                                <div>{{ $client->branch_name }}</div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <small class="text-muted">Email</small>
+                                                                <div>{{ $client->usr_email }}</div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <small class="text-muted">Mobile</small>
+                                                                <div>{{ $client->usr_mobile }}</div>
+                                                            </div>
+                                                        </div>
 
-                                                            {{-- PERSONAL INFO --}}
-                                                            <h6 class="font-weight-bold text-black">Personal Information
-                                                            </h6>
-                                                            <hr class="mt-1 mb-2">
-
-                                                            <div class="row mb-2">
-                                                                <div class="col-md-4">
-                                                                    <small class="text-muted">First Name</small>
-                                                                    <div>{{ $client->usr_first_name }}</div>
-                                                                </div>
-                                                                <div class="col-md-4">
-                                                                    <small class="text-muted">Middle Name</small>
-                                                                    <div>{{ $client->usr_middle_name ?? '-' }}</div>
-                                                                </div>
-                                                                <div class="col-md-4">
-                                                                    <small class="text-muted">Last Name</small>
-                                                                    <div>{{ $client->usr_last_name }}</div>
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-6">
+                                                                <small class="text-muted">Birthdate</small>
+                                                                <div>
+                                                                    {{ $client->usr_birth_date ?? '-' }}
                                                                 </div>
                                                             </div>
-
-                                                            <div class="row mb-2">
-                                                                <div class="col-md-4">
-                                                                    <small class="text-muted">Branch</small>
-                                                                    <div>{{ $client->branch_name }}</div>
-                                                                </div>
-                                                                <div class="col-md-4">
-                                                                    <small class="text-muted">Email</small>
-                                                                    <div>{{ $client->usr_email }}</div>
-                                                                </div>
-                                                                <div class="col-md-4">
-                                                                    <small class="text-muted">Mobile</small>
-                                                                    <div>{{ $client->usr_mobile }}</div>
+                                                            <div class="col-md-6">
+                                                                <small class="text-muted">Age</small>
+                                                                <div>
+                                                                    @if ($client->usr_birth_date)
+                                                                        {{ \Carbon\Carbon::parse($client->usr_birth_date)->age }}
+                                                                        years old
+                                                                    @else
+                                                                        -
+                                                                    @endif
                                                                 </div>
                                                             </div>
+                                                        </div>
 
-                                                            <div class="row mb-3">
-                                                                <div class="col-md-6">
-                                                                    <small class="text-muted">Birthdate</small>
-                                                                    <div>
-                                                                        {{ $client->usr_birth_date ?? '-' }}
+                                                        {{-- ADDRESSES --}}
+                                                        <h6 class="font-weight-bold text-black">Addresses</h6>
+                                                        <hr class="mt-1 mb-2">
+
+                                                        <div class="row">
+                                                            @php
+                                                                $clientAddresses =
+                                                                    $addresses[$client->usr_id] ?? collect();
+                                                            @endphp
+
+                                                            @if ($clientAddresses->isEmpty())
+                                                                <div class="col-12">
+                                                                    <div class="alert alert-light text-center mb-0">
+                                                                        No address registered
                                                                     </div>
                                                                 </div>
-                                                                <div class="col-md-6">
-                                                                    <small class="text-muted">Age</small>
-                                                                    <div>
-                                                                        @if ($client->usr_birth_date)
-                                                                            {{ \Carbon\Carbon::parse($client->usr_birth_date)->age }}
-                                                                            years old
-                                                                        @else
-                                                                            -
-                                                                        @endif
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            @else
+                                                                @foreach ($clientAddresses as $addr)
+                                                                    <div class="col-md-6 mb-2">
+                                                                        <div
+                                                                            class="card border {{ $addr->uadd_active ? 'border-success' : 'border-secondary' }}">
+                                                                            <div class="card-body p-2">
 
-                                                            {{-- ADDRESSES --}}
-                                                            <h6 class="font-weight-bold text-black">Addresses</h6>
-                                                            <hr class="mt-1 mb-2">
+                                                                                <strong>
+                                                                                    {{ $addr->add_name ?? 'Address' }}
+                                                                                </strong>
 
-                                                            <div class="row">
-                                                                @php
-                                                                    $clientAddresses =
-                                                                        $addresses[$client->usr_id] ?? collect();
-                                                                @endphp
-
-                                                                @if ($clientAddresses->isEmpty())
-                                                                    <div class="col-12">
-                                                                        <div class="alert alert-light text-center mb-0">
-                                                                            No address registered
-                                                                        </div>
-                                                                    </div>
-                                                                @else
-                                                                    @foreach ($clientAddresses as $addr)
-                                                                        <div class="col-md-6 mb-2">
-                                                                            <div
-                                                                                class="card border {{ $addr->uadd_active ? 'border-success' : 'border-secondary' }}">
-                                                                                <div class="card-body p-2">
-
-                                                                                    <strong>
-                                                                                        {{ $addr->add_name ?? 'Address' }}
-                                                                                    </strong>
-
-                                                                                    @if ($addr->uadd_street)
-                                                                                        <div class="small">
-                                                                                            {{ $addr->uadd_street }}
-                                                                                        </div>
-                                                                                    @endif
-
-                                                                                    @php
-                                                                                        $location = collect([
-                                                                                            $addr->uadd_barangay,
-                                                                                            $addr->uadd_city,
-                                                                                            $addr->uadd_province,
-                                                                                        ])
-                                                                                            ->filter()
-                                                                                            ->implode(', ');
-                                                                                    @endphp
-
-                                                                                    @if ($location)
-                                                                                        <div class="small">
-                                                                                            {{ $location }}</div>
-                                                                                    @endif
-
-                                                                                    @if ($addr->uadd_region)
-                                                                                        <div class="small text-muted">
-                                                                                            {{ $addr->uadd_region }}
-                                                                                        </div>
-                                                                                    @endif
-
-                                                                                    <div class="mt-1">
-                                                                                        <span
-                                                                                            class="badge {{ $addr->uadd_active ? 'badge-success' : 'badge-secondary' }}">
-                                                                                            {{ $addr->uadd_active ? 'Active' : 'Inactive' }}
-                                                                                        </span>
+                                                                                @if ($addr->uadd_street)
+                                                                                    <div class="small">
+                                                                                        {{ $addr->uadd_street }}
                                                                                     </div>
+                                                                                @endif
 
+                                                                                @php
+                                                                                    $location = collect([
+                                                                                        $addr->uadd_barangay,
+                                                                                        $addr->uadd_city,
+                                                                                        $addr->uadd_province,
+                                                                                    ])
+                                                                                        ->filter()
+                                                                                        ->implode(', ');
+                                                                                @endphp
+
+                                                                                @if ($location)
+                                                                                    <div class="small">
+                                                                                        {{ $location }}</div>
+                                                                                @endif
+
+                                                                                @if ($addr->uadd_region)
+                                                                                    <div class="small text-muted">
+                                                                                        {{ $addr->uadd_region }}
+                                                                                    </div>
+                                                                                @endif
+
+                                                                                <div class="mt-1">
+                                                                                    <span
+                                                                                        class="badge {{ $addr->uadd_active ? 'badge-success' : 'badge-secondary' }}">
+                                                                                        {{ $addr->uadd_active ? 'Active' : 'Inactive' }}
+                                                                                    </span>
                                                                                 </div>
+
                                                                             </div>
                                                                         </div>
-                                                                    @endforeach
-                                                                @endif
-                                                            </div>
-
+                                                                    </div>
+                                                                @endforeach
+                                                            @endif
                                                         </div>
 
-                                                        <div class="modal-footer">
-                                                            <button class="btn btn-secondary" data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button class="btn btn-secondary" data-dismiss="modal">
+                                                            <span class="fa fa-close"></span> Close
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Restore Modal --}}
+                                        <div class="modal fade" id="restoreModal-{{ $client->usr_id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ProfilingController@clients_restore', [$client->usr_id]) }}">
+                                                        @csrf
+                                                        <div class="modal-header bg-success text-white">
+                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                                                Please Confirm
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
                                                             </button>
                                                         </div>
-
-                                                    </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to <strong>RESTORE</strong> client
+                                                                <strong>{{ $client->usr_first_name }}
+                                                                    {{ $client->usr_last_name }}</strong>?
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-success">
+                                                                <span class="fa fa-refresh"></span> Confirm Delete
+                                                            </button>
+                                                        </div>
+                                                    </form>
                                                 </div>
                                             </div>
-
-                                            {{-- Restore Modal --}}
-                                            <div class="modal fade" id="restoreModal-{{ $client->usr_id }}"
-                                                tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-                                                aria-hidden="true">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <form method="POST"
-                                                            action="{{ action('App\Http\Controllers\ProfilingController@clients_restore', [$client->usr_id]) }}">
-                                                            @csrf
-                                                            <div class="modal-header bg-success text-white">
-                                                                <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                    Please Confirm
-                                                                </h5>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p>Are you sure you want to <strong>RESTORE</strong> client
-                                                                    <strong>{{ $client->usr_first_name }}
-                                                                        {{ $client->usr_last_name }}</strong>?
-                                                                </p>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">
-                                                                    <span class="fa fa-close"></span> Close
-                                                                </button>
-                                                                <button type="submit" class="btn btn-success">
-                                                                    <span class="fa fa-refresh"></span> Confirm Delete
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </tr>
+                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
