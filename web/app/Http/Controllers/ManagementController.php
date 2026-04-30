@@ -114,7 +114,7 @@ class ManagementController extends Controller
         DB::table('branches')
             ->where('branch_id', $branch_id)
             ->update([
-                'branch_name' => $request->branch_name,
+                'branch_name' =>  strtoupper($request->branch_name),
                 'branch_date_modified' => Carbon::now(),
                 'branch_modified_by' => session('usr_id'),
             ]);
@@ -273,6 +273,22 @@ class ManagementController extends Controller
         logUserActivity('Manage Addresses', 'Added new address ' . $request->add_name);
 
         session()->flash('successMessage', 'Address has been added.');
+        return redirect()->back();
+    }
+
+    public function addresses_update(Request $request, $add_id)
+    {
+        DB::table('addresses')
+            ->where('add_id', $add_id)
+            ->update([
+                'add_name' => strtoupper($request->add_name),
+                'add_date_modified' => Carbon::now(),
+                'add_modified_by' => session('usr_id'),
+            ]);
+
+        logUserActivity('Manage Addresses', 'Updated address ' . $request->add_name);
+
+        session()->flash('successMessage', 'Address has been updated.');
         return redirect()->back();
     }
 
