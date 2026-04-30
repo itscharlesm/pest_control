@@ -101,6 +101,19 @@
 
 <script>
     $(document).ready(function() {
+        $('#logsTable').DataTable({
+            "searching": false,
+            "lengthMenu": [
+                [50, 100, 1000],
+                [50, 100, 1000]
+            ],
+            dom: '<"top"lf>rt<"bottom"ip><"clear">'
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
         $('#defaultTable').DataTable({
             "searching": false,
             "lengthMenu": [
