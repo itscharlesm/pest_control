@@ -9,6 +9,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfilingController;
+use App\Http\Controllers\ManagementController;
 use App\Http\Controllers\LocationController;
 
 /*
@@ -82,6 +83,15 @@ Route::get('profiling/clients/deleted', [ProfilingController::class, 'clients_de
 Route::post('profiling/clients/reset/password/{usr_id}', [ProfilingController::class, 'clients_reset_password']);
 Route::post('profiling/clients/delete/{usr_id}', [ProfilingController::class, 'clients_delete']);
 Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, 'clients_restore']);
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+// MANAGEMENT
+// - Branches
+Route::get('management/branches/active', [ManagementController::class, 'branches_active']);
+Route::get('management/branches/deleted', [ManagementController::class, 'branches_deleted']);
+Route::post('management/branches/delete/{usr_id}', [ManagementController::class, 'branches_delete']);
+Route::post('management/branches/restore/{usr_id}', [ManagementController::class, 'branches_restore']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //
