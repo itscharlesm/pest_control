@@ -315,6 +315,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_uuid', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_password' => md5('123456')
             ]);
 
@@ -338,6 +340,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_id', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_active' => 0
             ]);
 
@@ -361,6 +365,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_id', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_active' => 1
             ]);
 
@@ -621,6 +627,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_uuid', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_password' => md5('123456')
             ]);
 
@@ -644,6 +652,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_id', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_active' => 0
             ]);
 
@@ -848,6 +858,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_uuid', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_password' => md5('123456')
             ]);
 
@@ -871,6 +883,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_id', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_active' => 0
             ]);
 
@@ -894,6 +908,8 @@ class ProfilingController extends Controller
         DB::table('users')
             ->where('usr_id', '=', $usr_id)
             ->update([
+                'usr_date_modified' => Carbon::now(),
+                'usr_modified_by' => session('usr_id'),
                 'usr_active' => 1
             ]);
 
