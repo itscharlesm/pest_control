@@ -65,10 +65,7 @@
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
                                         <th style="vertical-align: middle; text-align: center">Created By</th>
                                         <th style="vertical-align: middle; text-align: center">Modified By</th>
-                                        @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="110px">Action
-                                            </th>
-                                        @endif
+                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -97,16 +94,68 @@
                                                     -
                                                 @endif
                                             </td>
-                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                                <td style="vertical-align: middle; text-align: center">
+                                            <td style="vertical-align: middle; text-align: center">
+                                                <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
+                                                    data-toggle="modal"
+                                                    data-target="#updateBranchModal-{{ $branch->branch_id }}">
+                                                    <span class="fa fa-edit"></span>
+                                                </a>
+                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                                                     <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
                                                         data-toggle="modal"
                                                         data-target="#deleteModal-{{ $branch->branch_id }}">
                                                         <span class="fa fa-trash"></span>
                                                     </a>
-                                                </td>
-                                            @endif
+                                                @endif
+                                            </td>
                                         </tr>
+
+                                        {{-- Update Branch Modal --}}
+                                        <div class="modal fade" id="updateBranchModal-{{ $branch->branch_id }}" tabindex="-1"
+                                                role="dialog" aria-labelledby="updateBranchModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-xs" role="document">
+                                                <form
+                                                    action="{{ url('management/branches/update/' . $branch->branch_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-black">
+                                                            <h5 class="modal-title text-black"
+                                                                id="updateBranchModalLabel-{{ $branch->branch_id }}">
+                                                                <span class="fa fa-edit"></span> Update Branch
+                                                            </h5>
+
+                                                            <button type="button" class="close text-black"
+                                                                data-dismiss="modal">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            {{-- Branch Name --}}
+                                                            <div class="form-group">
+                                                                <label>Branch Name <span
+                                                                        class="text-danger">*</span></label>
+                                                                <input type="text" class="form-control"
+                                                                    name="branch_name" value="{{ $branch->branch_name }}"
+                                                                    required>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+
+                                                            <button type="submit" class="btn btn-warning">
+                                                                <span class="fa fa-save"></span> Update
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
 
                                         {{-- Delete Modal --}}
                                         <div class="modal fade" id="deleteModal-{{ $branch->branch_id }}" tabindex="-1"
