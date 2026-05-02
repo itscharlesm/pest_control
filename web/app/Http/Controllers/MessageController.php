@@ -47,7 +47,7 @@ class MessageController extends Controller
         $query->select(
             'mg.mesg_group_id',
             'mg.mesg_group_name',
-            'mg.mesg_group_photo',
+            'mg.mesg_group_image',
             'last_msg.mes_content',
             'last_msg.mes_date_created as last_message_date',
             DB::raw("CONCAT(sender.usr_first_name, ' ', sender.usr_last_name) as sender_name"),
@@ -151,7 +151,7 @@ class MessageController extends Controller
             ->select(
                 'mg.mesg_group_id',
                 'mg.mesg_group_name',
-                'mg.mesg_group_photo',
+                'mg.mesg_group_image',
                 'last_msg.mes_content',
                 'last_msg.mes_date_created as last_message_date',
                 DB::raw("CONCAT(sender.usr_first_name, ' ', sender.usr_last_name) as sender_name"),
@@ -253,7 +253,7 @@ class MessageController extends Controller
                     'mesg_uuid' => generateuuid(),
                     'mesg_group_id' => $groupId,
                     'mesg_group_name' => null,
-                    'mesg_group_photo' => null,
+                    'mesg_group_image' => null,
                     'usr_id' => $userId,
                     'mesg_date_created' => $now,
                     'mesg_created_by' => $currentUserId,
