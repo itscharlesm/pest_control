@@ -412,11 +412,11 @@ class ManagementController extends Controller
         $search = $request->search ?? '';
         $sessionBranchId = session('branch_id');
 
+        // General Service Package Areas
         $query = DB::table('service_package_areas')
             ->leftJoin('branches', 'service_package_areas.branch_id', '=', 'branches.branch_id')
             ->where('service_package_areas.svcpa_active', 1);
 
-        // Branch filter
         if ($sessionBranchId != 1) {
             $query->where('service_package_areas.branch_id', $sessionBranchId);
         }
@@ -430,7 +430,6 @@ class ManagementController extends Controller
             'service_package_areas.svcpa_date_created'
         );
 
-        // Search
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('service_package_areas.svcpa_area', 'LIKE', "%$search%")
@@ -443,17 +442,55 @@ class ManagementController extends Controller
 
         $services = $query->paginate(500);
 
-        // Separate fetch (NOT joined)
+        // Termite Service Package Areas
+        $termiteQuery = DB::table('service_package_area_termites')
+            ->leftJoin('branches', 'service_package_area_termites.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_area_termites.svcpat_active', 1);
+
+        // Branch filter (same logic as services)
+        if ($sessionBranchId != 1) {
+            $termiteQuery->where('service_package_area_termites.branch_id', $sessionBranchId);
+        }
+
+        // Search filter
+        if (!empty($search)) {
+            $termiteQuery->where(function ($q) use ($search) {
+                $q->where('service_package_area_termites.svcpat_sqm_details', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $termiteServices = $termiteQuery
+            ->select(
+                'service_package_area_termites.svcpat_id',
+                'service_package_area_termites.branch_id',
+                'branches.branch_name',
+                'service_package_area_termites.svcpat_sqm_details',
+                'service_package_area_termites.svcpat_costs',
+                'service_package_area_termites.svcpat_date_created'
+            )
+            ->orderBy('branches.branch_name')
+            ->orderBy('service_package_area_termites.svcpat_sqm_details')
+            ->paginate(500);
+
+        // Service Packages (right panel)
         $packages = DB::table('service_packages')
             ->where('svcp_active', 1)
             ->get();
 
+        // Branches (for any dropdowns)
         $branches = DB::table('branches')
             ->where('branch_active', 1)
             ->orderBy('branch_name')
             ->get();
 
-        return view('management.services.active', compact('services', 'packages', 'branches', 'search'));
+        return view('management.services.active', compact(
+            'services',
+            'termiteServices',
+            'packages',
+            'branches',
+            'search'
+        ));
     }
 
     public function services_area_cost_update(Request $request, $svcpa_id)
@@ -488,6 +525,41 @@ class ManagementController extends Controller
         );
 
         session()->flash('successMessage', 'Service cost has been updated.');
+
+        return redirect()->back();
+    }
+
+    public function services_area_termites_cost_update(Request $request, $svcpat_id)
+    {
+        // Get current record
+        $termite = DB::table('service_package_area_termites')
+            ->where('svcpat_id', $svcpat_id)
+            ->first();
+
+        // Normalize values for consistent logging
+        $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
+
+        $oldCost = $termite ? $formatCost($termite->svcpat_costs) : '0.00';
+        $newCost = $formatCost($request->svcpat_costs);
+
+        // Update record
+        DB::table('service_package_area_termites')
+            ->where('svcpat_id', $svcpat_id)
+            ->update([
+                'svcpat_costs' => $request->svcpat_costs,
+                'svcpat_date_modified' => Carbon::now(),
+                'svcpat_modified_by' => session('usr_id'),
+            ]);
+
+        // Log activity
+        logUserActivity(
+            'Manage Termite Service Pricing',
+            'Updated termite service "' . $request->svcpat_sqm_details . '"' .
+            ' in ' . $request->branch_name .
+            ' from ' . $oldCost . ' to ' . $newCost
+        );
+
+        session()->flash('successMessage', 'Termite service cost has been updated.');
 
         return redirect()->back();
     }
