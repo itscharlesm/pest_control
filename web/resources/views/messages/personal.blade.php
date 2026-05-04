@@ -313,8 +313,8 @@
                                       {{ $isActive ? 'msg-list-active' : '' }}">
 
                                     <div class="flex-shrink-0 mr-2">
-                                        @if ($isGrp && !empty($conv->mesg_group_photo))
-                                            <img src="{{ asset('images/messages/group_photo/' . $conv->mesg_group_photo) }}"
+                                        @if ($isGrp && !empty($conv->mesg_group_image))
+                                            <img src="{{ asset('images/messages/group_images/' . $conv->mesg_group_image) }}"
                                                 class="img-circle elevation-1"
                                                 style="width:40px;height:40px;object-fit:cover;" alt="Group">
                                         @elseif ($isGrp)
@@ -377,8 +377,8 @@
 
                             {{-- Avatar --}}
                             <div class="flex-shrink-0 mr-2">
-                                @if ($isGroup && !empty($groupInfo->mesg_group_photo))
-                                    <img src="{{ asset('images/messages/group_photo/' . $groupInfo->mesg_group_photo) }}"
+                                @if ($isGroup && !empty($groupInfo->mesg_group_image))
+                                    <img src="{{ asset('images/messages/group_images/' . $groupInfo->mesg_group_image) }}"
                                         class="img-circle elevation-1" style="width:38px;height:38px;object-fit:cover;"
                                         alt="Group">
                                 @elseif ($isGroup)

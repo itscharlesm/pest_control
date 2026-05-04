@@ -9,6 +9,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfilingController;
+use App\Http\Controllers\ManagementController;
 use App\Http\Controllers\LocationController;
 
 /*
@@ -45,8 +46,8 @@ Route::post('announcement/delete/{ann_uuid}', [AnnouncementController::class, 'd
 // ACCOUNT
 Route::get('account', [UserController::class, 'account']);
 Route::post('account/update', [UserController::class, 'account_update']);
-Route::post('account/address/add',  [UserController::class, 'account_address_add']);
-Route::post('account/address/edit',  [UserController::class, 'account_address_edit']);
+Route::post('account/address/add', [UserController::class, 'account_address_add']);
+Route::post('account/address/edit', [UserController::class, 'account_address_edit']);
 Route::post('account/update/password', [UserController::class, 'account_update_password']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
@@ -82,6 +83,35 @@ Route::get('profiling/clients/deleted', [ProfilingController::class, 'clients_de
 Route::post('profiling/clients/reset/password/{usr_id}', [ProfilingController::class, 'clients_reset_password']);
 Route::post('profiling/clients/delete/{usr_id}', [ProfilingController::class, 'clients_delete']);
 Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, 'clients_restore']);
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+// MANAGEMENT
+// - Branches
+Route::get('management/branches/active', [ManagementController::class, 'branches_active']);
+Route::get('management/branches/deleted', [ManagementController::class, 'branches_deleted']);
+Route::post('management/branches/add', [ManagementController::class, 'branches_add']);
+Route::post('management/branches/update/{branch_id}', [ManagementController::class, 'branches_update']);
+Route::post('management/branches/delete/{branch_id}', [ManagementController::class, 'branches_delete']);
+Route::post('management/branches/restore/{branch_id}', [ManagementController::class, 'branches_restore']);
+// - Addresses
+Route::get('management/addresses/active', [ManagementController::class, 'addresses_active']);
+Route::get('management/addresses/deleted', [ManagementController::class, 'addresses_deleted']);
+Route::post('management/addresses/add', [ManagementController::class, 'addresses_add']);
+Route::post('management/addresses/update/{add_id}', [ManagementController::class, 'addresses_update']);
+Route::post('management/addresses/delete/{add_id}', [ManagementController::class, 'addresses_delete']);
+Route::post('management/addresses/restore/{add_id}', [ManagementController::class, 'addresses_restore']);
+// - Services
+Route::get('management/services/active', [ManagementController::class, 'services_active']);
+Route::get('management/services/deleted', [ManagementController::class, 'services_deleted']);
+Route::post('management/services/area/cost/update/{svcpa_id}', [ManagementController::class, 'services_area_cost_update']);
+Route::post('management/services/area/delete/{svcpa_id}', [ManagementController::class, 'services_area_delete']);
+Route::post('management/services/area/restore/{svcpa_id}', [ManagementController::class, 'services_area_restore']);
+Route::post('management/services/area/termites/cost/update/{svcpa_id}', [ManagementController::class, 'services_area_termites_cost_update']);
+// - Logins
+Route::get('histories/logins', [ManagementController::class, 'login_histories']);
+// - Users
+Route::get('histories/users', [ManagementController::class, 'user_histories']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //
