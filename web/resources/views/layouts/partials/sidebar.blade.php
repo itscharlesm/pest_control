@@ -129,8 +129,8 @@
 
                     {{-- Services --}}
                     <li class="nav-item">
-                        <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
-                            class="nav-link  {{ request()->is('management/branches*') ? 'active' : '' }}">
+                        <a href="{{ action('App\Http\Controllers\ManagementController@services_active') }}"
+                            class="nav-link  {{ request()->is('management/services*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-list"></i>
                             <p>SERVICES</p>
                         </a>

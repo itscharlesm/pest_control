@@ -101,6 +101,9 @@ Route::post('management/addresses/add', [ManagementController::class, 'addresses
 Route::post('management/addresses/update/{add_id}', [ManagementController::class, 'addresses_update']);
 Route::post('management/addresses/delete/{add_id}', [ManagementController::class, 'addresses_delete']);
 Route::post('management/addresses/restore/{add_id}', [ManagementController::class, 'addresses_restore']);
+// - Services
+Route::get('management/services/active', [ManagementController::class, 'services_active']);
+Route::get('management/services/deleted', [ManagementController::class, 'services_deleted']);
 // - Logins
 Route::get('histories/logins', [ManagementController::class, 'login_histories']);
 // - Users
