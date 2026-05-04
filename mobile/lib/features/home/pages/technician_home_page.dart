@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:mobile_app/app/theme.dart';
-import 'package:mobile_app/shared/widgets/navigation/app_drawer.dart';
-import 'package:mobile_app/features/auth/pages/login_page.dart';
+import 'dart:convert';
 
-class TechnicianHomePage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:mobile_app/app/theme.dart';
+import 'package:mobile_app/config/api_config.dart';
+import 'package:mobile_app/shared/widgets/navigation/app_drawer.dart';
+import 'package:mobile_app/shared/widgets/headers/app_home_header.dart';
+
+class TechnicianHomePage extends StatefulWidget {
   final String email;
 
   const TechnicianHomePage({
@@ -12,39 +16,74 @@ class TechnicianHomePage extends StatelessWidget {
   });
 
   @override
+  State<TechnicianHomePage> createState() => _TechnicianHomePageState();
+}
+
+class _TechnicianHomePageState extends State<TechnicianHomePage> {
+  String? profileImagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileImage();
+  }
+
+  Future<void> _fetchProfileImage() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/mobile/profile'),
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: {
+          'email': widget.email,
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final user = data['data'];
+
+        setState(() {
+          profileImagePath = user['usr_image_path'];
+        });
+      }
+    } catch (_) {
+      // Keep default avatar if fetching fails.
+    }
+  }
+
+  String? get profileImageUrl {
+    if (profileImagePath == null || profileImagePath!.isEmpty) {
+      return null;
+    }
+
+    return '${ApiConfig.baseUrl}/$profileImagePath';
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: AppDrawer(
         userType: 2,
-        email: email,
+        email: widget.email,
         currentPage: 'home',
-        onLogout: () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-          );
-        },
       ),
-      appBar: AppBar(
-        title: const Text("Technician Home"),
-        actions: [
-          IconButton(
-            onPressed: () {
-              // TODO: logout
-            },
-            icon: const Icon(Icons.logout),
-          ),
-        ],
+      appBar: AppHomeHeader(
+        imageUrl: profileImageUrl,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Welcome, Technician", style: Theme.of(context).textTheme.bodySmall),
+            Text("Welcome, Technician",
+                style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 4),
-            Text(email, style: Theme.of(context).textTheme.titleLarge),
+            Text(widget.email, style: Theme.of(context).textTheme.titleLarge),
 
             const SizedBox(height: 24),
 
