@@ -455,6 +455,42 @@ class ManagementController extends Controller
 
         return view('management.services.active', compact('services', 'packages', 'branches', 'search'));
     }
+
+    public function services_area_cost_update(Request $request, $svcpa_id)
+    {
+        // Get current record
+        $service = DB::table('service_package_areas')
+            ->where('svcpa_id', $svcpa_id)
+            ->first();
+
+        // Normalize values for consistent logging
+        $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
+
+        $oldCost = $service ? $formatCost($service->svcpa_cost) : '0.00';
+        $newCost = $formatCost($request->svcpa_cost);
+
+        // Update record
+        DB::table('service_package_areas')
+            ->where('svcpa_id', $svcpa_id)
+            ->update([
+                'svcpa_cost' => $request->svcpa_cost,
+                'svcpa_date_modified' => Carbon::now(),
+                'svcpa_modified_by' => session('usr_id'),
+            ]);
+
+        // Log activity
+        logUserActivity(
+            'Manage Service Pricing',
+            'Updated service area ' . $request->svcpa_area .
+            ' in ' . $request->branch_name .
+            ' from cost ' . $oldCost .
+            ' to ' . $newCost
+        );
+
+        session()->flash('successMessage', 'Service cost has been updated.');
+
+        return redirect()->back();
+    }
     // END SERVICES
 
     // START LOGS

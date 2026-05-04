@@ -98,7 +98,8 @@
                                         <div class="modal fade" id="editServiceModal-{{ $service->svcpa_id }}"
                                             tabindex="-1" role="dialog" aria-hidden="true">
                                             <div class="modal-dialog" role="document">
-                                                <form action="{{ url('management/services/update', $service->svcpa_id) }}"
+                                                <form
+                                                    action="{{ url('management/services/area/cost/update', $service->svcpa_id) }}"
                                                     method="POST">
                                                     @csrf
                                                     <div class="modal-content">
@@ -113,7 +114,7 @@
                                                             <div class="form-group">
                                                                 <label>Area Name <span class="text-danger">*</span></label>
                                                                 <input type="text" class="form-control" name="svcpa_area"
-                                                                    value="{{ $service->svcpa_area }}" required>
+                                                                    value="{{ $service->svcpa_area }}" readonly>
                                                             </div>
                                                             <div class="form-group">
                                                                 <label>Cost (₱) <span class="text-danger">*</span></label>
@@ -124,7 +125,8 @@
                                                             <div class="form-group">
                                                                 <label>Branch</label>
                                                                 <input type="text" class="form-control"
-                                                                    value="{{ $service->branch_name }}" readonly>
+                                                                    name="branch_name" value="{{ $service->branch_name }}"
+                                                                    readonly>
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">
