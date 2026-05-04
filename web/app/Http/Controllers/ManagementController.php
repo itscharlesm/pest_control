@@ -136,7 +136,7 @@ class ManagementController extends Controller
             ];
         }
 
-        DB::table('service_package_areas')->insert($servicePackageAreas);
+        DB::table('service_package_areass')->insert($servicePackageAreas);
 
         $termites = [
             ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_costs' => 10000.00],
@@ -159,7 +159,7 @@ class ManagementController extends Controller
             ];
         }
 
-        DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
+        DB::table('service_package_areas_termites')->insert($servicePackageAreaTermites);
 
         logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
 
@@ -405,6 +405,57 @@ class ManagementController extends Controller
         return redirect()->back();
     }
     // END ADDRESSES
+
+    // START SERVICES
+    public function services_active(Request $request)
+    {
+        $search = $request->search ?? '';
+        $sessionBranchId = session('branch_id');
+
+        $query = DB::table('service_package_areas')
+            ->leftJoin('branches', 'service_package_areas.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_areas.svcpa_active', 1);
+
+        // Branch filter
+        if ($sessionBranchId != 1) {
+            $query->where('service_package_areas.branch_id', $sessionBranchId);
+        }
+
+        $query->select(
+            'service_package_areas.svcpa_id',
+            'service_package_areas.branch_id',
+            'branches.branch_name',
+            'service_package_areas.svcpa_area',
+            'service_package_areas.svcpa_cost',
+            'service_package_areas.svcpa_date_created'
+        );
+
+        // Search
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('service_package_areas.svcpa_area', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $query->orderBy('branches.branch_name')
+            ->orderBy('service_package_areas.svcpa_area');
+
+        $services = $query->paginate(500);
+
+        // Separate fetch (NOT joined)
+        $packages = DB::table('service_packages')
+            ->where('svcp_active', 1)
+            ->get();
+
+        $branches = DB::table('branches')
+            ->where('branch_active', 1)
+            ->orderBy('branch_name')
+            ->get();
+
+        return view('management.services.active', compact('services', 'packages', 'branches', 'search'));
+    }
+    // END SERVICES
 
     // START LOGS
     public function login_histories(Request $request)
