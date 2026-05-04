@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\v1\mobile_controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\File;
 
 class MobileProfileController extends Controller
 {
@@ -41,6 +42,7 @@ class MobileProfileController extends Controller
                 'usr_mobile' => $user->usr_mobile,
                 'usr_birth_date' => $user->usr_birth_date,
                 'usr_email' => $user->usr_email,
+                'usr_image_path' => $user->usr_image_path,
             ],
         ]);
     }
@@ -53,6 +55,7 @@ class MobileProfileController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'birth_date' => 'nullable|date',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
         ]);
 
         $user = User::where('usr_email', $request->email)->first();
@@ -70,13 +73,43 @@ class MobileProfileController extends Controller
             : null;
         $user->usr_last_name = strtoupper($request->last_name);
         $user->usr_birth_date = $request->birth_date;
+
+        if ($request->remove_image == '1') {
+            if ($user->usr_image_path) {
+                $oldPath = public_path($user->usr_image_path);
+
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+
+            $user->usr_image_path = null;
+        }
+
+        if ($request->hasFile('profile_image')) {
+            $image = $request->file('profile_image');
+
+            $folderPath = public_path('images/users');
+
+            if (!File::exists($folderPath)) {
+                File::makeDirectory($folderPath, 0755, true);
+            }
+
+            $fileName = 'user_' . $user->usr_id . '_' . time() . '.' . $image->getClientOriginalExtension();
+
+            $image->move($folderPath, $fileName);
+
+            $user->usr_image_path = 'images/users/' . $fileName;
+        }
+
         $user->usr_date_modified = now();
         $user->usr_modified_by = $user->usr_id;
         $user->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Profile updated successfully'
+            'message' => 'Profile updated successfully',
+            'image_path' => $user->usr_image_path,
         ]);
     }
 }

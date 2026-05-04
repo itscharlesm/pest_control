@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mobile_app/app/theme.dart';
 
 class AppHomeHeader extends StatelessWidget implements PreferredSizeWidget {
-  final String name;
+  final String? imageUrl;
 
   const AppHomeHeader({
     super.key,
-    required this.name,
+    this.imageUrl,
   });
 
   @override
@@ -23,35 +23,32 @@ class AppHomeHeader extends StatelessWidget implements PreferredSizeWidget {
             height: 60,
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 16,
                   backgroundColor: AppTheme.primaryRed,
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+                  backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                      ? NetworkImage(imageUrl!)
+                      : null,
+                  child: (imageUrl == null || imageUrl!.isEmpty)
+                      ? const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 18,
+                        )
+                      : null,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+
+                const Spacer(), // 🔥 pushes menu to right
+
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(
+                      Icons.menu_rounded,
                       color: AppTheme.primaryRed,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      size: 30,
                     ),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.menu_rounded,
-                    color: AppTheme.primaryRed,
-                    size: 30,
-                  ),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
                 ),
               ],
             ),
