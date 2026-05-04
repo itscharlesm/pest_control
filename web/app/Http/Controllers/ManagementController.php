@@ -96,6 +96,10 @@ class ManagementController extends Controller
 
     public function branches_add(Request $request)
     {
+        $request->validate([
+            'branch_name' => 'required|string|max:255|unique:branches,branch_name'
+        ]);
+
         DB::table('branches')->insert([
             'branch_name' => $request->branch_name,
             'branch_date_created' => Carbon::now(),
@@ -263,6 +267,10 @@ class ManagementController extends Controller
 
     public function addresses_add(Request $request)
     {
+        $request->validate([
+            'add_name' => 'required|string|max:255|unique:addresses,add_name'
+        ]);
+
         DB::table('addresses')->insert([
             'add_name' => $request->add_name,
             'add_date_created' => Carbon::now(),
