@@ -491,6 +491,31 @@ class ManagementController extends Controller
 
         return redirect()->back();
     }
+
+    public function services_area_delete(Request $request, $svcpa_id)
+    {
+        $service = DB::table('service_package_areas')
+            ->where('svcpa_id', '=', $svcpa_id)
+            ->first();
+
+        if (!$service) {
+            alert()->error('Service area not found.');
+            return redirect()->back();
+        }
+
+        DB::table('service_package_areas')
+            ->where('svcpa_id', '=', $svcpa_id)
+            ->update([
+                'svcpa_date_modified' => Carbon::now(),
+                'svcpa_modified_by' => session('usr_id'),
+                'svcpa_active' => 0
+            ]);
+
+        logUserActivity('Manage Services', 'Deleted area ' . $service->svcpa_area);
+
+        session()->flash('successMessage', 'Area has been Deleted.');
+        return redirect()->back();
+    }
     // END SERVICES
 
     // START LOGS

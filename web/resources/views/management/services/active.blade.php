@@ -142,6 +142,40 @@
                                                 </form>
                                             </div>
                                         </div>
+
+                                        {{-- Delete Service Modal --}}
+                                        <div class="modal fade" id="deleteServiceModal-{{ $service->svcpa_id }}"
+                                            tabindex="-1" role="dialog" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form action="{{ url('management/services/area/delete', $service->svcpa_id) }}"
+                                                        method="POST">
+                                                        @csrf
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title text-white">Please Confirm</h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to <strong>DELETE</strong> service area
+                                                                <strong>{{ $service->svcpa_area }}</strong>?
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <span class="fa fa-trash"></span> Confirm Delete
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>

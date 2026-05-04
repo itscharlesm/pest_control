@@ -105,6 +105,7 @@ Route::post('management/addresses/restore/{add_id}', [ManagementController::clas
 Route::get('management/services/active', [ManagementController::class, 'services_active']);
 Route::get('management/services/deleted', [ManagementController::class, 'services_deleted']);
 Route::post('management/services/area/cost/update/{svcpa_id}', [ManagementController::class, 'services_area_cost_update']);
+Route::post('management/services/area/delete/{svcpa_id}', [ManagementController::class, 'services_area_delete']);
 // - Logins
 Route::get('histories/logins', [ManagementController::class, 'login_histories']);
 // - Users
