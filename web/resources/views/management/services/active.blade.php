@@ -63,10 +63,7 @@
                                         <th style="vertical-align: middle; text-align: center">Area</th>
                                         <th style="vertical-align: middle; text-align: center">Cost</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                            <th style="vertical-align: middle; text-align: center" width="100px">Action
-                                            </th>
-                                        @endif
+                                        <th style="vertical-align: middle; text-align: center" width="100px">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -81,15 +78,20 @@
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $service->branch_name }}
                                             </td>
-                                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                                <td style="vertical-align: middle; text-align: center">
-                                                    <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
+                                            <td style="vertical-align: middle; text-align: center">
+                                                <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
+                                                    data-toggle="modal"
+                                                    data-target="#editServiceModal-{{ $service->svcpa_id }}">
+                                                    <span class="fa fa-edit"></span>
+                                                </a>
+                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                    <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
                                                         data-toggle="modal"
-                                                        data-target="#editServiceModal-{{ $service->svcpa_id }}">
-                                                        <span class="fa fa-edit"></span>
+                                                        data-target="#deleteServiceModal-{{ $service->svcpa_id }}">
+                                                        <span class="fa fa-trash"></span>
                                                     </a>
-                                                </td>
-                                            @endif
+                                                @endif
+                                            </td>
                                         </tr>
 
                                         {{-- Edit Service Modal --}}
