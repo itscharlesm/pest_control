@@ -108,34 +108,23 @@
                 @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                     <li class="nav-header">MANAGEMENT</li>
 
-                    <li class="nav-item {{ request()->is('management*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('management*') ? 'active' : '' }}">
-                            <i class="nav-icon fas fa-cog"></i>
-                            <p>
-                                MANAGE
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
+                    {{-- Addresses --}}
+                    <li class="nav-item">
+                        <a href="{{ action('App\Http\Controllers\ManagementController@addresses_active') }}"
+                            class="nav-link  {{ request()->is('management/addresses*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-map-marker-alt"></i>
+                            <p>ADDRESSES</p>
                         </a>
+                    </li>
 
-                        <ul class="nav nav-treeview">
 
-                            <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\ManagementController@addresses_active') }}"
-                                    class="nav-link {{ request()->is('management/addresses*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>ADDRESSESS</p>
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
-                                    class="nav-link {{ request()->is('management/branches*') ? 'active' : '' }}">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    <p>BRANCHES</p>
-                                </a>
-                            </li>
-
-                        </ul>
+                    {{-- Branches --}}
+                    <li class="nav-item">
+                        <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
+                            class="nav-link  {{ request()->is('management/branches*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-location"></i>
+                            <p>BRANCHES</p>
+                        </a>
                     </li>
 
                     <li class="nav-item {{ request()->is('histories/*') ? 'menu-open' : '' }}">
