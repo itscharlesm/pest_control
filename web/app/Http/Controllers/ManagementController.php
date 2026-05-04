@@ -100,12 +100,66 @@ class ManagementController extends Controller
             'branch_name' => 'required|string|max:255|unique:branches,branch_name'
         ]);
 
-        DB::table('branches')->insert([
+        $branch_id = DB::table('branches')->insertGetId([
+            'branch_uuid' => generateuuid(),
             'branch_name' => $request->branch_name,
             'branch_date_created' => Carbon::now(),
             'branch_created_by' => session('usr_id'),
             'branch_active' => 1
         ]);
+
+        $areas = [
+            ['svcpa_area' => 'ATTIC', 'svcpa_cost' => 10.00],
+            ['svcpa_area' => 'BASEMENT', 'svcpa_cost' => 20.00],
+            ['svcpa_area' => 'BATHROOM', 'svcpa_cost' => 30.00],
+            ['svcpa_area' => 'BEDROOM', 'svcpa_cost' => 40.00],
+            ['svcpa_area' => 'DINING ROOM', 'svcpa_cost' => 50.00],
+            ['svcpa_area' => 'GARAGE', 'svcpa_cost' => 60.00],
+            ['svcpa_area' => 'GARDEN/YARD', 'svcpa_cost' => 70.00],
+            ['svcpa_area' => 'KITCHEN', 'svcpa_cost' => 80.00],
+            ['svcpa_area' => 'LIVING ROOM', 'svcpa_cost' => 90.00],
+            ['svcpa_area' => 'OFFICE/STUDY', 'svcpa_cost' => 100.00],
+            ['svcpa_area' => 'STORAGE ROOM', 'svcpa_cost' => 110.00],
+            ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00],
+        ];
+
+        $servicePackageAreas = [];
+        foreach ($areas as $area) {
+            $servicePackageAreas[] = [
+                'svcpa_uuid' => generateuuid(),
+                'branch_id' => $branch_id,
+                'svcpa_area' => $area['svcpa_area'],
+                'svcpa_cost' => $area['svcpa_cost'],
+                'svcpa_date_created' => Carbon::now(),
+                'svcpa_created_by' => session('usr_id'),
+                'svcpa_active' => 1
+            ];
+        }
+
+        DB::table('service_package_areas')->insert($servicePackageAreas);
+
+        $termites = [
+            ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_costs' => 10000.00],
+            ['svcpat_sqm_details' => '51sqm - 100sqm', 'svcpat_costs' => 184.00],
+            ['svcpat_sqm_details' => '101sqm - 500sqm', 'svcpat_costs' => 150.00],
+            ['svcpat_sqm_details' => '501sqm - 1000sqm', 'svcpat_costs' => 120.00],
+            ['svcpat_sqm_details' => '1001sqm - 999999sqm', 'svcpat_costs' => 100.00],
+        ];
+
+        $servicePackageAreaTermites = [];
+        foreach ($termites as $termite) {
+            $servicePackageAreaTermites[] = [
+                'svcpat_uuid' => generateuuid(),
+                'branch_id' => $branch_id,
+                'svcpat_sqm_details' => $termite['svcpat_sqm_details'],
+                'svcpat_costs' => $termite['svcpat_costs'],
+                'svcpat_date_created' => Carbon::now(),
+                'svcpat_created_by' => session('usr_id'),
+                'svcpat_active' => 1
+            ];
+        }
+
+        DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
 
         logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
 
@@ -272,6 +326,7 @@ class ManagementController extends Controller
         ]);
 
         DB::table('addresses')->insert([
+            'add_uuid' => generateuuid(),
             'add_name' => $request->add_name,
             'add_date_created' => Carbon::now(),
             'add_created_by' => session('usr_id'),
