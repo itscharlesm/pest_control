@@ -57,7 +57,7 @@
                                 </div>
                             </form>
 
-                            <table id="servicesTable" class="table table-hover table-bordered table-sm responsive">
+                            <table id="defaultTable" class="table table-hover table-bordered table-sm responsive">
                                 <thead>
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">Area</th>
