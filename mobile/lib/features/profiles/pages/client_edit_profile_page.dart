@@ -5,6 +5,10 @@ import 'package:mobile_app/shared/shared.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobile_app/config/api_config.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:mobile_app/shared/widgets/bottom_sheets/app_bottom_sheet.dart';
 
 class ClientEditProfilePage extends StatefulWidget {
   final String email;
@@ -20,8 +24,12 @@ class ClientEditProfilePage extends StatefulWidget {
 
 class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
 
+  XFile? _selectedImage;
   bool isSaving = false;
   bool isFetching = true;
+  String? profileImagePath;
+  bool isImageRemoved = false;
+
   final TextEditingController firstNameController = TextEditingController();
 
   final TextEditingController middleNameController = TextEditingController();
@@ -79,6 +87,12 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
     super.dispose();
   }
 
+  Future<void> _editSelectedImage() async {
+    if (_selectedImage == null) return;
+
+    await _cropImage(_selectedImage!.path);
+  }
+
   Future<void> _fetchUserProfile() async {
     try {
       final response = await http.post(
@@ -111,6 +125,7 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
           phoneController.text = formatPhone(user['usr_mobile'] ?? '');
           birthDateController.text = user['usr_birth_date'] ?? '';
           emailController.text = user['usr_email'] ?? widget.email;
+          profileImagePath = user['usr_image_path'];
           isFetching = false;
         });
       } else {
@@ -128,14 +143,48 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
     }
   }
 
+  Future<void> _cropImage(String imagePath) async {
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: imagePath,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Adjust Profile Photo',
+          toolbarColor: AppTheme.primaryRed,
+          toolbarWidgetColor: Colors.white,
+          lockAspectRatio: true,
+        ),
+        IOSUiSettings(
+          title: 'Adjust Profile Photo',
+          aspectRatioLockEnabled: true,
+        ),
+      ],
+    );
+
+    if (croppedFile != null) {
+      setState(() {
+        _selectedImage = XFile(croppedFile.path);
+        isImageRemoved = false;
+      });
+    }
+  }
+
   Future<void> _pickDate() async {
-    DateTime initialDate = DateTime.now().subtract(const Duration(days: 3650));
+    final now = DateTime.now();
+
+    DateTime initialDate;
+
+    if (birthDateController.text.isNotEmpty) {
+      initialDate = DateTime.parse(birthDateController.text);
+    } else {
+      initialDate = DateTime(now.year - 18, now.month, now.day);
+    }
 
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
+      lastDate: now,
     );
 
     if (picked != null) {
@@ -164,17 +213,29 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
     setState(() => isSaving = true);
 
     try {
-      final response = await http.post(
+      final request = http.MultipartRequest(
+        'POST',
         Uri.parse('${ApiConfig.baseUrl}/api/mobile/profile/update'),
-        headers: {'Accept': 'application/json'},
-        body: {
-          'email': emailController.text.trim(),
-          'first_name': firstNameController.text.trim(),
-          'middle_name': middleNameController.text.trim(),
-          'last_name': lastNameController.text.trim(),
-          'birth_date': birthDateController.text.trim(),
-        },
       );
+
+      request.fields['email'] = emailController.text.trim();
+      request.fields['first_name'] = firstNameController.text.trim();
+      request.fields['middle_name'] = middleNameController.text.trim();
+      request.fields['last_name'] = lastNameController.text.trim();
+      request.fields['birth_date'] = birthDateController.text.trim();
+      request.fields['remove_image'] = isImageRemoved ? '1' : '0';
+
+      if (_selectedImage != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'profile_image',
+            _selectedImage!.path,
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       final data = jsonDecode(response.body);
 
@@ -204,6 +265,97 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
     }
   }
 
+  Future<void> _pickImageFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (image != null) {
+      await _cropImage(image.path);
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+
+    if (image != null) {
+      await _cropImage(image.path);
+    }
+  }
+
+  void _showPhotoOptions() {
+    final bool hasImage =
+        _selectedImage != null ||
+        (profileImagePath != null && profileImagePath!.isNotEmpty);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return AppBottomSheet(
+          children: [
+            AppBottomSheetItem(
+              icon: Icons.photo_library_outlined,
+              title: "Choose from Gallery",
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromGallery();
+              },
+            ),
+
+            AppBottomSheetItem(
+              icon: Icons.camera_alt_outlined,
+              title: "Take a Photo",
+              showDivider: hasImage,
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera();
+              },
+            ),
+
+            if (_selectedImage != null) ...[
+              AppBottomSheetItem(
+                icon: Icons.edit_outlined,
+                title: "Edit Current Photo",
+                onTap: () {
+                  Navigator.pop(context);
+                  _editSelectedImage();
+                },
+              ),
+            ],
+
+            if (hasImage) ...[
+              AppBottomSheetItem(
+                icon: Icons.delete_outline,
+                title: "Remove Photo",
+                showDivider: false,
+                isDestructive: true,
+                onTap: () {
+                  Navigator.pop(context);
+
+                  setState(() {
+                    _selectedImage = null;
+                    profileImagePath = null;
+                    isImageRemoved = true;
+                  });
+                },
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,34 +373,45 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
             Center(
               child: Column(
                 children: [
-                  Stack(
-                    children: [
-                      const CircleAvatar(
-                        radius: 46,
-                        backgroundColor: AppTheme.primaryRed,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 46,
+                  GestureDetector(
+                    onTap: _showPhotoOptions,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 46,
+                          backgroundColor: AppTheme.primaryRed,
+                          backgroundImage: _selectedImage != null
+                          ? FileImage(File(_selectedImage!.path))
+                          : (profileImagePath != null && profileImagePath!.isNotEmpty
+                              ? NetworkImage('${ApiConfig.baseUrl}/$profileImagePath')
+                              : null),
+                          child: (_selectedImage == null &&
+                              (profileImagePath == null || profileImagePath!.isEmpty))
+                          ? const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 46,
+                            )
+                          : null,
                         ),
-                      ),
-                      Positioned(
-                        bottom: 2,
-                        right: 2,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: AppTheme.primaryRed,
-                            size: 16,
+                        Positioned(
+                          bottom: 2,
+                          right: 2,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: AppTheme.primaryRed,
+                              size: 16,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -265,13 +428,13 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
             const SizedBox(height: 28),
 
             // NAME FIELDS
-            _input("First Name *", firstNameController, Icons.person_outline),
+            _input("First Name", firstNameController, Icons.person_outline),
             const SizedBox(height: 16),
 
             _input("Middle Name", middleNameController, Icons.person_outline),
             const SizedBox(height: 16),
 
-            _input("Last Name *", lastNameController, Icons.person_outline),
+            _input("Last Name", lastNameController, Icons.person_outline),
             const SizedBox(height: 16),
 
             // EMAIL (READ ONLY)
@@ -363,3 +526,4 @@ class _ClientEditProfilePageState extends State<ClientEditProfilePage> {
     );
   }
 }
+
