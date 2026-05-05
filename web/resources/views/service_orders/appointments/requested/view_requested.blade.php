@@ -167,6 +167,11 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <a class="btn btn-danger mr-2 mb-2"
+                                href="">
+                                <span class="fa fa-user-shield"></span> Override
+                            </a>
                         </div>
                     </div>
                 </div>

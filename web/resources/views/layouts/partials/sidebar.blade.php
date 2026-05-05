@@ -56,7 +56,7 @@
                 <li class="nav-item">
                     <a href="{{ action('App\Http\Controllers\UserController@account') }}"
                         class="nav-link {{ request()->is('account*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-user-shield"></i>
+                        <i class="nav-icon fas fa-cog"></i>
                         <p>ACCOUNT</p>
                     </a>
                 </li>
