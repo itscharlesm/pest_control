@@ -56,6 +56,45 @@ class AppointmentController extends Controller
 
         return view('service_orders.appointments.requested.requested', compact('appointments', 'search'));
     }
+
+    public function requested_appointments_view($svc_id)
+    {
+        $display = DB::table('services')
+            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+            ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
+            ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+            ->where('services.svc_id', $svc_id)
+            ->select(
+                'services.svc_id',
+                'services.svc_is_termite',
+                'services.svc_type_treatment',
+                'services.svc_sqm_initial',
+                'services.svc_with_device',
+                'services.svc_device_count',
+                'services.svc_status',
+                'services.svc_initial_price',
+                'services.svc_balance',
+                'services.svc_payment_status',
+                'users.usr_first_name',
+                'users.usr_last_name',
+                'users.usr_email',
+                'users.usr_mobile',
+                'branches.branch_name',
+                'service_appointments.svca_client_date',
+                'service_appointments.svca_client_time',
+                'user_addresses.uadd_street',
+                'user_addresses.uadd_barangay',
+                'user_addresses.uadd_city',
+                'user_addresses.uadd_province',
+                'user_addresses.uadd_region',
+                'addresses.add_name'
+            )
+            ->first();
+
+        return view('service_orders.appointments.requested.view_requested', compact('display'));
+    }
     // END REQUESTED APPOINTMENTS
 
     // START DELETED APPOINTMENTS

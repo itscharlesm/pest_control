@@ -30,26 +30,12 @@
             <div class="card">
                 <div class="card-body overflow-auto">
                     <div class="row">
-                        <div class="col-md-12">
-                            <a class="btn btn-danger btn-md mb-3" href="{{ url('management/addresses/deleted') }}">
-                                <span class="fa fa-archive"></span> Deleted Addresses
-                            </a>
-                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <button type="button" class="btn btn-success mb-3" data-toggle="modal"
-                                    data-target="#addAddressModal">
-                                    <span class="fa fa-plus"></span> Add Address
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="row">
                         <!-- Table Column -->
                         <div class="col-lg-12 col-md-7">
-                            <form method="GET" action="{{ url('management/addresses/active') }}" class="mb-3">
+                            <form method="GET" action="{{ url('service/orders/appointments/requested') }}" class="mb-3">
                                 <div class="input-group">
                                     <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search addresses..." value="{{ request('search') }}">
+                                        placeholder="Search client..." value="{{ request('search') }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-primary">
                                             <span class="fa fa-search"></span> Search
@@ -164,48 +150,6 @@
             </div>
         </div>
     </section>
-
-    {{-- Add Address Modal --}}
-    <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xs" role="document">
-            <form action="{{ url('management/addresses/add') }}" method="POST">
-                @csrf
-
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white" id="addAddressModalLabel">
-                            <span class="fa fa-plus text-white"></span> Add Address
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-
-                    <div class="modal-body">
-                        <div class="row">
-                            {{-- Address Name --}}
-                            <div class="col-md-12 mb-3">
-                                <label for="add_name">Address Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="add_address_name" name="add_name"
-                                    placeholder="Address Identifier" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <span class="fa fa-close"></span> Close
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save Address Identifier
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
     {{-- Dynamic Search While Typing --}}
     <script>
         document.getElementById("searchInput").addEventListener("keyup", function() {
