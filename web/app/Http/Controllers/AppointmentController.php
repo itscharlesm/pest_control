@@ -53,4 +53,40 @@ class AppointmentController extends Controller
         return view('service_orders.appointments.requested', compact('appointments', 'search'));
     }
     // END REQUESTED APPOINTMENTS
+
+    // START DELETED APPOINTMENTS
+    public function delete_appointment(Request $request, $svc_id)
+    {
+        $service = DB::table('services')
+            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+            ->where('services.svc_id', '=', $svc_id)
+            ->select(
+                'services.svc_id',
+                'users.usr_first_name',
+                'users.usr_last_name'
+            )
+            ->first();
+
+        if (!$service) {
+            alert()->error('Service not found.');
+            return redirect()->back();
+        }
+
+        DB::table('services')
+            ->where('svc_id', '=', $svc_id)
+            ->update([
+                'svc_date_modified' => Carbon::now(),
+                'svc_modified_by' => session('usr_id'),
+                'svc_active' => 0
+            ]);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Deleted appointment of ' . $service->usr_first_name . ' ' . $service->usr_last_name
+        );
+
+        session()->flash('successMessage', 'Appointment has been deleted.');
+        return redirect()->back();
+    }
+    // END DELETED APPOINTMENTS
 }
