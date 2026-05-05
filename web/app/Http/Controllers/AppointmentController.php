@@ -34,6 +34,8 @@ class AppointmentController extends Controller
             'services.svc_date_created',
             'users.usr_first_name',
             'users.usr_last_name',
+            'users.usr_email',
+            'users.usr_mobile',
             'branches.branch_name'
         );
 
@@ -42,6 +44,8 @@ class AppointmentController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('users.usr_first_name', 'LIKE', "%$search%")
                     ->orWhere('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_email', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
                     ->orWhere('branches.branch_name', 'LIKE', "%$search%");
             });
         }
@@ -50,7 +54,7 @@ class AppointmentController extends Controller
 
         $appointments = $query->paginate(50);
 
-        return view('service_orders.appointments.requested', compact('appointments', 'search'));
+        return view('service_orders.appointments.requested.requested', compact('appointments', 'search'));
     }
     // END REQUESTED APPOINTMENTS
 

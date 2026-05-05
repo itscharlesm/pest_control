@@ -63,6 +63,7 @@
                                     <tr>
                                         <th class="text-center">No</th>
                                         <th class="text-center">Client</th>
+                                        <th class="text-center">Mobile Number</th>
                                         <th class="text-center">Branch</th>
                                         <th class="text-center">Is Termite</th>
                                         <th class="text-center">Payment Status</th>
@@ -79,6 +80,9 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->usr_last_name }}, {{ $appointment->usr_first_name }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $appointment->usr_mobile }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->branch_name }}
