@@ -159,14 +159,14 @@
 
                                         {{-- Delete Modal --}}
                                         <div class="modal fade" id="deleteModal-{{ $address->add_id }}" tabindex="-1"
-                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">
                                                     <form method="POST"
                                                         action="{{ action('App\Http\Controllers\ManagementController@addresses_delete', [$address->add_id]) }}">
                                                         @csrf
                                                         <div class="modal-header bg-danger text-white">
-                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                                            <h5 class="modal-title text-white" id="deleteModalLabel">
                                                                 Please Confirm
                                                             </h5>
                                                             <button type="button" class="close" data-dismiss="modal"

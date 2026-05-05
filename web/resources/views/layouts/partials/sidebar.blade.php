@@ -46,7 +46,7 @@
                 {{-- Messages --}}
                 <li class="nav-item">
                     <a href="{{ action('App\Http\Controllers\MessageController@main') }}"
-                        class="nav-link  {{ request()->is('messages*') ? 'active' : '' }}">
+                        class="nav-link {{ request()->is('messages*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-comments"></i>
                         <p>MESSAGES</p>
                     </a>
@@ -55,8 +55,8 @@
                 {{-- Account --}}
                 <li class="nav-item">
                     <a href="{{ action('App\Http\Controllers\UserController@account') }}"
-                        class="nav-link  {{ request()->is('account*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-user-shield"></i>
+                        class="nav-link {{ request()->is('account*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-cog"></i>
                         <p>ACCOUNT</p>
                     </a>
                 </li>
@@ -104,6 +104,85 @@
                     </li>
                 @endif
 
+                {{-- SERVICE ORDER --}}
+                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                    <li class="nav-header">SERVICE ORDER</li>
+
+                    {{-- APPOINTMENTS --}}
+                    <li class="nav-item {{ request()->is('service/orders/appointments/*') ? 'menu-open' : '' }}">
+                        <a href="#"
+                            class="nav-link {{ request()->is('service/orders/appointments/*') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-calendar-alt"></i>
+                            <p>
+                                APPOINTMENTS
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+
+                        <ul class="nav nav-treeview">
+
+                            <li class="nav-item">
+                                <a href="{{ action('App\Http\Controllers\AppointmentController@requested_appointments') }}"
+                                    class="nav-link {{ request()->is('service/orders/appointments/requested*') ? 'active' : '' }}">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>REQUESTED</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>ASSESSED</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>SCHEDULED</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>ONGOING</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>COMPLETED</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>DELETED</p>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {{-- Scheduling --}}
+                    <li class="nav-item">
+                        <a href="" class="nav-link">
+                            <i class="nav-icon fas fa-clock"></i>
+                            <p>SCHEDULING</p>
+                        </a>
+                    </li>
+
+                    {{-- Accounting --}}
+                    <li class="nav-item">
+                        <a href="" class="nav-link">
+                            <i class="nav-icon fas fa-money-bill"></i>
+                            <p>ACCOUNTING</p>
+                        </a>
+                    </li>
+                @endif
+
                 {{-- MANAGEMENT --}}
                 @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
                     <li class="nav-header">MANAGEMENT</li>
@@ -111,7 +190,7 @@
                     {{-- Addresses --}}
                     <li class="nav-item">
                         <a href="{{ action('App\Http\Controllers\ManagementController@addresses_active') }}"
-                            class="nav-link  {{ request()->is('management/addresses*') ? 'active' : '' }}">
+                            class="nav-link {{ request()->is('management/addresses*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-map-marker-alt"></i>
                             <p>ADDRESSES</p>
                         </a>
@@ -121,7 +200,7 @@
                     {{-- Branches --}}
                     <li class="nav-item">
                         <a href="{{ action('App\Http\Controllers\ManagementController@branches_active') }}"
-                            class="nav-link  {{ request()->is('management/branches*') ? 'active' : '' }}">
+                            class="nav-link {{ request()->is('management/branches*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-location"></i>
                             <p>BRANCHES</p>
                         </a>
@@ -130,7 +209,7 @@
                     {{-- Services --}}
                     <li class="nav-item">
                         <a href="{{ action('App\Http\Controllers\ManagementController@services_active') }}"
-                            class="nav-link  {{ request()->is('management/services*') ? 'active' : '' }}">
+                            class="nav-link {{ request()->is('management/services*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-list"></i>
                             <p>SERVICES</p>
                         </a>
