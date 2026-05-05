@@ -10,6 +10,7 @@ import 'package:mobile_app/features/home/pages/technician_home_page.dart';
 import 'package:mobile_app/features/profiles/pages/client_profile_page.dart';
 import 'package:mobile_app/features/profiles/pages/technician_profile_page.dart';
 import 'package:mobile_app/shared/widgets/dialogs/app_confirmation_dialog.dart';
+import 'package:mobile_app/features/bookings/pages/client_booking_location_page.dart';
 
 class AppDrawer extends StatefulWidget {
   final int userType; // 3 = Client, 2 = Technician
@@ -128,7 +129,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     Navigator.pop(context);
 
                     if (widget.currentPage != 'home') {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => widget.userType == 3
@@ -148,7 +149,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     Navigator.pop(context);
 
                     if (widget.currentPage != 'profile') {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => widget.userType == 3
@@ -164,7 +165,21 @@ class _AppDrawerState extends State<AppDrawer> {
                   _drawerItem(
                     icon: Icons.add_circle_outline_rounded,
                     title: 'Book Service',
-                    onTap: () => Navigator.pop(context),
+                    isSelected: widget.currentPage == 'book_service',
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      if (widget.currentPage != 'book_service') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ClientBookingLocationPage(
+                              email: widget.email,
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   _drawerItem(
                     icon: Icons.calendar_month_rounded,

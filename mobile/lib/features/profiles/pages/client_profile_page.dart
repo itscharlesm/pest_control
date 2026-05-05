@@ -8,6 +8,8 @@ import 'package:mobile_app/features/profiles/widgets/profile_header.dart';
 import 'package:mobile_app/features/profiles/widgets/profile_menu_list.dart';
 import 'package:mobile_app/features/profiles/pages/client_edit_profile_page.dart';
 import 'package:mobile_app/shared/shared.dart';
+import 'package:mobile_app/features/profiles/pages/client_address_page.dart';
+import 'package:mobile_app/app/theme.dart';
 
 class ClientProfilePage extends StatefulWidget {
   final String email;
@@ -100,6 +102,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.lightGray,
       drawer: AppDrawer(
         userType: 3,
         email: widget.email,
@@ -109,7 +112,11 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
         title: "My Profile",
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+            child: CircularProgressIndicator(
+              color: AppTheme.primaryRed,
+            ),
+          )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -159,8 +166,17 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
                         icon: Icons.location_on_outlined,
                         title: "Address",
                         subtitle: "Manage your service location",
-                        onTap: () {
-                          // TODO: Navigate to address page
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ClientAddressPage(
+                                email: widget.email,
+                              ),
+                            ),
+                          );
+
+                          _fetchProfile();
                         },
                       ),
                       ProfileMenuItem(
