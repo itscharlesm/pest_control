@@ -2,13 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\MainController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MainController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfilingController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ManagementController;
 use App\Http\Controllers\LocationController;
 
@@ -83,6 +84,19 @@ Route::get('profiling/clients/deleted', [ProfilingController::class, 'clients_de
 Route::post('profiling/clients/reset/password/{usr_id}', [ProfilingController::class, 'clients_reset_password']);
 Route::post('profiling/clients/delete/{usr_id}', [ProfilingController::class, 'clients_delete']);
 Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, 'clients_restore']);
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+
+// ------------------------------------------------------------------------------------------------------------------------------------ //
+// SERVICE ORDER
+// - Requested Appointments
+Route::get('service/orders/appointments/requested', [AppointmentController::class, 'requested_appointments']);
+Route::get('service/orders/appointments/requested/{svc_id}', [AppointmentController::class, 'requested_appointments_view']);
+// - Assesed Appointments
+// - Scheduled Appointments
+// - Ongoing Appointments
+// - Completed Appointments
+// - Deleted Appointments
+Route::post('service/orders/appointments/delete/{svc_id}', [AppointmentController::class, 'delete_appointment']);
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //
