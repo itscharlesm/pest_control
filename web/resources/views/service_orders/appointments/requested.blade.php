@@ -65,43 +65,39 @@
                                         <th class="text-center">Client</th>
                                         <th class="text-center">Branch</th>
                                         <th class="text-center">Is Termite</th>
-                                        <th class="text-center">Status</th>
                                         <th class="text-center">Payment Status</th>
+                                        <th class="text-center">Date Requested</th>
+                                        <th class="text-center">Status</th>
                                         <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($appointments as $appointment)
                                         <tr>
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $loop->iteration }}
                                             </td>
-
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->usr_last_name }}, {{ $appointment->usr_first_name }}
                                             </td>
-
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->branch_name }}
                                             </td>
-
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 @if ($appointment->svc_is_termite == 1)
                                                     YES
                                                 @else
                                                     NO
                                                 @endif
                                             </td>
-
-                                            <td class="text-center">
-                                                {{ $appointment->svc_status }}
-                                            </td>
-
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->svc_payment_status }}
                                             </td>
-
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">{{ \Carbon\Carbon::parse($appointment->svc_date_created)->format('m/d/Y | h:i A') }}</td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $appointment->svc_status }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
                                                 <a class="btn btn-warning btn-sm mb-1"
                                                     href="{{ url('service/orders/appointments/requested/' . $appointment->svc_id) }}">
                                                     <span class="fa fa-eye"></span>
@@ -116,52 +112,6 @@
                                                 @endif
                                             </td>
                                         </tr>
-
-                                        {{-- Update Address Modal --}}
-                                        <div class="modal fade" id="updateAddressModal-{{ $address->add_id }}"
-                                            tabindex="-1" role="dialog" aria-labelledby="updateAddressModalLabel"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog modal-xs" role="document">
-                                                <form action="{{ url('management/addresses/update/' . $address->add_id) }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    <div class="modal-content">
-                                                        <div class="modal-header bg-warning text-black">
-                                                            <h5 class="modal-title text-black"
-                                                                id="updateAddressModalLabel-{{ $address->add_id }}">
-                                                                <span class="fa fa-edit"></span> Update Address Identifier
-                                                            </h5>
-
-                                                            <button type="button" class="close text-black"
-                                                                data-dismiss="modal">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-
-                                                        <div class="modal-body">
-                                                            {{-- Address Identifier --}}
-                                                            <div class="form-group">
-                                                                <label>Address Identifier <span
-                                                                        class="text-danger">*</span></label>
-                                                                <input type="text" class="form-control" name="add_name"
-                                                                    value="{{ $address->add_name }}" required>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-
-                                                            <button type="submit" class="btn btn-warning">
-                                                                <span class="fa fa-save"></span> Update
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
 
                                         {{-- Delete Modal --}}
                                         <div class="modal fade" id="deleteModal-{{ $appointment->svc_id }}">
