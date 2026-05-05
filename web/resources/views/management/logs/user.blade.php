@@ -57,19 +57,19 @@
                                 <tbody>
                                     @foreach ($logs as $index => $log)
                                         <tr>
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $logs->firstItem() + $index }}
                                             </td>
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ \Carbon\Carbon::parse($log->log_date)->format('m/d/Y | h:i A') }}
                                             </td>
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $log->usr_last_name }}, {{ $log->usr_first_name }}
                                             </td>
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $log->log_title ?? '-' }}
                                             </td>
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $log->log_details ?? '-' }}
                                             </td>
                                         </tr>

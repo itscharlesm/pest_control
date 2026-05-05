@@ -58,27 +58,27 @@
                                     @foreach ($logs as $index => $log)
                                         <tr>
                                             {{-- Auto number (respects pagination + latest first) --}}
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $logs->firstItem() + $index }}
                                             </td>
 
                                             {{-- Date --}}
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ \Carbon\Carbon::parse($log->log_date)->format('m/d/Y | h:i A') }}
                                             </td>
 
                                             {{-- Name --}}
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $log->usr_last_name }}, {{ $log->usr_first_name }}
                                             </td>
 
                                             {{-- IP --}}
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $log->log_ip ?? '-' }}
                                             </td>
 
                                             {{-- MAC --}}
-                                            <td class="text-center">
+                                            <td style="vertical-align: middle; text-align: center">
                                                 {{ $log->log_mac ?? '-' }}
                                             </td>
                                         </tr>
