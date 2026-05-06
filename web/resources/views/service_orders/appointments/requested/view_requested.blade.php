@@ -16,6 +16,14 @@
             display: none !important;
         }
     }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    #sectionB {
+        overflow: visible !important;
+    }
 </style>
 
 @extends('layouts.themes.main')
@@ -63,6 +71,7 @@
                         </strong>
                     </div>
                     <div class="row">
+                        {{-- Appointment Information Display --}}
                         <div class="table-responsive" id="sectionA">
                             <table class="table table-bordered text-left align-middle">
                                 <tbody>
@@ -85,8 +94,10 @@
                                     <tr>
                                         <td style="font-weight: bold;">MOBILE NUMBER</td>
                                         <td>{{ $display->usr_mobile }}</td>
-                                        <td colspan="1" style="font-weight: bold;">BRANCH</td>
-                                        <td colspan="3">{{ $display->branch_name }}</td>
+                                        <td style="font-weight: bold;">IS PACKAGE</td>
+                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                        <td style="font-weight: bold;">BRANCH</td>
+                                        <td>{{ $display->branch_name }}</td>
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">ADDRESS</td>
@@ -168,10 +179,155 @@
                                 </div>
                             </div>
 
-                            <a class="btn btn-danger mr-2 mb-2"
-                                href="">
+                            <a class="btn btn-danger mr-2 mb-2" href="">
                                 <span class="fa fa-user-shield"></span> Override
                             </a>
+                        </div>
+
+                        {{-- Service Order Display --}}
+                        <div class="table-responsive" id="sectionB">
+                            <hr>
+                            @if ($display->svc_is_termite == 0)
+                                {{-- NON-TERMITE: Two columns - Pest Type & Service Order --}}
+                                <div class="d-flex gap-2 mb-3 no-print">
+                                    <button type="button" class="btn btn-success btn-sm mr-2" data-toggle="modal"
+                                        data-target="#addPestTypeModal">
+                                        <span class="fa fa-plus"></span> Add Pest Type
+                                    </button>
+                                    <button type="button" class="btn btn-success btn-sm" data-toggle="modal"
+                                        data-target="#addAreaModal">
+                                        <span class="fa fa-plus"></span> Add Area
+                                    </button>
+                                </div>
+
+                                <div class="row">
+                                    {{-- PEST TYPE TABLE --}}
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th colspan="3"><strong>PEST TYPE</strong></th>
+                                                </tr>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th style="width: 50px;">No.</th>
+                                                    <th>Pest</th>
+                                                    <th class="no-print" style="width: 80px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($pestTypes as $index => $type)
+                                                    <tr>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $index + 1 }}</td>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $type->svcp_pest_type }}</td>
+                                                        <td class="no-print"
+                                                            style="vertical-align: middle; text-align: center">
+                                                            <a class="btn btn-danger btn-sm mb-1"
+                                                                href="javascript:void(0)" data-toggle="modal"
+                                                                data-target="#deletePestTypeModal-{{ $type->svcp_id }}">
+                                                                <span class="fa fa-trash"></span>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center text-muted">No pest types
+                                                            added.</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {{-- SERVICE ORDER TABLE (non-termite areas) --}}
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th colspan="4"><strong>SERVICE ORDER</strong></th>
+                                                </tr>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th style="width: 50px;">No.</th>
+                                                    <th>Service</th>
+                                                    <th>Cost</th>
+                                                    <th class="no-print" style="width: 80px;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($serviceAreas as $index => $area)
+                                                    <tr>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $index + 1 }}</td>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $area->svcpa_area }}</td>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            ₱{{ number_format($area->svcpa_cost, 2) }}</td>
+                                                        <td class="no-print"
+                                                            style="vertical-align: middle; text-align: center">
+                                                            <a class="btn btn-danger btn-sm mb-1"
+                                                                href="javascript:void(0)" data-toggle="modal"
+                                                                data-target="#deleteAreaModal-{{ $area->svcpa_id }}">
+                                                                <span class="fa fa-trash"></span>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="4" class="text-center text-muted">No service areas
+                                                            added.</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @elseif ($display->svc_is_termite == 1)
+                                {{-- TERMITE: Full width - Termite Details --}}
+                                <div class="col-md-12">
+                                    <table class="table table-bordered text-center mb-2">
+                                        <thead>
+                                            <tr style="background-color: #f5f5f5;">
+                                                <th colspan="5"><strong>TERMITE DETAILS</strong></th>
+                                            </tr>
+                                            <tr style="background-color: #f5f5f5;">
+                                                <th style="width: 50px;">No.</th>
+                                                <th>SQM Details</th>
+                                                <th>Cost</th>
+                                                <th>Computation</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($termiteAreas as $index => $area)
+                                                <tr>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        {{ $index + 1 }}</td>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        {{ $area->svcpat_sqm_details }}</td>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        ₱{{ number_format($area->svcpat_costs, 2) }}</td>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        {{-- @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
+                                                            <p>STANDARD TREATMENT: sqm × cost</p>
+                                                        @elseif ($display->svc_type_treatment == 'HYBRID TREATMENT')
+                                                            <p>HYBRID TREATMENT: sqm × cost + device</p>
+                                                        @else
+                                                            <p>{{ $display->svc_type_treatment }}: sqm × cost</p>
+                                                        @endif --}}
+                                                        <p>STANDARD TREATMENT: sqm × cost</p>
+                                                        <p>HYBRID TREATMENT: sqm × cost + device</p>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">No termite areas
+                                                        added.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

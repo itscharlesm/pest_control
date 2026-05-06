@@ -1,52 +1,44 @@
 Route::get('service/orders/appointments/requested', [AppointmentController::class, 'requested_appointments']);
 Route::get('service/orders/appointments/requested/{svc_id}', [AppointmentController::class, 'requested_appointments_view']);
 
-public function requested_appointments(Request $request)
-{
-    $search = $request->search ?? '';
-    $sessionBranchId = session('branch_id');
+public function requested_appointments_view($svc_id)
+    {
+        $display = DB::table('services')
+            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+            ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
+            ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+            ->where('services.svc_id', $svc_id)
+            ->select(
+                'services.svc_id',
+                'services.svc_is_termite',
+                'services.svc_type_treatment',
+                'services.svc_sqm_initial',
+                'services.svc_with_device',
+                'services.svc_device_count',
+                'services.svc_status',
+                'services.svc_initial_price',
+                'services.svc_balance',
+                'services.svc_payment_status',
+                'users.usr_first_name',
+                'users.usr_last_name',
+                'users.usr_email',
+                'users.usr_mobile',
+                'branches.branch_name',
+                'service_appointments.svca_client_date',
+                'service_appointments.svca_client_time',
+                'user_addresses.uadd_street',
+                'user_addresses.uadd_barangay',
+                'user_addresses.uadd_city',
+                'user_addresses.uadd_province',
+                'user_addresses.uadd_region',
+                'addresses.add_name'
+            )
+            ->first();
 
-    $query = DB::table('services')
-        ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
-        ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
-        ->where('services.svc_active', 1)
-        ->where('services.svc_status', 'REQUESTED');
-
-    // Branch filter (same logic as users_active)
-    if ($sessionBranchId != 1) {
-        $query->where('services.branch_id', $sessionBranchId);
+        return view('service_orders.appointments.requested.view_requested', compact('display'));
     }
-
-    $query->select(
-        'services.svc_id',
-        'services.svc_is_termite',
-        'services.svc_status',
-        'services.svc_payment_status',
-        'services.svc_date_created',
-        'users.usr_first_name',
-        'users.usr_last_name',
-        'users.usr_email',
-        'users.usr_mobile',
-        'branches.branch_name'
-    );
-
-    // Search
-    if (!empty($search)) {
-        $query->where(function ($q) use ($search) {
-            $q->where('users.usr_first_name', 'LIKE', "%$search%")
-                ->orWhere('users.usr_last_name', 'LIKE', "%$search%")
-                ->orWhere('users.usr_email', 'LIKE', "%$search%")
-                ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
-                ->orWhere('branches.branch_name', 'LIKE', "%$search%");
-        });
-    }
-
-    $query->orderBy('services.svc_date_created', 'asc');
-
-    $appointments = $query->paginate(50);
-
-    return view('service_orders.appointments.requested.requested', compact('appointments', 'search'));
-}
 
 <style>
     @media print {
@@ -102,78 +94,95 @@ public function requested_appointments(Request $request)
                 <div class="card-body overflow-auto">
                     <div class="text-center mb-2">
                         <h5 style="margin: 0; font-weight: bold;">GO FORWARD PEST CONTROL</h5>
-                        <p style="margin: 0;">services.branch_id display branch_name {{ $display->branch_name }}</p>
+                        <p style="margin: 0;">{{ $display->branch_name }}</p>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="flex-grow-1 text-center">
-                            <strong style="color: red;">SERVICE ORDER</strong>
-                        </div>
-                        <div>
-                            <strong>JO-{{ isset($display->svc_id) ? str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) : '______' }}</strong>
-                        </div>
+
+                    <div class="mb-4 position-relative text-center">
+                        <strong style="color: red;">SERVICE ORDER</strong>
+
+                        <strong style="position: absolute; right: 0; top: 0;">
+                            SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }}
+                        </strong>
                     </div>
                     <div class="row">
+                        {{-- Appointment Information Display --}}
                         <div class="table-responsive" id="sectionA">
                             <table class="table table-bordered text-left align-middle">
                                 <tbody>
                                     <tr>
-                                        <td class="fw-bold">CLIENT NAME</td>
-                                        <td>usr_first_name usr_last_name</td>
-                                        <td class="fw-bold">PAYMENT STATUS</td>
-                                        <td>svc_payment_status</td>
-                                        <td class="fw-bold">INITIAL PRICE</td>
-                                        <td>svc_initial_price</td>
+                                        <td style="font-weight: bold;">CLIENT NAME</td>
+                                        <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
+                                        <td style="font-weight: bold;">PAYMENT STATUS</td>
+                                        <td>{{ $display->svc_payment_status }}</td>
+                                        <td style="font-weight: bold;">INITIAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">EMAIL</td>
-                                        <td>usr_email</td>
-                                        <td class="fw-bold">IS TERMITE</td>
-                                        <td>svc_is_termite = 1 (YES), = 0 (NO)</td>
-                                        <td class="fw-bold">BALANCE</td>
-                                        <td>svc_balance</td>
+                                        <td style="font-weight: bold;">EMAIL</td>
+                                        <td>{{ $display->usr_email }}</td>
+                                        <td style="font-weight: bold;">IS TERMITE</td>
+                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                        <td style="font-weight: bold;">BALANCE</td>
+                                        <td>₱{{ number_format($display->svc_balance, 2) }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">MOBILE NUMBER</td>
-                                        <td>usr_mobile</td>
-                                        <td colspan="2" class="fw-bold text-center">BRANCH</td>
-                                        <td colspan="2">services.branch_id display branch_name</td>
+                                        <td style="font-weight: bold;">MOBILE NUMBER</td>
+                                        <td>{{ $display->usr_mobile }}</td>
+                                        <td style="font-weight: bold;">IS PACKAGE</td>
+                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                        <td style="font-weight: bold;">BRANCH</td>
+                                        <td>{{ $display->branch_name }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold">ADDRESS</td>
-                                        <td>uadd_street, uadd_barangay, uadd_city, uadd_province, uadd_region</td>
-                                        <td class="fw-bold">ADDRESS TYPE</td>
-                                        <td>add_name</td>
-                                        <td class="fw-bold">STATUS</td>
-                                        <td>svc_status</td>
+                                        <td style="font-weight: bold;">ADDRESS</td>
+                                        <td>{{ implode(
+                                            ', ',
+                                            array_filter([
+                                                $display->uadd_street,
+                                                $display->uadd_barangay,
+                                                $display->uadd_city,
+                                                $display->uadd_province,
+                                                $display->uadd_region,
+                                            ]),
+                                        ) }}
+                                        </td>
+                                        <td style="font-weight: bold;">ADDRESS TYPE</td>
+                                        <td>{{ $display->add_name }}</td>
+                                        <td style="font-weight: bold;">STATUS</td>
+                                        <td>{{ $display->svc_status }}</td>
                                     </tr>
                                     <tr>
-                                        <th colspan="6" class="text-center table-secondary">
+                                        <th colspan="6" class="text-center table-light">
                                             SCHEDULE
                                         </th>
                                     </tr>
                                     <tr>
-                                        <td colspan="2" class="fw-bold">DATE REQUESTED</td>
-                                        <td>svca_date (mm/dd/yyyy)</td>
-                                        <td colspan="2" class="fw-bold">TIME REQUESTED</td>
-                                        <td>svca_time (00:00 AM/PM)</td>
+                                        <td style="font-weight: bold;">DATE REQUESTED</td>
+                                        <td colspan="2">
+                                            {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
+                                        <td style="font-weight: bold;">TIME REQUESTED</td>
+                                        <td colspan="2">
+                                            {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
                                     </tr>
-                                    <tr>
-                                        <th colspan="6" class="text-center table-secondary">
-                                            TERMITE CASE
-                                        </th>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="fw-bold">INITIAL SQM</td>
-                                        <td>svc_sqm_initial</td>
-                                        <td colspan="2" class="fw-bold">WITH DEVICE</td>
-                                        <td>svc_with_device = 1 (YES) = 0 (NO)</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" class="fw-bold">TREATMENT TYPE</td>
-                                        <td>svc_type_treatment</td>
-                                        <td colspan="2" class="fw-bold">DEVICE COUNT</td>
-                                        <td>svc_device_count</td>
-                                    </tr>
+                                    @if ($display->svc_is_termite)
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">
+                                                TERMITE CASE
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">INITIAL SQM</td>
+                                            <td colspan="2">{{ $display->svc_sqm_initial }}</td>
+                                            <td style="font-weight: bold;">WITH DEVICE</td>
+                                            <td colspan="2">{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                            <td colspan="2">{{ $display->svc_type_treatment }}</td>
+                                            <td style="font-weight: bold;">DEVICE COUNT</td>
+                                            <td colspan="2">{{ $display->svc_device_count ?? 'N/A' }}</td>
+                                        </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -183,7 +192,7 @@ public function requested_appointments(Request $request)
                             </button>
 
                             <div class="btn-group mr-2 mb-2">
-                                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
                                     aria-haspopup="true" aria-expanded="false">
                                     <span class="fa fa-print"></span> Print Options
                                 </button>
@@ -202,6 +211,53 @@ public function requested_appointments(Request $request)
                                             section.</p>
                                     </div>
                                 </div>
+                            </div>
+
+                            <a class="btn btn-danger mr-2 mb-2" href="">
+                                <span class="fa fa-user-shield"></span> Override
+                            </a>
+                        </div>
+
+                        {{-- Service Order Display --}}
+                        <div class="table-responsive" id="sectionB">
+                            <div class="d-flex gap-2">
+
+                                @if ($display->svc_is_termite == 0)
+                                    <!-- FIRST ROW (NON-TERMITE) -->
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <td><strong>PEST TYPE</strong></td>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <td><strong>SERVICE ORDER</strong></td>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                @endif
+
+                                @if ($display->svc_is_termite == 1)
+                                    <!-- SECOND ROW (TERMITE) -->
+                                    <div class="col-md-12">
+                                        <!-- Your termite-specific layout -->
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <td><strong>TERMITE DETAILS</strong></td>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -330,3 +386,72 @@ uadd_city
 uadd_province
 uadd_region
 uadd_active
+
+service_order_pests
+svcop_id
+svc_id
+svcp_id
+svcop_active
+
+service_orders
+svco_id
+svc_id
+svcpa_id
+svcpat_id
+svco_active
+
+service_packages
+svcp_id
+svcp_pest_type
+svcp_active
+
+service_package_areas
+svcpa_id
+svcpa_area
+svcpa_cost
+svcpa_active
+
+service_package_area_termites
+svcpat_id
+svcpat_sqm_details
+svcpat_costs
+svcpat_active
+
+svc_is_termite = 0 no need to display SERVICE ORDER WITH TERMITES
+
+can you fill the data for all table in sectionB
+
+then add 2 modal button (dont add modal yet just button)
+
+Add Pest Type
+
+Add Area
+
+so in pest type
+No. = index + 1
+Pest = svcp_pest_type
+Action = 
+<a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+    data-toggle="modal"
+    data-target="#deletePestTypeModal-{{ $type->svcp_id }}">
+    <span class="fa fa-trash"></span>
+</a>
+
+so in service_order (note: if in the row svcpat_id is null we display below)
+No. = index + 1
+Service = svcpa_area
+Cost = svcpa_cost
+Action = 
+<a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+    data-toggle="modal"
+    data-target="#deleteAreaModal-{{ $area->svcpa_id }}">
+    <span class="fa fa-trash"></span>
+</a>
+
+in termite details it uses service_order and service_package_area_termites (note: if in the row svcpat_id is not null we display below)
+No. = index + 1
+SQM Details = svcpat_sqm_details
+Cost = svcpat_costs
+Computation = Instructional row: STANDARD TREATMENT: sqm x cost HYBRID TREATMENT: sqm x cost + device
+
+I HOPE YOU UNDERSTAND THE CONNECTION OF THE TABLE
