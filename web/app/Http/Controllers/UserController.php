@@ -98,6 +98,7 @@ class UserController extends Controller
         ]);
 
         DB::table('user_addresses')->insert([
+            'uadd_uuid' => generateuuid(),
             'usr_id' => session('usr_id'),
             'add_id' => $request->add_id ?: null,
             'uadd_street' => $request->street,

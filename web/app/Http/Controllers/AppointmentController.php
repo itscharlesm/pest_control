@@ -68,6 +68,8 @@ class AppointmentController extends Controller
             ->where('services.svc_id', $svc_id)
             ->select(
                 'services.svc_id',
+                'services.svc_is_package',
+                'services.svcpat_id',
                 'services.svc_is_termite',
                 'services.svc_type_treatment',
                 'services.svc_sqm_initial',
@@ -93,7 +95,47 @@ class AppointmentController extends Controller
             )
             ->first();
 
-        return view('service_orders.appointments.requested.view_requested', compact('display'));
+        // Pest Types for this service
+        $pestTypes = DB::table('service_order_pests')
+            ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+            ->where('service_order_pests.svc_id', $svc_id)
+            ->where('service_order_pests.svcop_active', 1)
+            ->select(
+                'service_order_pests.svcop_id',
+                'service_packages.svcp_id',
+                'service_packages.svcp_pest_type'
+            )
+            ->get();
+
+        // Service Orders with Areas (non-termite: svcpat_id IS NULL)
+        $serviceAreas = DB::table('service_orders')
+            ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+            ->where('service_orders.svc_id', $svc_id)
+            ->whereNull('service_orders.svcpat_id')
+            ->where('service_orders.svco_active', 1)
+            ->select(
+                'service_orders.svco_id',
+                'service_package_areas.svcpa_id',
+                'service_package_areas.svcpa_area',
+                'service_package_areas.svcpa_cost'
+            )
+            ->get();
+
+        // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
+        $termiteAreas = DB::table('service_orders')
+            ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
+            ->where('service_orders.svc_id', $svc_id)
+            ->whereNotNull('service_orders.svcpat_id')
+            ->where('service_orders.svco_active', 1)
+            ->select(
+                'service_orders.svco_id',
+                'service_package_area_termites.svcpat_id',
+                'service_package_area_termites.svcpat_sqm_details',
+                'service_package_area_termites.svcpat_costs'
+            )
+            ->get();
+
+        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas'));
     }
     // END REQUESTED APPOINTMENTS
 

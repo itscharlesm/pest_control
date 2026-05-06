@@ -206,6 +206,7 @@ class ProfilingController extends Controller
         // Insert address (if any field is filled)
         if ($request->street || $request->barangay || $request->municipality || $request->province || $request->region) {
             DB::table('user_addresses')->insert([
+                'uadd_uuid' => generateuuid(),
                 'usr_id' => $usr_id,
                 'add_id' => 1,
                 'uadd_street' => $request->street,
