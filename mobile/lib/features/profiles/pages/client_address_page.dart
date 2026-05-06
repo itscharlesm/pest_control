@@ -1,10 +1,12 @@
 import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:mobile_app/app/theme.dart';
 import 'package:mobile_app/config/api_config.dart';
+import 'package:flutter/material.dart';
+import 'package:mobile_app/app/theme.dart';
+import 'package:mobile_app/features/profiles/widgets/add_address_sheet.dart';
 import 'package:mobile_app/shared/widgets/headers/app_back_header.dart';
+import 'package:mobile_app/features/profiles/widgets/edit_address_sheet.dart';
+import 'package:mobile_app/features/profiles/widgets/delete_address_dialog.dart';
 
 class ClientAddressPage extends StatefulWidget {
   final String email;
@@ -19,122 +21,101 @@ class ClientAddressPage extends StatefulWidget {
 }
 
 class _ClientAddressPageState extends State<ClientAddressPage> {
-  bool isLoadingRegions = true;
-  bool isSaving = false;
+  List<Map<String, dynamic>> addresses = [];
+  bool isLoading = true;
 
-  int selectedAddressTypeId = 1;
-  int? selectedRegionId;
-  int? selectedProvinceId;
-  int? selectedMunicipalityId;
-  int? selectedBarangayId;
+  String _addressTypeName(dynamic addId) {
+    switch (addId) {
+      case 1:
+        return 'HOME';
+      case 2:
+        return 'WORK';
+      case 3:
+        return 'COMPANY';
+      case 4:
+        return 'FAVORITE';
+      case 5:
+        return 'RESIDENTIAL';
+      default:
+        return 'ADDRESS';
+    }
+  }
 
-  final List<Map<String, dynamic>> addressTypes = [
-    {'id': 1, 'name': 'HOME'},
-    {'id': 2, 'name': 'WORK'},
-    {'id': 3, 'name': 'COMPANY'},
-    {'id': 4, 'name': 'FAVORITE'},
-    {'id': 5, 'name': 'RESIDENTIAL'},
-  ];
+  IconData _addressIcon(String label) {
+    switch (label.toUpperCase()) {
+      case 'HOME':
+        return Icons.home_outlined;
+      case 'WORK':
+        return Icons.business_center_outlined;
+      case 'COMPANY':
+        return Icons.business_outlined;
+      case 'FAVORITE':
+        return Icons.star_outline_rounded;
+      case 'RESIDENTIAL':
+        return Icons.apartment_rounded;
+      default:
+        return Icons.location_on_outlined;
+    }
+  }
 
-  List<dynamic> regions = [];
-  List<dynamic> provinces = [];
-  List<dynamic> municipalities = [];
-  List<dynamic> barangays = [];
-
-  final TextEditingController streetController = TextEditingController();
+  String _formatLabel(String label) {
+    switch (label.toUpperCase()) {
+      case 'HOME':
+        return 'Home';
+      case 'WORK':
+        return 'Office';
+      case 'COMPANY':
+        return 'Company';
+      case 'FAVORITE':
+        return 'Favorite';
+      case 'RESIDENTIAL':
+        return 'Residential';
+      default:
+        return label;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _fetchRegions();
+    _loadAddresses();
   }
 
-  @override
-  void dispose() {
-    streetController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _fetchRegions() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/mobile/location/regions'),
-        headers: {'Accept': 'application/json'},
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 && data['success'] == true) {
-        setState(() {
-          regions = data['data'];
-          isLoadingRegions = false;
-        });
-      } else {
-        _showMessage('Unable to load regions.');
-        setState(() => isLoadingRegions = false);
-      }
-    } catch (_) {
-      if (!mounted) return;
-      _showMessage('Connection error while loading regions.');
-      setState(() => isLoadingRegions = false);
-    }
-  }
-
-  Future<void> _fetchProvinces(int regId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/mobile/location/provinces/$regId'),
-        headers: {'Accept': 'application/json'},
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 && data['success'] == true) {
-        setState(() {
-          provinces = data['data'];
-        });
-      } else {
-        _showMessage('Unable to load provinces.');
-      }
-    } catch (_) {
-      _showMessage('Connection error while loading provinces.');
-    }
-  }
-
-  Future<void> _fetchMunicipalities(int provId) async {
-    try {
-      final response = await http.get(
-        Uri.parse(
-          '${ApiConfig.baseUrl}/api/mobile/location/municipalities/$provId',
+  void _openAddAddressSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(18),
         ),
-        headers: {'Accept': 'application/json'},
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 && data['success'] == true) {
-        setState(() {
-          municipalities = data['data'];
-        });
-      } else {
-        _showMessage('Unable to load municipalities.');
-      }
-    } catch (_) {
-      _showMessage('Connection error while loading municipalities.');
-    }
+      ),
+      builder: (_) {
+        return AddAddressSheet(
+          email: widget.email,
+          onSaved: (newAddress) {
+            _loadAddresses();
+          },
+        );
+      },
+    );
   }
 
-  Future<void> _fetchBarangays(int munId) async {
+  Future<void> _setPrimaryAddress(int index) async {
+    final selectedAddress = addresses[index];
+
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/mobile/location/barangays/$munId'),
-        headers: {'Accept': 'application/json'},
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/mobile/address/set-primary'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'email': widget.email,
+          'uadd_id': selectedAddress['uadd_id'],
+        }),
       );
 
       final data = jsonDecode(response.body);
@@ -143,46 +124,57 @@ class _ClientAddressPageState extends State<ClientAddressPage> {
 
       if (response.statusCode == 200 && data['success'] == true) {
         setState(() {
-          barangays = data['data'];
+          for (final address in addresses) {
+            address['primary'] = false;
+          }
+
+          selectedAddress['primary'] = true;
         });
       } else {
-        _showMessage('Unable to load barangays.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              data['message'] ?? 'Unable to set primary address.',
+            ),
+          ),
+        );
       }
-    } catch (_) {
-      _showMessage('Connection error while loading barangays.');
-    }
-  }
+    } catch (e) {
+      debugPrint(e.toString());
 
-  void _saveAddress() {
-    if (selectedRegionId == null ||
-        selectedProvinceId == null ||
-        selectedMunicipalityId == null ||
-        selectedBarangayId == null ||
-        streetController.text.trim().isEmpty) {
-      _showMessage('Please complete all address fields.');
-      return;
-    }
-
-    setState(() {
-      isSaving = true;
-    });
-
-    Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
 
-      setState(() {
-        isSaving = false;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Connection error while updating address.'),
+        ),
+      );
+    }
+  }
 
-      _showMessage('Address save API will be connected next.');
+  void _deleteAddress(int index) {
+    setState(() {
+      addresses.removeAt(index);
     });
   }
 
-  void _showMessage(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  void _openEditAddressSheet(Map<String, dynamic> address) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(18),
+        ),
+      ),
+      builder: (_) {
+        return EditAddressSheet(
+          email: widget.email,
+          address: address,
+          onUpdated: _loadAddresses,
+        );
+      },
     );
   }
 
@@ -193,229 +185,398 @@ class _ClientAddressPageState extends State<ClientAddressPage> {
       appBar: const AppBackHeader(
         title: 'My Address',
       ),
-      body: isLoadingRegions
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryRed,
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      body: isLoading
+      ? const Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.primaryRed,
+          ),
+        )
+      : SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          child: _addressListCard(),
+        ),
+    );
+  }
+
+  Widget _addressListCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _addAddressButton(),
+        const SizedBox(height: 10),
+
+        if (addresses.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 70),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoCard(),
-                  const SizedBox(height: 18),
-                  _addressFormCard(),
+                  Container(
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryRed.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.location_on_outlined,
+                      color: AppTheme.primaryRed,
+                      size: 30,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    'No Address Yet',
+                    style: TextStyle(
+                      color: AppTheme.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 28),
+                    child: Text(
+                      'Add your delivery or service address to make future bookings faster and more convenient.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppTheme.gray,
+                        fontSize: 12.5,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
+          ),
+
+          ...addresses.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+
+          return _addressCard(
+            label: item['label'],
+            address: item['address'],
+            isPrimary: item['primary'] == true,
+            onSelect: () => _setPrimaryAddress(index),
+            onEdit: () => _openEditAddressSheet(item),
+            onDelete: () => _confirmDeleteAddress(item),
+            );
+        }),
+      ],
     );
   }
 
-  Widget _infoCard() {
+  Widget _addressCard({
+    required String label,
+    required String address,
+    required bool isPrimary,
+    required VoidCallback onSelect,
+    required VoidCallback onEdit,
+    required VoidCallback onDelete,
+  }) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: AppTheme.borderedCardDecoration,
-      child: const Text(
-        'Set up your service address first. This address will be used when booking pest control appointments.',
-        style: TextStyle(
-          color: AppTheme.gray,
-          fontSize: 14,
-          height: 1.4,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isPrimary ? AppTheme.primaryRed : AppTheme.borderGray,
+          width: isPrimary ? 1.2 : 1,
         ),
       ),
-    );
-  }
-
-  Widget _addressFormCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: AppTheme.borderedCardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Address Details',
-            style: TextStyle(
+          Row(
+            children: [
+              Icon(
+                _addressIcon(label),
+                color: AppTheme.black,
+                size: 19,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      _formatLabel(label),
+                      style: const TextStyle(
+                        color: AppTheme.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+
+                    if (isPrimary) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryRed.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Primary',
+                          style: TextStyle(
+                            color: AppTheme.primaryRed,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: onSelect,
+                child: Icon(
+                  isPrimary
+                      ? Icons.check_box_rounded
+                      : Icons.check_box_outline_blank_rounded,
+                  color: isPrimary ? AppTheme.primaryRed : AppTheme.gray,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
+          Text(
+            address,
+            style: const TextStyle(
               color: AppTheme.black,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 12.5,
+              height: 1.35,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 18),
 
-          _addressTypeDropdown(),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
 
-          _regionDropdown(),
-          const SizedBox(height: 14),
+          Row(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onEdit,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    'Edit',
+                    style: TextStyle(
+                      color: AppTheme.primaryRed,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
 
-          _provinceDropdown(),
-          const SizedBox(height: 14),
+              const SizedBox(width: 16),
 
-          _municipalityDropdown(),
-          const SizedBox(height: 14),
-
-          _barangayDropdown(),
-          const SizedBox(height: 14),
-
-          _streetField(),
-          const SizedBox(height: 22),
-
-          LoadingButton(
-            isLoading: isSaving,
-            onPressed: _saveAddress,
-            child: const Text('Save Address'),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onDelete,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _addressTypeDropdown() {
-    return DropdownButtonFormField<int>(
-      value: selectedAddressTypeId,
-      decoration: const InputDecoration(
-        labelText: 'Address Type',
+  Widget _addAddressButton() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: _openAddAddressSheet,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          color: AppTheme.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppTheme.borderGray,
+            width: 1,
+          ),
+        ),
+        child: const Row(
+          children: [
+            Icon(
+              Icons.add_rounded,
+              color: Color.fromARGB(255, 58, 58, 58),
+              size: 22,
+            ),
+            SizedBox(width: 12),
+            Text(
+              'Add New Address',
+              style: TextStyle(
+                color: Color.fromARGB(255, 58, 58, 58),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
-      items: addressTypes.map((type) {
-        return DropdownMenuItem<int>(
-          value: type['id'],
-          child: Text(type['name']),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value == null) return;
+    );
+  }
+
+  Future<void> _loadAddresses() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/mobile/address/list'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'email': widget.email,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final List fetchedAddresses = data['data'] ?? [];
 
         setState(() {
-          selectedAddressTypeId = value;
+          addresses = fetchedAddresses.map<Map<String, dynamic>>((item) {
+          return {
+            'uadd_id': item['uadd_id'],
+            'label': _addressTypeName(item['add_id']),
+            'add_id': item['add_id'],
+
+            'uadd_street': item['uadd_street'] ?? '',
+            'uadd_barangay': item['uadd_barangay'] ?? '',
+            'uadd_city': item['uadd_city'] ?? '',
+            'uadd_province': item['uadd_province'] ?? '',
+            'uadd_region': item['uadd_region'] ?? '',
+
+            'address':
+                '${item['uadd_street'] ?? ''}, ${item['uadd_barangay'] ?? ''}\n${item['uadd_city'] ?? ''}, ${item['uadd_province'] ?? ''}, ${item['uadd_region'] ?? ''}',
+
+            'primary': item['uadd_active'] == 1,
+          };
+        }).toList();
         });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to load addresses.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteAddress(Map<String, dynamic> address) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return DeleteAddressDialog(
+          isPrimary: address['primary'] == true,
+          onConfirm: () {
+            _deleteAddressFromDatabase(address['uadd_id']);
+          },
+        );
       },
     );
   }
 
-  Widget _regionDropdown() {
-    return DropdownButtonFormField<int>(
-      value: selectedRegionId,
-      decoration: const InputDecoration(
-        labelText: 'Region',
-      ),
-      items: regions.map((region) {
-        return DropdownMenuItem<int>(
-          value: region['reg_id'],
-          child: Text(region['reg_name']),
+  Future<void> _deleteAddressFromDatabase(int uaddId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/mobile/address/delete'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'email': widget.email,
+          'uadd_id': uaddId,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        _loadAddresses();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Address deleted successfully.'),
+          ),
         );
-      }).toList(),
-      onChanged: (value) {
-        if (value == null) return;
-
-        setState(() {
-          selectedRegionId = value;
-          selectedProvinceId = null;
-          selectedMunicipalityId = null;
-          selectedBarangayId = null;
-          provinces = [];
-          municipalities = [];
-          barangays = [];
-        });
-
-        _fetchProvinces(value);
-      },
-    );
-  }
-
-  Widget _provinceDropdown() {
-    return DropdownButtonFormField<int>(
-      value: selectedProvinceId,
-      decoration: const InputDecoration(
-        labelText: 'Province',
-      ),
-      items: provinces.map((province) {
-        return DropdownMenuItem<int>(
-          value: province['prov_id'],
-          child: Text(province['prov_name']),
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              data['message'] ?? 'Unable to delete address.',
+            ),
+          ),
         );
-      }).toList(),
-      onChanged: selectedRegionId == null
-          ? null
-          : (value) {
-              if (value == null) return;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
 
-              setState(() {
-                selectedProvinceId = value;
-                selectedMunicipalityId = null;
-                selectedBarangayId = null;
-                municipalities = [];
-                barangays = [];
-              });
+      if (!mounted) return;
 
-              _fetchMunicipalities(value);
-            },
-    );
-  }
-
-  Widget _municipalityDropdown() {
-    return DropdownButtonFormField<int>(
-      value: selectedMunicipalityId,
-      decoration: const InputDecoration(
-        labelText: 'City / Municipality',
-      ),
-      items: municipalities.map((municipality) {
-        return DropdownMenuItem<int>(
-          value: municipality['mun_id'],
-          child: Text(municipality['mun_name']),
-        );
-      }).toList(),
-      onChanged: selectedProvinceId == null
-          ? null
-          : (value) {
-              if (value == null) return;
-
-              setState(() {
-                selectedMunicipalityId = value;
-                selectedBarangayId = null;
-                barangays = [];
-              });
-
-              _fetchBarangays(value);
-            },
-    );
-  }
-
-  Widget _barangayDropdown() {
-    return DropdownButtonFormField<int>(
-      value: selectedBarangayId,
-      decoration: const InputDecoration(
-        labelText: 'Barangay',
-      ),
-      items: barangays.map((barangay) {
-        return DropdownMenuItem<int>(
-          value: barangay['brg_id'],
-          child: Text(barangay['brg_name']),
-        );
-      }).toList(),
-      onChanged: selectedMunicipalityId == null
-          ? null
-          : (value) {
-              if (value == null) return;
-
-              setState(() {
-                selectedBarangayId = value;
-              });
-            },
-    );
-  }
-
-  Widget _streetField() {
-    return TextField(
-      controller: streetController,
-      textCapitalization: TextCapitalization.words,
-      decoration: const InputDecoration(
-        labelText: 'Street / House No. / Building',
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Connection error while deleting address.'),
+        ),
+      );
+    }
   }
 }
