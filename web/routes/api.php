@@ -14,6 +14,7 @@
     use App\Http\Controllers\api\v1\mobile_controllers\MobileProfileController;
     use App\Http\Controllers\api\v1\mobile_controllers\MobileLocationController;
     use App\Http\Controllers\api\v1\mobile_controllers\MobileAddressController;
+    use App\Http\Controllers\api\v1\mobile_controllers\MobileServicePackageController;
     use App\Models\User;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Route;
@@ -141,4 +142,5 @@
         Route::post('/address/update', [MobileAddressController::class, 'update']);
         Route::post('/address/delete', [MobileAddressController::class, 'delete']);
         Route::post('/address/set-primary', [MobileAddressController::class, 'setPrimary']);
+        Route::get('/service-packages', [MobileServicePackageController::class, 'list']);
     });
