@@ -167,6 +167,10 @@
                                         <input type="checkbox" class="print-toggle mr-1" data-target="sectionA"> Appointment
                                         Information
                                     </label>
+                                    <label class="dropdown-item">
+                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionB"> Service
+                                        Orders
+                                    </label>
                                     <div class="dropdown-item text-center">
                                         <button class="btn btn-primary btn-sm mt-2" onclick="handlePrint()">Confirm &
                                             Print</button>
@@ -349,7 +353,7 @@
 
             // Reset all sections (show all initially) - Check if the section exists
             const sectionIds = [
-                'sectionA'
+                'sectionA', 'sectionB'
             ];
 
             sectionIds.forEach(sectionId => {
