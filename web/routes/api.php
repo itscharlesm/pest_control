@@ -15,6 +15,7 @@
     use App\Http\Controllers\api\v1\mobile_controllers\MobileLocationController;
     use App\Http\Controllers\api\v1\mobile_controllers\MobileAddressController;
     use App\Http\Controllers\api\v1\mobile_controllers\MobileServicePackageController;
+    use App\Http\Controllers\api\v1\mobile_controllers\MobileServiceAppointmentController;
     use App\Models\User;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Route;
@@ -144,4 +145,5 @@
         Route::post('/address/set-primary', [MobileAddressController::class, 'setPrimary']);
         Route::get('/service-packages', [MobileServicePackageController::class, 'list']);
         Route::get('/service-package-areas/{branch_id}', [MobileServicePackageController::class, 'areas']);
+        Route::post('/service-appointments/store', [MobileServiceAppointmentController::class, 'store']);
     });

@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Http\Controllers\api\v1\mobile_controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class MobileServiceAppointmentController extends Controller
+{
+    public function store(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'uadd_id' => 'required',
+            'client_date' => 'required',
+            'client_time' => 'required',
+            'service_packages' => 'required',
+            'service_areas' => 'required',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $user = DB::table('users')
+                ->where('usr_email', $request->email)
+                ->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found.',
+                ], 404);
+            }
+
+            $servicePackages = json_decode($request->service_packages, true);
+            $serviceAreas = json_decode($request->service_areas, true);
+
+            $serviceId = DB::table('services')->insertGetId([
+                'svc_uuid' => Str::uuid(),
+                'branch_id' => $user->branch_id,
+                'usr_id' => $user->usr_id,
+                'svc_is_package' => count($servicePackages) > 1 ? 1 : 0,
+                'svcpat_id' => null,
+                'svc_is_termite' => 0,
+                'svc_type_treatment' => null,
+                'svc_sqm_initial' => null,
+                'svc_sqm_final' => null,
+                'svc_with_device' => null,
+                'svc_device_count' => null,
+                'svc_status' => 'REQUESTED',
+                'svc_infestation' => null,
+                'svc_initial_price' => null,
+                'svc_final_price' => null,
+                'svc_balance' => null,
+                'svc_payment_status' => null,
+                'svc_attachment' => null,
+                'svc_frequency_type' => null,
+                'svc_frequency' => null,
+                'svc_recommendation' => null,
+                'svc_date_created' => now(),
+                'svc_created_by' => $user->usr_id,
+                'svc_date_modified' => null,
+                'svc_modified_by' => null,
+                'svc_active' => 1,
+            ]);
+
+            foreach ($servicePackages as $package) {
+                DB::table('service_order_pests')->insert([
+                    'svcop_uuid' => Str::uuid(),
+                    'svc_id' => $serviceId,
+                    'svcp_id' => $package['id'],
+                    'svcop_date_created' => now(),
+                    'svcop_created_by' => $user->usr_id,
+                    'svcop_date_modified' => null,
+                    'svcop_modified_by' => null,
+                    'svcop_active' => 1,
+                ]);
+            }
+
+            foreach ($serviceAreas as $area) {
+                DB::table('service_orders')->insert([
+                    'svco_uuid' => Str::uuid(),
+                    'svc_id' => $serviceId,
+                    'svcpa_id' => $area['id'],
+                    'svco_date_created' => now(),
+                    'svco_created_by' => $user->usr_id,
+                    'svco_date_modified' => null,
+                    'svco_modified_by' => null,
+                    'svco_active' => 1,
+                ]);
+            }
+
+            $appointmentId = DB::table('service_appointments')->insertGetId([
+                'svca_uuid' => Str::uuid(),
+                'svc_id' => $serviceId,
+                'uadd_id' => $request->uadd_id,
+                'svca_client_date' => $request->client_date,
+                'svca_client_time' => $request->client_time,
+                'svca_status' => 'REQUESTED',
+                'svca_approved_time_from' => null,
+                'svca_approved_time_to' => null,
+                'svca_date_approved' => null,
+                'svca_approved_by' => null,
+                'svca_date_created' => now(),
+                'svca_created_by' => $user->usr_id,
+                'svca_date_modified' => null,
+                'svca_modified_by' => null,
+                'svca_active' => 1,
+            ]);
+
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('service_appointments', 'public');
+
+                    DB::table('service_appointment_images')->insert([
+                        'svcap_uuid' => Str::uuid(),
+                        'svca_id' => $appointmentId,
+                        'svcap_image' => $path,
+                        'svcap_date_created' => now(),
+                        'svcap_created_by' => $user->usr_id,
+                        'svcap_date_modified' => null,
+                        'svcap_modified_by' => null,
+                        'svcap_active' => 1,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Service appointment request submitted successfully.',
+                'svc_id' => $serviceId,
+                'svca_id' => $appointmentId,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to submit service appointment.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

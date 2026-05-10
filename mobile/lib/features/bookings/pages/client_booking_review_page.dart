@@ -1,5 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:mobile_app/config/api_config.dart';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/app/theme.dart';
@@ -37,6 +39,14 @@ class ClientBookingReviewPage extends StatefulWidget {
 
 class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
   bool isSubmitting = false;
+
+  String _timeStart(String timeWindow) {
+    if (timeWindow.contains('8:00 AM')) return '08:00:00';
+    if (timeWindow.contains('12:00 PM')) return '12:00:00';
+    if (timeWindow.contains('5:00 PM')) return '17:00:00';
+
+    return '08:00:00';
+  }
 
   int get totalPrice {
     int total = 0;
@@ -78,20 +88,96 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
         .join(' ');
   }
 
-  void _submitBooking() {
+  Future<void> _submitBooking() async {
     setState(() => isSubmitting = true);
 
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (!mounted) return;
+    try {
+      final uri = Uri.parse(
+        '${ApiConfig.baseUrl}/api/mobile/service-appointments/store',
+      );
 
-      setState(() => isSubmitting = false);
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['Accept'] = 'application/json';
+      
+      request.fields['email'] = widget.email;
 
+      request.fields['uadd_id'] =
+          widget.selectedAddress['id'].toString();
+
+      request.fields['client_date'] =
+        '${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2, '0')}-${widget.selectedDate.day.toString().padLeft(2, '0')}';
+
+      request.fields['client_time'] = _timeStart(widget.selectedTime);
+
+      request.fields['service_packages'] = jsonEncode(
+        widget.selectedServicePackages.map((service) {
+          return {
+            'id': service['id'],
+          };
+        }).toList(),
+      );
+
+      request.fields['service_areas'] = jsonEncode(
+        widget.selectedAreas.map((area) {
+          return {
+            'id': area['id'],
+          };
+        }).toList(),
+      );
+
+      for (final image in widget.selectedImages) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'images[]',
+            image.path,
+          ),
+        );
+      }
+
+      final response = await request.send();
+
+      final responseBody =
+          await response.stream.bytesToString();
+
+      debugPrint('SUBMIT STATUS: ${response.statusCode}');
+      debugPrint('SUBMIT BODY: $responseBody');
+
+      final data = jsonDecode(responseBody);
+
+      if (response.statusCode == 200 &&
+          data['success'] == true) {
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Booking request submitted successfully.',
+            ),
+          ),
+        );
+
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/client-home',
+          (route) => false,
+        );
+
+      } else {
+        throw Exception(data['message']);
+      }
+
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Booking request submitted for admin approval.'),
+        SnackBar(
+          content: Text('Submission failed: $e'),
         ),
       );
-    });
+    }
+
+    if (mounted) {
+      setState(() => isSubmitting = false);
+    }
   }
 
   @override
