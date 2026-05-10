@@ -112,18 +112,55 @@ class MobileServiceAppointmentController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $path = $image->store('service_appointments', 'public');
-
-                    DB::table('service_appointment_images')->insert([
-                        'svcap_uuid' => Str::uuid(),
-                        'svca_id' => $appointmentId,
-                        'svcap_image' => $path,
-                        'svcap_date_created' => now(),
-                        'svcap_created_by' => $user->usr_id,
-                        'svcap_date_modified' => null,
-                        'svcap_modified_by' => null,
-                        'svcap_active' => 1,
+                    $request->validate([
+                        'images.*' => 'mimes:jpeg,jpg,png,webp|max:8192',
                     ]);
+
+                    if ($request->hasFile('images')) {
+                        foreach ($request->file('images') as $image) {
+                            $fileName = uniqid() . '_' . $image->getClientOriginalName();
+                            $folderPath = public_path('images/service_appointments');
+
+                            if (!file_exists($folderPath)) {
+                                mkdir($folderPath, 0755, true);
+                            }
+
+                            $path = $folderPath . '/' . $fileName;
+                            $ext = strtolower($image->getClientOriginalExtension());
+
+                            if (in_array($ext, ['jpg', 'jpeg'])) {
+                                $source = imagecreatefromjpeg($image->getPathname());
+                                imagejpeg($source, $path, 75);
+                                imagedestroy($source);
+                            } elseif ($ext === 'png') {
+                                $source = imagecreatefrompng($image->getPathname());
+
+                                if ($source && imageistruecolor($source) === false) {
+                                    imagepalettetotruecolor($source);
+                                }
+
+                                if ($source) {
+                                    imagepng($source, $path, 7);
+                                    imagedestroy($source);
+                                }
+                            } elseif ($ext === 'webp') {
+                                $source = imagecreatefromwebp($image->getPathname());
+                                imagewebp($source, $path, 75);
+                                imagedestroy($source);
+                            }
+
+                            DB::table('service_appointment_images')->insert([
+                                'svcap_uuid' => Str::uuid(),
+                                'svca_id' => $appointmentId,
+                                'svcap_image' => $fileName,
+                                'svcap_date_created' => now(),
+                                'svcap_created_by' => $user->usr_id,
+                                'svcap_date_modified' => null,
+                                'svcap_modified_by' => null,
+                                'svcap_active' => 1,
+                            ]);
+                        }
+                    }
                 }
             }
 
