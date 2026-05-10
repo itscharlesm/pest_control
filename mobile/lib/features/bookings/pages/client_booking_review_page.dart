@@ -1,14 +1,33 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/app/theme.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_step_indicator.dart';
 import 'package:mobile_app/shared/widgets/headers/app_back_header.dart';
 
 class ClientBookingReviewPage extends StatefulWidget {
   final String email;
+  final Map<String, dynamic> selectedAddress;
+  final List<Map<String, dynamic>> selectedServicePackages;
+  final List<Map<String, dynamic>> selectedAreas;
+  final String description;
+  final List<XFile> selectedImages;
+  final DateTime selectedDate;
+  final String selectedTime;
+  final String selectedUrgency;
 
   const ClientBookingReviewPage({
     super.key,
     required this.email,
+    required this.selectedAddress,
+    required this.selectedServicePackages,
+    required this.selectedAreas,
+    required this.description,
+    required this.selectedImages,
+    required this.selectedDate,
+    required this.selectedTime,
+    required this.selectedUrgency,
   });
 
   @override
@@ -18,6 +37,46 @@ class ClientBookingReviewPage extends StatefulWidget {
 
 class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
   bool isSubmitting = false;
+
+  int get totalPrice {
+    int total = 0;
+
+    for (final area in widget.selectedAreas) {
+      total += int.tryParse(area['cost'].toString()) ?? 0;
+    }
+
+    return total;
+  }
+
+  String get formattedDate {
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${months[widget.selectedDate.month - 1]} ${widget.selectedDate.day}, ${widget.selectedDate.year}';
+  }
+
+  String _formatName(String text) {
+    return text
+        .toLowerCase()
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
+  }
 
   void _submitBooking() {
     setState(() => isSubmitting = true);
@@ -48,64 +107,25 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: AppTheme.borderedCardDecoration,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _reviewHeader(),
-                    const SizedBox(height: 18),
-                    _summaryBox(
-                      icon: Icons.location_on_outlined,
-                      title: 'Location',
-                      children: const [
-                        _MainValue('Office'),
-                        SizedBox(height: 6),
-                        _SubValue(
-                          'Go Forward Pest Control Building, Genesis Street, Matina Crossing, Davao City',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    _summaryBox(
-                      icon: Icons.bug_report_outlined,
-                      title: 'Pest Problem',
-                      children: const [
-                        _MainValue('Ants'),
-                        SizedBox(height: 6),
-                        _SubValue(
-                          'Pests are seen mostly in the kitchen and living room area.',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    _summaryBox(
-                      icon: Icons.home_repair_service_outlined,
-                      title: 'Treatment Areas',
-                      children: [
-                        _areaChip('Kitchen', '₱25'),
-                        const SizedBox(height: 8),
-                        _areaChip('Bathroom', '₱15'),
-                        const Divider(height: 24),
-                        _totalRow('Estimated Total', '₱40'),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    _summaryBox(
-                      icon: Icons.calendar_month_outlined,
-                      title: 'Appointment',
-                      children: const [
-                        _MainValue('Friday, May 29, 2026'),
-                        SizedBox(height: 6),
-                        _SubValue('8:00 AM - 12:00 PM'),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _nextStepBox(),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _pageHeader(),
+                  const SizedBox(height: 18),
+                  _locationCard(),
+                  const SizedBox(height: 14),
+                  _pestCard(),
+                  const SizedBox(height: 14),
+                  _areasCard(),
+                  const SizedBox(height: 14),
+                  _descriptionCard(),
+                  const SizedBox(height: 14),
+                  _photosCard(),
+                  const SizedBox(height: 14),
+                  _scheduleCard(),
+                  const SizedBox(height: 16),
+                  _nextStepBox(),
+                ],
               ),
             ),
           ),
@@ -115,38 +135,136 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
     );
   }
 
-  Widget _reviewHeader() {
-    return const Row(
+  Widget _pageHeader() {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          Icons.check_rounded,
-          color: AppTheme.primaryRed,
-          size: 22,
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Review Your Request',
-                style: TextStyle(
-                  color: AppTheme.black,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Please confirm the details before submitting.',
-                style: TextStyle(
-                  color: AppTheme.gray,
-                  fontSize: 13,
-                ),
-              ),
-            ],
+        Text(
+          'Review Your Request',
+          style: TextStyle(
+            color: AppTheme.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        SizedBox(height: 5),
+        Text(
+          'Please check the details before submitting your appointment request.',
+          style: TextStyle(
+            color: AppTheme.gray,
+            fontSize: 13,
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _locationCard() {
+    return _summaryBox(
+      icon: Icons.location_on_outlined,
+      title: 'Service Location',
+      children: [
+        _MainValue(widget.selectedAddress['type'] ?? 'Address'),
+        const SizedBox(height: 6),
+        _SubValue(widget.selectedAddress['address'] ?? 'No address selected'),
+      ],
+    );
+  }
+
+  Widget _pestCard() {
+    return _summaryBox(
+      icon: Icons.bug_report_outlined,
+      title: 'Pest Problem',
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.selectedServicePackages.map((service) {
+            return _chip(
+              _formatName(service['name'] ?? ''),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _areasCard() {
+    return _summaryBox(
+      icon: Icons.home_work_outlined,
+      title: 'Areas to Treat',
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.selectedAreas.map((area) {
+            return _chip(
+              '${_formatName(area['area'] ?? '')} • ₱${area['cost']}',
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 14),
+        _totalRow('Estimated Total', '₱$totalPrice'),
+      ],
+    );
+  }
+
+  Widget _descriptionCard() {
+    final description = widget.description.trim();
+
+    return _summaryBox(
+      icon: Icons.notes_outlined,
+      title: 'Problem Description',
+      children: [
+        _SubValue(
+          description.isEmpty ? 'No additional description provided.' : description,
+        ),
+      ],
+    );
+  }
+
+  Widget _photosCard() {
+    return _summaryBox(
+      icon: Icons.photo_library_outlined,
+      title: 'Attached Photos',
+      children: [
+        if (widget.selectedImages.isEmpty)
+          const _SubValue('No photos attached.')
+        else
+          SizedBox(
+            height: 82,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: widget.selectedImages.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final image = widget.selectedImages[index];
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(image.path),
+                    width: 92,
+                    height: 82,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _scheduleCard() {
+    return _summaryBox(
+      icon: Icons.calendar_month_outlined,
+      title: 'Preferred Schedule',
+      children: [
+        _MainValue(formattedDate),
+        const SizedBox(height: 6),
+        _SubValue('${widget.selectedUrgency} • ${widget.selectedTime}'),
       ],
     );
   }
@@ -159,7 +277,7 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: AppTheme.softCardDecoration,
+      decoration: AppTheme.borderedCardDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -167,82 +285,78 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
             children: [
               Icon(
                 icon,
-                color: AppTheme.gray,
+                color: AppTheme.primaryRed,
                 size: 18,
               ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: const TextStyle(
-                  color: AppTheme.gray,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: AppTheme.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ...children,
         ],
       ),
     );
   }
 
-  Widget _areaChip(String area, String price) {
+  Widget _chip(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: AppTheme.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.borderGray),
+        color: AppTheme.primaryRed.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: AppTheme.primaryRed.withOpacity(0.18),
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            area,
-            style: const TextStyle(
-              color: AppTheme.black,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            price,
-            style: const TextStyle(
-              color: AppTheme.primaryRed,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: AppTheme.primaryRed,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   Widget _totalRow(String label, String amount) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: AppTheme.gray,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+    return Container(
+      padding: const EdgeInsets.only(top: 12),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: AppTheme.borderGray),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppTheme.gray,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-        Text(
-          amount,
-          style: const TextStyle(
-            color: AppTheme.primaryRed,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          Text(
+            amount,
+            style: const TextStyle(
+              color: AppTheme.primaryRed,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -251,27 +365,30 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF2FF),
+        color: AppTheme.primaryRed.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.primaryRed.withOpacity(0.14),
+        ),
       ),
-      child: const Column(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'What happens next?',
-            style: TextStyle(
-              color: Color(0xFF0B3CC1),
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
+          Icon(
+            Icons.info_outline,
+            color: AppTheme.primaryRed,
+            size: 18,
           ),
-          SizedBox(height: 5),
-          Text(
-            'The admin will review your request and confirm technician availability. You will be notified once your booking is approved.',
-            style: TextStyle(
-              color: Color(0xFF0B3CC1),
-              fontSize: 13,
-              height: 1.4,
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'After submitting, the admin will review your request and confirm technician availability.',
+              style: TextStyle(
+                color: AppTheme.primaryRed,
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -291,10 +408,18 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
           ),
         ),
       ),
-      child: LoadingButton(
-        isLoading: isSubmitting,
-        onPressed: _submitBooking,
-        child: const Text('Submit for Approval'),
+      child: ElevatedButton(
+        onPressed: isSubmitting ? null : _submitBooking,
+        child: isSubmitting
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.white,
+                ),
+              )
+            : const Text('Submit for Approval'),
       ),
     );
   }
@@ -328,9 +453,10 @@ class _SubValue extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        color: AppTheme.black,
+        color: AppTheme.gray,
         fontSize: 13,
         height: 1.35,
+        fontWeight: FontWeight.w500,
       ),
     );
   }

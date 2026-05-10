@@ -143,4 +143,5 @@
         Route::post('/address/delete', [MobileAddressController::class, 'delete']);
         Route::post('/address/set-primary', [MobileAddressController::class, 'setPrimary']);
         Route::get('/service-packages', [MobileServicePackageController::class, 'list']);
+        Route::get('/service-package-areas/{branch_id}', [MobileServicePackageController::class, 'areas']);
     });

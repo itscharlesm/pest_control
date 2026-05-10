@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/app/theme.dart';
+import 'package:mobile_app/features/bookings/pages/client_booking_review_page.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_step_indicator.dart';
 import 'package:mobile_app/shared/widgets/headers/app_back_header.dart';
-import 'package:mobile_app/features/bookings/pages/client_booking_review_page.dart';
 
 class ClientBookingSchedulePage extends StatefulWidget {
   final String email;
+  final Map<String, dynamic> selectedAddress;
+  final List<Map<String, dynamic>> selectedServicePackages;
+  final List<Map<String, dynamic>> selectedAreas;
+  final String description;
+  final List<XFile> selectedImages;
 
   const ClientBookingSchedulePage({
     super.key,
     required this.email,
+    required this.selectedAddress,
+    required this.selectedServicePackages,
+    required this.selectedAreas,
+    required this.description,
+    required this.selectedImages,
   });
 
   @override
@@ -19,30 +30,33 @@ class ClientBookingSchedulePage extends StatefulWidget {
 
 class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
   DateTime? selectedDate;
-  String? selectedTime;
-  String? selectedUrgency;
+  Map<String, String>? selectedTimeWindow;
 
-  final List<String> timeSlots = [
-    '8:00 AM',
-    '9:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '1:00 PM',
-    '2:00 PM',
-    '3:00 PM',
-    '4:00 PM',
-  ];
-
-  final List<String> urgencyOptions = [
-    'Flexible',
-    'Within 3 days',
-    'ASAP',
+  final List<Map<String, String>> timeWindows = [
+    {
+      'title': 'Morning',
+      'time': '8:00 AM - 12:00 PM',
+      'subtitle': 'Best for early home visits',
+      'icon': '🌅',
+    },
+    {
+      'title': 'Afternoon',
+      'time': '12:00 PM - 5:00 PM',
+      'subtitle': 'Ideal for regular service hours',
+      'icon': '☀️',
+    },
+    {
+      'title': 'Evening',
+      'time': '5:00 PM - 8:00 PM',
+      'subtitle': 'For late-day inspection requests',
+      'icon': '🌆',
+    },
   ];
 
   Future<void> _pickDate() async {
-    final DateTime now = DateTime.now();
+    final now = DateTime.now();
 
-    final DateTime? date = await showDatePicker(
+    final date = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? now,
       firstDate: now,
@@ -57,30 +71,52 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
   }
 
   void _continueToReview() {
-    if (selectedDate == null ||
-        selectedTime == null ||
-        selectedUrgency == null) {
+    if (selectedDate == null || selectedTimeWindow == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please complete your preferred schedule.'),
+          content: Text('Please choose your preferred date and time window.'),
         ),
       );
       return;
     }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ClientBookingReviewPage(
           email: widget.email,
+          selectedAddress: widget.selectedAddress,
+          selectedServicePackages: widget.selectedServicePackages,
+          selectedAreas: widget.selectedAreas,
+          description: widget.description,
+          selectedImages: widget.selectedImages,
+          selectedDate: selectedDate!,
+          selectedTime: selectedTimeWindow!['time']!,
+          selectedUrgency: selectedTimeWindow!['title']!,
         ),
       ),
     );
   }
 
   String get formattedDate {
-    if (selectedDate == null) return 'Select preferred date';
+    if (selectedDate == null) return 'Choose preferred date';
 
-    return '${selectedDate!.month}/${selectedDate!.day}/${selectedDate!.year}';
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${months[selectedDate!.month - 1]} ${selectedDate!.day}, ${selectedDate!.year}';
   }
 
   @override
@@ -99,13 +135,9 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _introCard(),
+                  _pageHeader(),
                   const SizedBox(height: 18),
-                  _dateCard(),
-                  const SizedBox(height: 18),
-                  _timeCard(),
-                  const SizedBox(height: 18),
-                  _urgencyCard(),
+                  _scheduleCard(),
                 ],
               ),
             ),
@@ -116,37 +148,32 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
     );
   }
 
-  Widget _introCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: AppTheme.borderedCardDecoration,
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'When do you need the service?',
-            style: TextStyle(
-              color: AppTheme.black,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+  Widget _pageHeader() {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Schedule Your Service',
+          style: TextStyle(
+            color: AppTheme.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-          SizedBox(height: 8),
-          Text(
-            'Choose your preferred service date and time. The company may still confirm the final schedule depending on technician availability.',
-            style: TextStyle(
-              color: AppTheme.gray,
-              fontSize: 14,
-              height: 1.4,
-            ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          'Choose the date and time window that works best for you.',
+          style: TextStyle(
+            color: AppTheme.gray,
+            fontSize: 13,
+            height: 1.35,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _dateCard() {
+  Widget _scheduleCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -154,200 +181,216 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _dateSelector(),
+          const SizedBox(height: 22),
           const Text(
-            'Preferred Date',
+            'Time Window',
             style: TextStyle(
               color: AppTheme.black,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 12),
-          InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: _pickDate,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: AppTheme.softCardDecoration,
-              child: Row(
+          ...timeWindows.map(_timeWindowItem),
+          const SizedBox(height: 4),
+          _scheduleNote(),
+        ],
+      ),
+    );
+  }
+
+  Widget _dateSelector() {
+    final hasDate = selectedDate != null;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: _pickDate,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: hasDate
+              ? AppTheme.primaryRed.withOpacity(0.06)
+              : AppTheme.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasDate ? AppTheme.primaryRed : AppTheme.borderGray,
+            width: hasDate ? 1.3 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: hasDate
+                    ? AppTheme.primaryRed
+                    : AppTheme.primaryRed.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.calendar_month_outlined,
+                color: hasDate ? AppTheme.white : AppTheme.primaryRed,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.calendar_month_outlined,
-                    color: AppTheme.primaryRed,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      formattedDate,
-                      style: TextStyle(
-                        color: selectedDate == null
-                            ? AppTheme.gray
-                            : AppTheme.black,
-                        fontSize: 14,
-                        fontWeight: selectedDate == null
-                            ? FontWeight.w500
-                            : FontWeight.bold,
-                      ),
+                  const Text(
+                    'Preferred Date',
+                    style: TextStyle(
+                      color: AppTheme.gray,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppTheme.gray,
+                  const SizedBox(height: 3),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                      color: hasDate ? AppTheme.black : AppTheme.gray,
+                      fontSize: 14,
+                      fontWeight: hasDate ? FontWeight.bold : FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppTheme.gray,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _timeCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: AppTheme.borderedCardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Preferred Time',
-            style: TextStyle(
-              color: AppTheme.black,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: timeSlots.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 2.8,
-            ),
-            itemBuilder: (context, index) {
-              final time = timeSlots[index];
-              final isSelected = selectedTime == time;
+  Widget _timeWindowItem(Map<String, String> window) {
+    final isSelected = selectedTimeWindow?['title'] == window['title'];
 
-              return InkWell(
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        setState(() {
+          selectedTimeWindow = window;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryRed : AppTheme.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryRed : AppTheme.borderGray,
+            width: isSelected ? 1.3 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppTheme.white
+                    : AppTheme.primaryRed.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  setState(() {
-                    selectedTime = time;
-                  });
-                },
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.primaryRed.withOpacity(0.08)
-                        : AppTheme.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppTheme.primaryRed
-                          : AppTheme.borderGray,
-                    ),
-                  ),
-                  child: Text(
-                    time,
+              ),
+              child: Text(
+                window['icon']!,
+                style: const TextStyle(fontSize: 23),
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    window['title']!,
                     style: TextStyle(
-                      color:
-                          isSelected ? AppTheme.primaryRed : AppTheme.black,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w600,
+                      color: isSelected ? AppTheme.white : AppTheme.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
+                  const SizedBox(height: 3),
+                  Text(
+                    window['time']!,
+                    style: TextStyle(
+                      color: isSelected ? AppTheme.white : AppTheme.gray,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    window['subtitle']!,
+                    style: TextStyle(
+                      color: isSelected
+                          ? AppTheme.white.withOpacity(0.9)
+                          : AppTheme.gray,
+                      fontSize: 11,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: isSelected ? AppTheme.white : AppTheme.gray,
+              size: 22,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _urgencyCard() {
+  Widget _scheduleNote() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: AppTheme.borderedCardDecoration,
-      child: Column(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.lightGray,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Urgency',
-            style: TextStyle(
-              color: AppTheme.black,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          Icon(
+            Icons.info_outline,
+            color: AppTheme.gray,
+            size: 16,
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Final schedule is subject to company approval and technician availability.',
+              style: TextStyle(
+                color: AppTheme.gray,
+                fontSize: 12,
+                height: 1.3,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          ...urgencyOptions.map((option) {
-            final isSelected = selectedUrgency == option;
-
-            return InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                setState(() {
-                  selectedUrgency = option;
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppTheme.primaryRed.withOpacity(0.08)
-                      : AppTheme.lightGray,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppTheme.primaryRed
-                        : AppTheme.borderGray,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isSelected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color:
-                          isSelected ? AppTheme.primaryRed : AppTheme.gray,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        option,
-                        style: TextStyle(
-                          color: isSelected
-                              ? AppTheme.primaryRed
-                              : AppTheme.black,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
         ],
       ),
     );
   }
 
   Widget _bottomButton() {
+    final canContinue = selectedDate != null && selectedTimeWindow != null;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       decoration: const BoxDecoration(
@@ -360,7 +403,7 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
         ),
       ),
       child: ElevatedButton(
-        onPressed: _continueToReview,
+        onPressed: canContinue ? _continueToReview : null,
         child: const Text('Continue'),
       ),
     );

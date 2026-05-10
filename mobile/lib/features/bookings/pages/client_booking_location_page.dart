@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:mobile_app/app/theme.dart';
-import 'package:mobile_app/features/bookings/pages/client_booking_service_page.dart';
+import 'package:mobile_app/features/bookings/pages/client_booking_problem_page.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_saved_address_card.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_step_indicator.dart';
 import 'package:mobile_app/shared/shared.dart';

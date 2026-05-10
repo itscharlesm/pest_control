@@ -23,4 +23,24 @@ class MobileServicePackageController extends Controller
             'data' => $packages,
         ]);
     }
+
+    public function areas($branch_id)
+    {
+        $areas = DB::table('service_package_areas')
+            ->where('branch_id', $branch_id)
+            ->where('svcpa_active', 1)
+            ->select(
+                'svcpa_id',
+                'branch_id',
+                'svcpa_area',
+                'svcpa_cost'
+            )
+            ->orderBy('svcpa_area', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $areas,
+        ]);
+    }
 }

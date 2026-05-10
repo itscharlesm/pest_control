@@ -27,6 +27,4 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/img_goforwardlogo.png
-    - assets/images/img_wlcmpagebg.png
-    - assets/images/img_drawerbg.png
+    - assets/images/
