@@ -230,7 +230,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse ($pestTypes as $index => $type)
+                                                @foreach ($pestTypes as $index => $type)
                                                     <tr>
                                                         <td style="vertical-align: middle; text-align: center">
                                                             {{ $index + 1 }}</td>
@@ -240,19 +240,51 @@
                                                             style="vertical-align: middle; text-align: center">
                                                             <a class="btn btn-danger btn-sm mb-1"
                                                                 href="javascript:void(0)" data-toggle="modal"
-                                                                data-target="#deletePestTypeModal-{{ $type->svcp_id }}">
+                                                                data-target="#deletePestTypeModal-{{ $type->svcop_id }}">
                                                                 <span class="fa fa-trash"></span>
                                                             </a>
                                                         </td>
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="3" class="text-center text-muted">No pest types
-                                                            added.</td>
-                                                    </tr>
-                                                @endforelse
+                                                @endforeach
                                             </tbody>
                                         </table>
+
+                                        {{-- Delete Pest Type Modal --}}
+                                        @foreach ($pestTypes as $type)
+                                            <div class="modal fade" id="deletePestTypeModal-{{ $type->svcop_id }}" tabindex="-1"
+                                                role="dialog" aria-labelledby="deletePestTypeModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form method="POST"
+                                                            action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_delete_pest', [$type->svcop_id]) }}">
+                                                            @csrf
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title text-white" id="deletePestTypeModalLabel">
+                                                                    Please Confirm
+                                                                </h5>
+                                                                <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Are you sure you want to <strong>DELETE</strong> the <strong>{{ $type->svcp_pest_type }}</strong> pest type?
+                                                                </p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">
+                                                                    <span class="fa fa-close"></span> Close
+                                                                </button>
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <span class="fa fa-trash"></span> Confirm Delete
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
 
                                     {{-- SERVICE ORDER TABLE (non-termite areas) --}}

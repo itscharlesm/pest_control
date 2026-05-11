@@ -145,6 +145,42 @@ class AppointmentController extends Controller
 
         return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages'));
     }
+
+    public function requested_appointments_view_delete_pest(Request $request, $svcop_id)
+    {
+        $pest = DB::table('service_order_pests')
+            ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+            ->where('service_order_pests.svcop_id', $svcop_id)
+            ->select(
+                'service_order_pests.svcop_id',
+                'service_order_pests.svc_id',
+                'service_packages.svcp_pest_type'
+            )
+            ->first();
+
+        if (!$pest) {
+            alert()->error('Pest type not found.');
+            return redirect()->back();
+        }
+
+        DB::table('service_order_pests')
+            ->where('svcop_id', $svcop_id)
+            ->update([
+                'svcop_date_modified' => Carbon::now(),
+                'svcop_modified_by' => session('usr_id'),
+                'svcop_active' => 0
+            ]);
+
+        $serviceOrder = 'SA-' . str_pad($pest->svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Deleted pest type ' . $pest->svcp_pest_type . ' from ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Appointment service pest type has been deleted.');
+        return redirect()->back();
+    }
     // END REQUESTED APPOINTMENTS
 
     // START DELETED APPOINTMENTS
