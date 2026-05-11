@@ -48,11 +48,13 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
     return '08:00:00';
   }
   
-  int get totalPrice {
-    int total = 0;
+  double get totalPrice {
+    double total = 0;
 
     for (final area in widget.selectedAreas) {
-      total += int.tryParse(area['cost'].toString()) ?? 0;
+      final value = area['cost'] ?? area['price'] ?? area['svcpa_cost'] ?? 0;
+
+      total += double.tryParse(value.toString()) ?? 0;
     }
 
     return total;
@@ -109,7 +111,7 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
 
       request.fields['client_time'] = _timeStart(widget.selectedTime);
 
-      request.fields['initial_price'] = totalPrice.toString();
+      request.fields['initial_price'] = totalPrice.toStringAsFixed(2);
 
       request.fields['service_packages'] = jsonEncode(
         widget.selectedServicePackages.map((service) {
@@ -288,12 +290,12 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
           runSpacing: 8,
           children: widget.selectedAreas.map((area) {
             return _chip(
-              '${_formatName(area['area'] ?? '')} • ₱${area['cost']}',
+              '${_formatName(area['area'] ?? '')} • ₱${area['cost'] ?? area['price'] ?? area['svcpa_cost'] ?? 0}',
             );
           }).toList(),
         ),
         const SizedBox(height: 14),
-        _totalRow('Estimated Total', '₱$totalPrice'),
+        _totalRow('Estimated Total', '₱${totalPrice.toStringAsFixed(2)}'),
       ],
     );
   }
@@ -453,29 +455,29 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.primaryRed.withOpacity(0.06),
+        color: AppTheme.black.withOpacity(0.04),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryRed.withOpacity(0.14),
+          color: AppTheme.black.withOpacity(0.08),
         ),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.info_outline,
-            color: AppTheme.primaryRed,
+            color: AppTheme.black.withOpacity(0.65),
             size: 18,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'After submitting, the admin will review your request and confirm technician availability.',
+              'The displayed amount is only an estimated price. Final cost may still change after inspection and additional service fees.',
               style: TextStyle(
-                color: AppTheme.primaryRed,
+                color: AppTheme.black.withOpacity(0.72),
                 fontSize: 12,
                 height: 1.35,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
