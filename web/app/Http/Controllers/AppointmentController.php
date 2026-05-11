@@ -186,6 +186,7 @@ class AppointmentController extends Controller
     {
         $service = DB::table('service_orders')
             ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+            ->leftJoin('services', 'service_orders.svc_id', '=', 'services.svc_id')
             ->where('service_orders.svcpa_id', $svcpa_id)
             ->where('service_orders.svco_active', 1)
             ->select(
@@ -193,7 +194,9 @@ class AppointmentController extends Controller
                 'service_orders.svc_id',
                 'service_orders.svcpa_id',
                 'service_package_areas.svcpa_area',
-                'service_package_areas.svcpa_cost'
+                'service_package_areas.svcpa_cost',
+                'services.svc_initial_price',
+                'services.svc_balance'
             )
             ->first();
 
@@ -202,6 +205,12 @@ class AppointmentController extends Controller
             return redirect()->back();
         }
 
+        $newInitialPrice = $service->svc_initial_price - $service->svcpa_cost;
+        $newBalance = $service->svc_balance - $service->svcpa_cost;
+
+        DB::beginTransaction();
+
+        // Soft delete service order
         DB::table('service_orders')
             ->where('svcpa_id', $svcpa_id)
             ->update([
@@ -210,17 +219,31 @@ class AppointmentController extends Controller
                 'svco_active' => 0
             ]);
 
+        // Update service prices
+        DB::table('services')
+            ->where('svc_id', $service->svc_id)
+            ->update([
+                'svc_initial_price' => $newInitialPrice,
+                'svc_balance' => $newBalance
+            ]);
+
+        DB::commit();
+
         $serviceOrder = 'SA-' . str_pad($service->svc_id, 6, '0', STR_PAD_LEFT);
 
         logUserActivity(
             'Manage Appointments',
-            'Deleted service area ' . $service->svcpa_area .
-            ' from ' . $serviceOrder
+            'Deleted service area "' . $service->svcpa_area .
+            '" from ' . $serviceOrder .
+            '. Deducted ' . number_format($service->svcpa_cost, 2) .
+            ' from Initial Price and Balance. ' .
+            'New Initial Price: ' . number_format($newInitialPrice, 2) .
+            ', New Balance: ' . number_format($newBalance, 2)
         );
 
         session()->flash(
             'successMessage',
-            'Appointment service order has been deleted.'
+            'Appointment service order has been deleted and prices updated.'
         );
 
         return redirect()->back();
