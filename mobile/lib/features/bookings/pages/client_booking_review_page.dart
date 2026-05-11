@@ -47,7 +47,7 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
 
     return '08:00:00';
   }
-
+  
   int get totalPrice {
     int total = 0;
 
@@ -108,6 +108,8 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
         '${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2, '0')}-${widget.selectedDate.day.toString().padLeft(2, '0')}';
 
       request.fields['client_time'] = _timeStart(widget.selectedTime);
+
+      request.fields['initial_price'] = totalPrice.toString();
 
       request.fields['service_packages'] = jsonEncode(
         widget.selectedServicePackages.map((service) {
