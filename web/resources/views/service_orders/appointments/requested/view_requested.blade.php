@@ -71,6 +71,7 @@
                         </strong>
                     </div>
                     <div class="row">
+                        
                         {{-- Appointment Information Display --}}
                         <div class="table-responsive" id="sectionA">
                             <table class="table table-bordered text-left align-middle">
@@ -152,6 +153,7 @@
                                 </tbody>
                             </table>
                         </div>
+
                         <div class="d-flex justify-content-end flex-wrap mb-3 no-print">
                             <button type="button" class="btn btn-primary mr-2 mb-2" onclick="printDefault()">
                                 <span class="fa fa-print"></span> Print
@@ -335,29 +337,31 @@
                         </div>
 
                         {{-- Client Appointment Images --}}
-                        <div class="table-responsive" id="sectionC">
-                            <hr>
-                            <table class="table table-bordered text-center mb-2">
-                                <thead>
-                                    <tr style="background-color: #f5f5f5;">
-                                        <th colspan="1"><strong>CLIENT APPOINTMENT IMAGES</strong></th>
-                                    </tr>
-                                </thead>
-                            </table>
-                            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
-                                @foreach ($appointmentImages as $img)
-                                    <div style="position: relative;">
-                                        <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
-                                            target="_blank"
-                                            style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden; border:1px solid #dee2e6; border-radius:4px; background:#f8f9fa;">
-                                            <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
-                                                style="width:100%; height:100%; object-fit:cover; display:block;"
-                                                alt="Appointment Image">
-                                        </a>
-                                    </div>
-                                @endforeach
+                        @if ($appointmentImages->count() > 0)
+                            <div class="table-responsive" id="sectionC">
+                                <hr>
+                                <table class="table table-bordered text-center mb-2">
+                                    <thead>
+                                        <tr style="background-color: #f5f5f5;">
+                                            <th colspan="1"><strong>CLIENT APPOINTMENT IMAGES</strong></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                                    @foreach ($appointmentImages as $img)
+                                        <div style="position: relative;">
+                                            <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
+                                                target="_blank"
+                                                style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden; border:1px solid #dee2e6; border-radius:4px; background:#f8f9fa;">
+                                                <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
+                                                    style="width:100%; height:100%; object-fit:cover; display:block;"
+                                                    alt="Appointment Image">
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
+                        @endif
 
                     </div>
                 </div>
