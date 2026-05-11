@@ -181,6 +181,50 @@ class AppointmentController extends Controller
         session()->flash('successMessage', 'Appointment service pest type has been deleted.');
         return redirect()->back();
     }
+
+    public function requested_appointments_view_delete_service(Request $request, $svcpa_id)
+    {
+        $service = DB::table('service_orders')
+            ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+            ->where('service_orders.svcpa_id', $svcpa_id)
+            ->where('service_orders.svco_active', 1)
+            ->select(
+                'service_orders.svco_id',
+                'service_orders.svc_id',
+                'service_orders.svcpa_id',
+                'service_package_areas.svcpa_area',
+                'service_package_areas.svcpa_cost'
+            )
+            ->first();
+
+        if (!$service) {
+            alert()->error('Service order not found.');
+            return redirect()->back();
+        }
+
+        DB::table('service_orders')
+            ->where('svcpa_id', $svcpa_id)
+            ->update([
+                'svco_date_modified' => Carbon::now(),
+                'svco_modified_by' => session('usr_id'),
+                'svco_active' => 0
+            ]);
+
+        $serviceOrder = 'SA-' . str_pad($service->svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Deleted service area ' . $service->svcpa_area .
+            ' from ' . $serviceOrder
+        );
+
+        session()->flash(
+            'successMessage',
+            'Appointment service order has been deleted.'
+        );
+
+        return redirect()->back();
+    }
     // END REQUESTED APPOINTMENTS
 
     // START DELETED APPOINTMENTS

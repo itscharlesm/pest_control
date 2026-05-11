@@ -251,24 +251,27 @@
 
                                         {{-- Delete Pest Type Modal --}}
                                         @foreach ($pestTypes as $type)
-                                            <div class="modal fade" id="deletePestTypeModal-{{ $type->svcop_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="deletePestTypeModalLabel" aria-hidden="true">
+                                            <div class="modal fade" id="deletePestTypeModal-{{ $type->svcop_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="deletePestTypeModalLabel"
+                                                aria-hidden="true">
                                                 <div class="modal-dialog" role="document">
                                                     <div class="modal-content">
                                                         <form method="POST"
                                                             action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_delete_pest', [$type->svcop_id]) }}">
                                                             @csrf
                                                             <div class="modal-header bg-danger text-white">
-                                                                <h5 class="modal-title text-white" id="deletePestTypeModalLabel">
+                                                                <h5 class="modal-title text-white"
+                                                                    id="deletePestTypeModalLabel">
                                                                     Please Confirm
                                                                 </h5>
-                                                                <button type="button" class="close" data-dismiss="modal"
-                                                                    aria-label="Close">
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal" aria-label="Close">
                                                                     <span aria-hidden="true">&times;</span>
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <p>Are you sure you want to <strong>DELETE</strong> the <strong>{{ $type->svcp_pest_type }}</strong> pest type?
+                                                                <p>Are you sure you want to <strong>DELETE</strong> the
+                                                                    <strong>{{ $type->svcp_pest_type }}</strong> pest type?
                                                                 </p>
                                                             </div>
                                                             <div class="modal-footer">
@@ -302,7 +305,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse ($serviceAreas as $index => $area)
+                                                @foreach ($serviceAreas as $index => $area)
                                                     <tr>
                                                         <td style="vertical-align: middle; text-align: center">
                                                             {{ $index + 1 }}</td>
@@ -319,14 +322,51 @@
                                                             </a>
                                                         </td>
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="4" class="text-center text-muted">No service areas
-                                                            added.</td>
-                                                    </tr>
-                                                @endforelse
+                                                @endforeach
                                             </tbody>
                                         </table>
+
+                                        {{-- Delete Area Modal --}}
+                                        @foreach ($serviceAreas as $area)
+                                            <div class="modal fade" id="deleteAreaModal-{{ $area->svcpa_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="deleteAreaModalLabel"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form method="POST"
+                                                            action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_delete_service', [$area->svcpa_id]) }}">
+                                                            @csrf
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title text-white"
+                                                                    id="deleteAreaModalLabel">
+                                                                    Please Confirm
+                                                                </h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Are you sure you want to <strong>DELETE</strong> the
+                                                                    service for <strong>{{ $area->svcpa_area }}</strong>
+                                                                    with the cost of
+                                                                    <em>₱{{ number_format($area->svcpa_cost, 2) }}</em>?
+                                                                </p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">
+                                                                    <span class="fa fa-close"></span> Close
+                                                                </button>
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <span class="fa fa-trash"></span> Confirm Delete
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             @elseif ($display->svc_is_termite == 1)
