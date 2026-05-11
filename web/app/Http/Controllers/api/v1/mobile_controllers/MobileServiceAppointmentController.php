@@ -14,10 +14,12 @@ class MobileServiceAppointmentController extends Controller
         $request->validate([
             'email' => 'required|email',
             'uadd_id' => 'required',
-            'client_date' => 'required',
+            'client_date' => 'required|date',
             'client_time' => 'required',
+            'initial_price' => 'nullable|numeric',
             'service_packages' => 'required',
             'service_areas' => 'required',
+            'images.*' => 'mimes:jpeg,jpg,png,webp|max:8192',
         ]);
 
         DB::beginTransaction();
@@ -34,8 +36,9 @@ class MobileServiceAppointmentController extends Controller
                 ], 404);
             }
 
-            $servicePackages = json_decode($request->service_packages, true);
-            $serviceAreas = json_decode($request->service_areas, true);
+            $servicePackages = json_decode($request->service_packages, true) ?? [];
+            $serviceAreas = json_decode($request->service_areas, true) ?? [];
+            $initialPrice = $request->initial_price ?? 0;
 
             $serviceId = DB::table('services')->insertGetId([
                 'svc_uuid' => Str::uuid(),
@@ -51,10 +54,11 @@ class MobileServiceAppointmentController extends Controller
                 'svc_device_count' => null,
                 'svc_status' => 'REQUESTED',
                 'svc_infestation' => null,
-                'svc_initial_price' => null,
+                'svc_initial_price' => $initialPrice,
+                'svc_service_price' => $initialPrice,
                 'svc_final_price' => null,
-                'svc_balance' => null,
-                'svc_payment_status' => null,
+                'svc_balance' => $initialPrice,
+                'svc_payment_status' => 'NO PAYMENT',
                 'svc_attachment' => null,
                 'svc_frequency_type' => null,
                 'svc_frequency' => null,
@@ -84,6 +88,7 @@ class MobileServiceAppointmentController extends Controller
                     'svco_uuid' => Str::uuid(),
                     'svc_id' => $serviceId,
                     'svcpa_id' => $area['id'],
+                    'svcpat_id' => null,
                     'svco_date_created' => now(),
                     'svco_created_by' => $user->usr_id,
                     'svco_date_modified' => null,
@@ -99,6 +104,7 @@ class MobileServiceAppointmentController extends Controller
                 'svca_client_date' => $request->client_date,
                 'svca_client_time' => $request->client_time,
                 'svca_status' => 'REQUESTED',
+                'svca_approved_date' => null,
                 'svca_approved_time_from' => null,
                 'svca_approved_time_to' => null,
                 'svca_date_approved' => null,
@@ -112,55 +118,47 @@ class MobileServiceAppointmentController extends Controller
 
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $request->validate([
-                        'images.*' => 'mimes:jpeg,jpg,png,webp|max:8192',
-                    ]);
+                    $fileName = uniqid() . '_' . $image->getClientOriginalName();
+                    $folderPath = public_path('images/client_images');
 
-                    if ($request->hasFile('images')) {
-                        foreach ($request->file('images') as $image) {
-                            $fileName = uniqid() . '_' . $image->getClientOriginalName();
-                            $folderPath = public_path('images/service_appointments');
-
-                            if (!file_exists($folderPath)) {
-                                mkdir($folderPath, 0755, true);
-                            }
-
-                            $path = $folderPath . '/' . $fileName;
-                            $ext = strtolower($image->getClientOriginalExtension());
-
-                            if (in_array($ext, ['jpg', 'jpeg'])) {
-                                $source = imagecreatefromjpeg($image->getPathname());
-                                imagejpeg($source, $path, 75);
-                                imagedestroy($source);
-                            } elseif ($ext === 'png') {
-                                $source = imagecreatefrompng($image->getPathname());
-
-                                if ($source && imageistruecolor($source) === false) {
-                                    imagepalettetotruecolor($source);
-                                }
-
-                                if ($source) {
-                                    imagepng($source, $path, 7);
-                                    imagedestroy($source);
-                                }
-                            } elseif ($ext === 'webp') {
-                                $source = imagecreatefromwebp($image->getPathname());
-                                imagewebp($source, $path, 75);
-                                imagedestroy($source);
-                            }
-
-                            DB::table('service_appointment_images')->insert([
-                                'svcap_uuid' => Str::uuid(),
-                                'svca_id' => $appointmentId,
-                                'svcap_image' => $fileName,
-                                'svcap_date_created' => now(),
-                                'svcap_created_by' => $user->usr_id,
-                                'svcap_date_modified' => null,
-                                'svcap_modified_by' => null,
-                                'svcap_active' => 1,
-                            ]);
-                        }
+                    if (!file_exists($folderPath)) {
+                        mkdir($folderPath, 0755, true);
                     }
+
+                    $path = $folderPath . '/' . $fileName;
+                    $ext = strtolower($image->getClientOriginalExtension());
+
+                    if (in_array($ext, ['jpg', 'jpeg'])) {
+                        $source = imagecreatefromjpeg($image->getPathname());
+                        imagejpeg($source, $path, 75);
+                        imagedestroy($source);
+                    } elseif ($ext === 'png') {
+                        $source = imagecreatefrompng($image->getPathname());
+
+                        if ($source && imageistruecolor($source) === false) {
+                            imagepalettetotruecolor($source);
+                        }
+
+                        if ($source) {
+                            imagepng($source, $path, 7);
+                            imagedestroy($source);
+                        }
+                    } elseif ($ext === 'webp') {
+                        $source = imagecreatefromwebp($image->getPathname());
+                        imagewebp($source, $path, 75);
+                        imagedestroy($source);
+                    }
+
+                    DB::table('service_appointment_images')->insert([
+                        'svcap_uuid' => Str::uuid(),
+                        'svca_id' => $appointmentId,
+                        'svcap_image' => $fileName,
+                        'svcap_date_created' => now(),
+                        'svcap_created_by' => $user->usr_id,
+                        'svcap_date_modified' => null,
+                        'svcap_modified_by' => null,
+                        'svcap_active' => 1,
+                    ]);
                 }
             }
 
