@@ -462,6 +462,55 @@
         </div>
     </section>
 
+    {{-- Add Pest Type Modal --}}
+    <div class="modal fade" id="addPestTypeModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <form method="POST"
+                    action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_add_pest') }}">
+                    @csrf
+
+                    <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
+
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white">Add Pest Type</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <label>Select Pest Type</label>
+                            <select name="svcp_id" class="form-control" required>
+                                @foreach ($servicePackages as $package)
+                                    <option value="{{ $package->svcp_id }}">
+                                        {{ $package->svcp_pest_type }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     <script>
         function printDefault() {
             window.print();

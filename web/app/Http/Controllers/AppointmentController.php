@@ -107,6 +107,18 @@ class AppointmentController extends Controller
             )
             ->get();
 
+        // Add Pest Type
+        $existingPests = DB::table('service_order_pests')
+            ->where('svc_id', $svc_id)
+            ->where('svcop_active', 1)
+            ->pluck('svcp_id')
+            ->toArray();
+
+        $servicePackages = DB::table('service_packages')
+            ->where('svcp_id', '!=', 8)
+            ->whereNotIn('svcp_id', $existingPests)
+            ->get();
+
         // Service Orders with Areas (non-termite: svcpat_id IS NULL)
         $serviceAreas = DB::table('service_orders')
             ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
@@ -143,7 +155,52 @@ class AppointmentController extends Controller
             ->select('service_appointment_images.*')
             ->get();
 
-        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages'));
+        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'termiteAreas', 'appointmentImages'));
+    }
+
+    public function requested_appointments_view_add_pest(Request $request)
+    {
+        $request->validate([
+            'svc_id' => 'required',
+            'svcp_id' => 'required'
+        ]);
+
+        $svc_id = $request->svc_id;
+        $svcp_id = $request->svcp_id;
+
+        // check if already exists active
+        $exists = DB::table('service_order_pests')
+            ->where('svc_id', $svc_id)
+            ->where('svcp_id', $svcp_id)
+            ->where('svcop_active', 1)
+            ->first();
+
+        if ($exists) {
+            alert()->error('Pest type already added.');
+            return redirect()->back();
+        }
+
+        DB::table('service_order_pests')->insert([
+            'svc_id' => $svc_id,
+            'svcp_id' => $svcp_id,
+            'svcop_date_created' => Carbon::now(),
+            'svcop_created_by' => session('usr_id'),
+            'svcop_active' => 1
+        ]);
+
+        $pest = DB::table('service_packages')
+            ->where('svcp_id', $svcp_id)
+            ->first();
+
+        $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Added pest type ' . ($pest->svcp_pest_type ?? '') . ' to ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Pest type successfully added.');
+        return redirect()->back();
     }
 
     public function requested_appointments_view_delete_pest(Request $request, $svcop_id)
