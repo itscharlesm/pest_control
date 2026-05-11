@@ -181,6 +181,7 @@ class AppointmentController extends Controller
         }
 
         DB::table('service_order_pests')->insert([
+            'svcop_uuid' => generateuuid(),
             'svc_id' => $svc_id,
             'svcp_id' => $svcp_id,
             'svcop_date_created' => Carbon::now(),
