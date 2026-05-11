@@ -113,8 +113,11 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
 
       request.fields['initial_price'] = totalPrice.toStringAsFixed(2);
 
+      request.fields['problem_description'] =
+          widget.description.trim().toUpperCase();
+
       request.fields['service_packages'] = jsonEncode(
-        widget.selectedServicePackages.map((service) {
+          widget.selectedServicePackages.map((service) {
           return {
             'id': service['id'],
           };
