@@ -135,7 +135,15 @@ class AppointmentController extends Controller
             )
             ->get();
 
-        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas'));
+        // Client Appointment Images
+        $appointmentImages = DB::table('service_appointment_images')
+            ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
+            ->where('service_appointments.svc_id', $svc_id)
+            ->where('service_appointment_images.svcap_active', 1)
+            ->select('service_appointment_images.*')
+            ->get();
+
+        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages'));
     }
     // END REQUESTED APPOINTMENTS
 
