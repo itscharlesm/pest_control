@@ -107,6 +107,18 @@ class AppointmentController extends Controller
             )
             ->get();
 
+        // Add Pest Type
+        $existingPests = DB::table('service_order_pests')
+            ->where('svc_id', $svc_id)
+            ->where('svcop_active', 1)
+            ->pluck('svcp_id')
+            ->toArray();
+
+        $servicePackages = DB::table('service_packages')
+            ->where('svcp_id', '!=', 8)
+            ->whereNotIn('svcp_id', $existingPests)
+            ->get();
+
         // Service Orders with Areas (non-termite: svcpat_id IS NULL)
         $serviceAreas = DB::table('service_orders')
             ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
@@ -135,7 +147,164 @@ class AppointmentController extends Controller
             )
             ->get();
 
-        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas'));
+        // Client Appointment Images
+        $appointmentImages = DB::table('service_appointment_images')
+            ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
+            ->where('service_appointments.svc_id', $svc_id)
+            ->where('service_appointment_images.svcap_active', 1)
+            ->select('service_appointment_images.*')
+            ->get();
+
+        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'termiteAreas', 'appointmentImages'));
+    }
+
+    public function requested_appointments_view_add_pest(Request $request)
+    {
+        $request->validate([
+            'svc_id' => 'required',
+            'svcp_id' => 'required'
+        ]);
+
+        $svc_id = $request->svc_id;
+        $svcp_id = $request->svcp_id;
+
+        // check if already exists active
+        $exists = DB::table('service_order_pests')
+            ->where('svc_id', $svc_id)
+            ->where('svcp_id', $svcp_id)
+            ->where('svcop_active', 1)
+            ->first();
+
+        if ($exists) {
+            alert()->error('Pest type already added.');
+            return redirect()->back();
+        }
+
+        DB::table('service_order_pests')->insert([
+            'svcop_uuid' => generateuuid(),
+            'svc_id' => $svc_id,
+            'svcp_id' => $svcp_id,
+            'svcop_date_created' => Carbon::now(),
+            'svcop_created_by' => session('usr_id'),
+            'svcop_active' => 1
+        ]);
+
+        $pest = DB::table('service_packages')
+            ->where('svcp_id', $svcp_id)
+            ->first();
+
+        $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Added pest type ' . ($pest->svcp_pest_type ?? '') . ' to ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Pest type successfully added.');
+        return redirect()->back();
+    }
+
+    public function requested_appointments_view_delete_pest(Request $request, $svcop_id)
+    {
+        $pest = DB::table('service_order_pests')
+            ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+            ->where('service_order_pests.svcop_id', $svcop_id)
+            ->select(
+                'service_order_pests.svcop_id',
+                'service_order_pests.svc_id',
+                'service_packages.svcp_pest_type'
+            )
+            ->first();
+
+        if (!$pest) {
+            alert()->error('Pest type not found.');
+            return redirect()->back();
+        }
+
+        DB::table('service_order_pests')
+            ->where('svcop_id', $svcop_id)
+            ->update([
+                'svcop_date_modified' => Carbon::now(),
+                'svcop_modified_by' => session('usr_id'),
+                'svcop_active' => 0
+            ]);
+
+        $serviceOrder = 'SA-' . str_pad($pest->svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Deleted pest type ' . $pest->svcp_pest_type . ' from ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Appointment service pest type has been deleted.');
+        return redirect()->back();
+    }
+
+    public function requested_appointments_view_delete_service(Request $request, $svcpa_id)
+    {
+        $service = DB::table('service_orders')
+            ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+            ->leftJoin('services', 'service_orders.svc_id', '=', 'services.svc_id')
+            ->where('service_orders.svcpa_id', $svcpa_id)
+            ->where('service_orders.svco_active', 1)
+            ->select(
+                'service_orders.svco_id',
+                'service_orders.svc_id',
+                'service_orders.svcpa_id',
+                'service_package_areas.svcpa_area',
+                'service_package_areas.svcpa_cost',
+                'services.svc_initial_price',
+                'services.svc_balance'
+            )
+            ->first();
+
+        if (!$service) {
+            alert()->error('Service order not found.');
+            return redirect()->back();
+        }
+
+        $newInitialPrice = $service->svc_initial_price - $service->svcpa_cost;
+        $newBalance = $service->svc_balance - $service->svcpa_cost;
+
+        DB::beginTransaction();
+
+        // Soft delete service order
+        DB::table('service_orders')
+            ->where('svcpa_id', $svcpa_id)
+            ->update([
+                'svco_date_modified' => Carbon::now(),
+                'svco_modified_by' => session('usr_id'),
+                'svco_active' => 0
+            ]);
+
+        // Update service prices
+        DB::table('services')
+            ->where('svc_id', $service->svc_id)
+            ->update([
+                'svc_initial_price' => $newInitialPrice,
+                'svc_balance' => $newBalance
+            ]);
+
+        DB::commit();
+
+        $serviceOrder = 'SA-' . str_pad($service->svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Deleted service area "' . $service->svcpa_area .
+            '" from ' . $serviceOrder .
+            '. Deducted ' . number_format($service->svcpa_cost, 2) .
+            ' from Initial Price and Balance. ' .
+            'New Initial Price: ' . number_format($newInitialPrice, 2) .
+            ', New Balance: ' . number_format($newBalance, 2)
+        );
+
+        session()->flash(
+            'successMessage',
+            'Appointment service order has been deleted and prices updated.'
+        );
+
+        return redirect()->back();
     }
     // END REQUESTED APPOINTMENTS
 

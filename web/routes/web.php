@@ -91,6 +91,9 @@ Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, '
 // - Requested Appointments
 Route::get('service/orders/appointments/requested', [AppointmentController::class, 'requested_appointments']);
 Route::get('service/orders/appointments/requested/{svc_id}', [AppointmentController::class, 'requested_appointments_view']);
+Route::post('service/orders/appointments/requested/add/pest_type', [AppointmentController::class, 'requested_appointments_view_add_pest']);
+Route::post('service/orders/appointments/requested/delete/pest_type/{svcop_id}', [AppointmentController::class, 'requested_appointments_view_delete_pest']);
+Route::post('service/orders/appointments/requested/delete/service_order/{svcpa_id}', [AppointmentController::class, 'requested_appointments_view_delete_service']);
 // - Assesed Appointments
 // - Scheduled Appointments
 // - Ongoing Appointments

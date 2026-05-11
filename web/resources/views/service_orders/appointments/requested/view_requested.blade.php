@@ -24,6 +24,10 @@
     #sectionB {
         overflow: visible !important;
     }
+
+    .content-wrapper {
+        overflow-x: hidden;
+    }
 </style>
 
 @extends('layouts.themes.main')
@@ -71,6 +75,7 @@
                         </strong>
                     </div>
                     <div class="row">
+
                         {{-- Appointment Information Display --}}
                         <div class="table-responsive" id="sectionA">
                             <table class="table table-bordered text-left align-middle">
@@ -152,6 +157,7 @@
                                 </tbody>
                             </table>
                         </div>
+
                         <div class="d-flex justify-content-end flex-wrap mb-3 no-print">
                             <button type="button" class="btn btn-primary mr-2 mb-2" onclick="printDefault()">
                                 <span class="fa fa-print"></span> Print
@@ -171,6 +177,12 @@
                                         <input type="checkbox" class="print-toggle mr-1" data-target="sectionB"> Service
                                         Orders
                                     </label>
+                                    @if ($appointmentImages->count() > 0)
+                                        <label class="dropdown-item">
+                                            <input type="checkbox" class="print-toggle mr-1" data-target="sectionC"> Client
+                                            Appointment Images
+                                        </label>
+                                    @endif
                                     <div class="dropdown-item text-center">
                                         <button class="btn btn-primary btn-sm mt-2" onclick="handlePrint()">Confirm &
                                             Print</button>
@@ -190,7 +202,6 @@
 
                         {{-- Service Order Display --}}
                         <div class="table-responsive" id="sectionB">
-                            <hr>
                             @if ($display->svc_is_termite == 0)
                                 {{-- NON-TERMITE: Two columns - Pest Type & Service Order --}}
                                 <div class="d-flex gap-2 mb-3 no-print">
@@ -219,7 +230,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse ($pestTypes as $index => $type)
+                                                @foreach ($pestTypes as $index => $type)
                                                     <tr>
                                                         <td style="vertical-align: middle; text-align: center">
                                                             {{ $index + 1 }}</td>
@@ -229,19 +240,54 @@
                                                             style="vertical-align: middle; text-align: center">
                                                             <a class="btn btn-danger btn-sm mb-1"
                                                                 href="javascript:void(0)" data-toggle="modal"
-                                                                data-target="#deletePestTypeModal-{{ $type->svcp_id }}">
+                                                                data-target="#deletePestTypeModal-{{ $type->svcop_id }}">
                                                                 <span class="fa fa-trash"></span>
                                                             </a>
                                                         </td>
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="3" class="text-center text-muted">No pest types
-                                                            added.</td>
-                                                    </tr>
-                                                @endforelse
+                                                @endforeach
                                             </tbody>
                                         </table>
+
+                                        {{-- Delete Pest Type Modal --}}
+                                        @foreach ($pestTypes as $type)
+                                            <div class="modal fade" id="deletePestTypeModal-{{ $type->svcop_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="deletePestTypeModalLabel"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form method="POST"
+                                                            action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_delete_pest', [$type->svcop_id]) }}">
+                                                            @csrf
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title text-white"
+                                                                    id="deletePestTypeModalLabel">
+                                                                    Please Confirm
+                                                                </h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Are you sure you want to <strong>DELETE</strong> the
+                                                                    <strong>{{ $type->svcp_pest_type }}</strong> pest type?
+                                                                </p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">
+                                                                    <span class="fa fa-close"></span> Close
+                                                                </button>
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <span class="fa fa-trash"></span> Confirm Delete
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
 
                                     {{-- SERVICE ORDER TABLE (non-termite areas) --}}
@@ -259,7 +305,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse ($serviceAreas as $index => $area)
+                                                @foreach ($serviceAreas as $index => $area)
                                                     <tr>
                                                         <td style="vertical-align: middle; text-align: center">
                                                             {{ $index + 1 }}</td>
@@ -276,14 +322,51 @@
                                                             </a>
                                                         </td>
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="4" class="text-center text-muted">No service areas
-                                                            added.</td>
-                                                    </tr>
-                                                @endforelse
+                                                @endforeach
                                             </tbody>
                                         </table>
+
+                                        {{-- Delete Area Modal --}}
+                                        @foreach ($serviceAreas as $area)
+                                            <div class="modal fade" id="deleteAreaModal-{{ $area->svcpa_id }}"
+                                                tabindex="-1" role="dialog" aria-labelledby="deleteAreaModalLabel"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <form method="POST"
+                                                            action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_delete_service', [$area->svcpa_id]) }}">
+                                                            @csrf
+                                                            <div class="modal-header bg-danger text-white">
+                                                                <h5 class="modal-title text-white"
+                                                                    id="deleteAreaModalLabel">
+                                                                    Please Confirm
+                                                                </h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>Are you sure you want to <strong>DELETE</strong> the
+                                                                    service for <strong>{{ $area->svcpa_area }}</strong>
+                                                                    with the cost of
+                                                                    <em>₱{{ number_format($area->svcpa_cost, 2) }}</em>?
+                                                                </p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">
+                                                                    <span class="fa fa-close"></span> Close
+                                                                </button>
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <span class="fa fa-trash"></span> Confirm Delete
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             @elseif ($display->svc_is_termite == 1)
@@ -333,11 +416,100 @@
                                 </div>
                             @endif
                         </div>
+
+                        {{-- Client Appointment Images --}}
+                        @if ($appointmentImages->count() > 0)
+                            <div class="table-responsive" id="sectionC">
+                                <table class="table table-bordered text-center mb-2">
+                                    <thead>
+                                        <tr style="background-color: #f5f5f5;">
+                                            <th colspan="5">
+                                                <strong>CLIENT APPOINTMENT IMAGES</strong>
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach ($appointmentImages->chunk(5) as $chunk)
+                                            <tr>
+                                                @foreach ($chunk as $img)
+                                                    <td style="width:20%; padding:10px; vertical-align:middle;">
+                                                        <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
+                                                            target="_blank"
+                                                            style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden;">
+
+                                                            <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
+                                                                alt="Appointment Image"
+                                                                style="width:100%; height:100%; object-fit:cover; display:block;">
+                                                        </a>
+                                                    </td>
+                                                @endforeach
+
+                                                {{-- Fill empty cells if less than 5 images --}}
+                                                @for ($i = $chunk->count(); $i < 5; $i++)
+                                                    <td></td>
+                                                @endfor
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    {{-- Add Pest Type Modal --}}
+    <div class="modal fade" id="addPestTypeModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <form method="POST"
+                    action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_add_pest') }}">
+                    @csrf
+
+                    <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
+
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white">Add Pest Type</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <label>Select Pest Type</label>
+                            <select name="svcp_id" class="form-control" required>
+                                @foreach ($servicePackages as $package)
+                                    <option value="{{ $package->svcp_id }}">
+                                        {{ $package->svcp_pest_type }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
 
     <script>
         function printDefault() {
@@ -353,7 +525,7 @@
 
             // Reset all sections (show all initially) - Check if the section exists
             const sectionIds = [
-                'sectionA', 'sectionB'
+                'sectionA', 'sectionB', 'sectionC'
             ];
 
             sectionIds.forEach(sectionId => {
