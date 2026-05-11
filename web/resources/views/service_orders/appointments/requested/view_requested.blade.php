@@ -466,7 +466,6 @@
     <div class="modal fade" id="addPestTypeModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-
                 <form method="POST"
                     action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_add_pest') }}">
                     @csrf
@@ -474,14 +473,12 @@
                     <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
 
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white">Add Pest Type</h5>
+                        <h5 class="modal-title text-white">Add Pest Type <span class="text-danger">*</span></h5>
                         <button type="button" class="close" data-dismiss="modal">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-
                     <div class="modal-body">
-
                         <div class="form-group">
                             <label>Select Pest Type</label>
                             <select name="svcp_id" class="form-control" required>
@@ -492,9 +489,7 @@
                                 @endforeach
                             </select>
                         </div>
-
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">
                             <span class="fa fa-close"></span> Close
@@ -504,9 +499,52 @@
                             <span class="fa fa-save"></span> Save
                         </button>
                     </div>
-
                 </form>
+            </div>
+        </div>
+    </div>
 
+    {{-- Add Area Modal --}}
+    <div class="modal fade" id="addAreaModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST"
+                    action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_add_service') }}">
+                    @csrf
+
+                    <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
+
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white">Add Service Area</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Select Area <span class="text-danger">*</span></label>
+                            <select name="svcpa_id" id="svcpaSelect" class="form-control" required>
+                                @foreach ($servicePackageAreas as $area)
+                                    <option value="{{ $area->svcpa_id }}" data-cost="{{ $area->svcpa_cost }}">
+                                        {{ $area->svcpa_area }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cost</label>
+                            <input type="text" id="areaCost" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -576,5 +614,12 @@
                 });
             }, 1000);
         }
+    </script>
+
+    <script>
+        document.getElementById('svcpaSelect').addEventListener('change', function() {
+            let cost = this.options[this.selectedIndex].getAttribute('data-cost');
+            document.getElementById('areaCost').value = cost ? '₱' + parseFloat(cost).toFixed(2) : '';
+        });
     </script>
 @endsection
