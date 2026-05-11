@@ -38,7 +38,9 @@ class MobileServiceAppointmentController extends Controller
 
             $servicePackages = json_decode($request->service_packages, true) ?? [];
             $serviceAreas = json_decode($request->service_areas, true) ?? [];
-            $initialPrice = $request->initial_price ?? 0;
+            $initialPrice = $request->filled('initial_price')
+                ? $request->initial_price
+                : 0;
 
             $serviceId = DB::table('services')->insertGetId([
                 'svc_uuid' => Str::uuid(),
@@ -55,7 +57,7 @@ class MobileServiceAppointmentController extends Controller
                 'svc_status' => 'REQUESTED',
                 'svc_infestation' => null,
                 'svc_initial_price' => $initialPrice,
-                'svc_service_price' => $initialPrice,
+                'svc_service_price' => null,
                 'svc_final_price' => null,
                 'svc_balance' => $initialPrice,
                 'svc_payment_status' => 'NO PAYMENT',

@@ -40,11 +40,12 @@ import 'package:image_picker/image_picker.dart';
     final TextEditingController descriptionController =
         TextEditingController();
 
-    int get totalPrice {
-      int total = 0;
+    double get totalPrice {
+      double total = 0;
 
       for (final area in selectedAreas) {
-        total += int.tryParse(area['cost'].toString()) ?? 0;
+        total +=
+            double.tryParse(area['cost'].toString()) ?? 0;
       }
 
       return total;
