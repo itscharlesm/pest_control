@@ -345,11 +345,11 @@
                                         <tbody>
                                             @foreach ($deviceCosts as $device)
                                                 <tr>
-                                                    <td style="vertical-align:middle;">
+                                                    <td style="vertical-align:middle; text-align:center; font-size: 12px;">
                                                         {{ $device->branch_name }}
                                                     </td>
 
-                                                    <td style="vertical-align:middle; text-align:center;">
+                                                    <td style="vertical-align:middle; text-align:center; font-size: 12px;">
                                                         ₱ {{ number_format($device->svcpad_cost, 2) }}
                                                     </td>
 

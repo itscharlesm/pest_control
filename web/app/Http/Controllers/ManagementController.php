@@ -97,9 +97,38 @@ class ManagementController extends Controller
     public function branches_add(Request $request)
     {
         $request->validate([
-            'branch_name' => 'required|string|max:255|unique:branches,branch_name'
+            'branch_name' => 'required|string|max:255'
         ]);
 
+        // Check if branch already exists (active or inactive)
+        $existingBranch = DB::table('branches')
+            ->where('branch_name', $request->branch_name)
+            ->first();
+
+        // If existing branch found
+        if ($existingBranch) {
+
+            // If inactive, reactivate it
+            if ($existingBranch->branch_active == 0) {
+
+                DB::table('branches')
+                    ->where('branch_id', $existingBranch->branch_id)
+                    ->update([
+                        'branch_active' => 1
+                    ]);
+
+                logUserActivity('Manage Branches', 'Reactivated branch ' . $request->branch_name);
+
+                session()->flash('successMessage', 'Existing branch has been reactivated.');
+                return redirect()->back();
+            }
+
+            // If already active
+            session()->flash('errorMessage', 'Branch already exists.');
+            return redirect()->back();
+        }
+
+        // Create new branch
         $branch_id = DB::table('branches')->insertGetId([
             'branch_uuid' => generateuuid(),
             'branch_name' => $request->branch_name,
@@ -124,6 +153,7 @@ class ManagementController extends Controller
         ];
 
         $servicePackageAreas = [];
+
         foreach ($areas as $area) {
             $servicePackageAreas[] = [
                 'svcpa_uuid' => generateuuid(),
@@ -136,7 +166,7 @@ class ManagementController extends Controller
             ];
         }
 
-        DB::table('service_package_areass')->insert($servicePackageAreas);
+        DB::table('service_package_areas')->insert($servicePackageAreas);
 
         $termites = [
             ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_costs' => 10000.00],
@@ -147,6 +177,7 @@ class ManagementController extends Controller
         ];
 
         $servicePackageAreaTermites = [];
+
         foreach ($termites as $termite) {
             $servicePackageAreaTermites[] = [
                 'svcpat_uuid' => generateuuid(),
@@ -159,10 +190,15 @@ class ManagementController extends Controller
             ];
         }
 
-        DB::table('service_package_areas_termites')->insert($servicePackageAreaTermites);
+        DB::table('service_package_area_devices')->insert([
+            'branch_id' => $branch_id,
+            'svcpad_cost' => 15000,
+            'svcpad_active' => 1
+        ]);
+
+        DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
 
         logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
-
         session()->flash('successMessage', 'Branch has been added.');
         return redirect()->back();
     }
