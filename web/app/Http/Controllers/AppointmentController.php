@@ -430,17 +430,16 @@ class AppointmentController extends Controller
         DB::table('services')
             ->where('svc_id', $svc_id)
             ->update([
-                'svc_is_package' => $isPackage,
-                'svc_sqm_initial' => $sqmInitial,
-                'svc_sqm_final' => $sqmInitial,
-                'svc_status' => 'CONFIRM ASSESSMENT',
-                'svc_infestation' => $request->svc_infestation,
-                // svc_initial_price intentionally NOT updated
+                'svc_is_package'    => $isPackage,
+                'svc_sqm_initial'   => $sqmInitial,
+                'svc_sqm_final'     => $isPackage == 1 ? $sqmInitial : null, // null if not package
+                'svc_status'        => 'CONFIRM ASSESSMENT',
+                'svc_infestation'   => $request->svc_infestation,
                 'svc_service_price' => $servicePrice,
-                'svc_final_price' => $finalPrice,
-                'svc_balance' => $finalPrice,
+                'svc_final_price'   => $finalPrice,
+                'svc_balance'       => $finalPrice,
                 'svc_date_modified' => Carbon::now(),
-                'svc_modified_by' => session('usr_id'),
+                'svc_modified_by'   => session('usr_id'),
             ]);
 
         // Update service_appointments table
