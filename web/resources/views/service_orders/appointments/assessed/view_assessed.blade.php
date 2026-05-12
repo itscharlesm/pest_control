@@ -81,94 +81,109 @@
                             <table class="table table-bordered text-left align-middle">
                                 <tbody>
                                     <tr>
+                                        <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
+                                    </tr>
+                                    <tr>
                                         <td style="font-weight: bold;">CLIENT NAME</td>
                                         <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
-                                        <td style="font-weight: bold;">PAYMENT STATUS</td>
-                                        <td>{{ $display->svc_payment_status }}</td>
-                                        <td style="font-weight: bold;">INITIAL PRICE</td>
-                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
-                                    </tr>
-                                    <tr>
                                         <td style="font-weight: bold;">EMAIL</td>
                                         <td>{{ $display->usr_email }}</td>
-                                        <td style="font-weight: bold;">IS TERMITE</td>
-                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
-                                        <td style="font-weight: bold;">BALANCE</td>
-                                        <td>₱{{ number_format($display->svc_balance, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">MOBILE NUMBER</td>
+                                        <td style="font-weight: bold;">MOBILE</td>
                                         <td>{{ $display->usr_mobile }}</td>
-                                        <td style="font-weight: bold;">IS PACKAGE</td>
-                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                        <td style="font-weight: bold;">BRANCH</td>
-                                        <td>{{ $display->branch_name }}</td>
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">ADDRESS</td>
-                                        <td>{{ implode(
-                                            ', ',
-                                            array_filter([
-                                                $display->uadd_street,
-                                                $display->uadd_barangay,
-                                                $display->uadd_city,
-                                                $display->uadd_province,
-                                                $display->uadd_region,
-                                            ]),
-                                        ) }}
+                                        <td colspan="3">
+                                            {{ implode(
+                                                ', ',
+                                                array_filter([
+                                                    $display->uadd_street,
+                                                    $display->uadd_barangay,
+                                                    $display->uadd_city,
+                                                    $display->uadd_province,
+                                                    $display->uadd_region,
+                                                ]),
+                                            ) }}
                                         </td>
                                         <td style="font-weight: bold;">ADDRESS TYPE</td>
                                         <td>{{ $display->add_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">BRANCH</td>
+                                        <td>{{ $display->branch_name }}</td>
                                         <td style="font-weight: bold;">STATUS</td>
                                         <td>{{ $display->svc_status }}</td>
+                                        <td style="font-weight: bold;">PAYMENT STATUS</td>
+                                        <td>{{ $display->svc_payment_status }}</td>
                                     </tr>
                                     <tr>
-                                        <th colspan="6" class="text-center table-light">
-                                            SCHEDULE
-                                        </th>
+                                        <td style="font-weight: bold;">INITIAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+
+                                        <td style="font-weight: bold;">FINAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_balance, 2) }}</td>
+
+                                        <td style="font-weight: bold;">SERVICE PRICE</td>
+                                        <td>₱{{ number_format($display->svc_service_price, 2) }}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="font-weight: bold;">IS TERMITE</td>
+                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+
+                                        <td style="font-weight: bold;">IS PACKAGE</td>
+                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    @if ($display->svc_is_termite)
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">TERMITE CASE</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">INITIAL SQM</td>
+                                            <td>{{ $display->svc_sqm_initial }}</td>
+
+                                            <td style="font-weight: bold;">WITH DEVICE</td>
+                                            <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
+
+                                            <td style="font-weight: bold;">DEVICE COUNT</td>
+                                            <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                            <td colspan="5">{{ $display->svc_type_treatment }}</td>
+                                        </tr>
+                                    @endif
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">SCHEDULE</th>
                                     </tr>
                                     <tr>
-                                        <td style="font-weight: bold;">CLIENT DATE REQUESTED</td>
-                                        <td>
-                                            {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
-                                        <td style="font-weight: bold;">CLIENT TIME REQUESTED</td>
+                                        <td style="font-weight: bold;">CLIENT DATE</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
+
+                                        <td style="font-weight: bold;">CLIENT TIME</td>
                                         <td colspan="3">
                                             {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">DATE APPROVED</td>
-                                        <td>
-                                            {{ \Carbon\Carbon::parse($display->svca_date_approved)->format('m/d/Y') }}</td>
-                                        <td style="font-weight: bold;">TIME APPROVED FROM</td>
-                                        <td>
-                                            {{ \Carbon\Carbon::parse($display->svca_approved_time_from)->format('h:i A') }}</td>
-                                            <td style="font-weight: bold;">TIME APPROVED TO</td>
-                                        <td>
-                                            {{ \Carbon\Carbon::parse($display->svca_approved_time_to)->format('h:i A') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_date_approved)->format('m/d/Y') }}</td>
+
+                                        <td style="font-weight: bold;">TIME FROM</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_from)->format('h:i A') }}
+                                        </td>
+
+                                        <td style="font-weight: bold;">TIME TO</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_to)->format('h:i A') }}
+                                        </td>
                                     </tr>
-                                    @if ($display->svc_is_termite)
-                                        <tr>
-                                            <th colspan="6" class="text-center table-light">
-                                                TERMITE CASE
-                                            </th>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight: bold;">INITIAL SQM</td>
-                                            <td colspan="2">{{ $display->svc_sqm_initial }}</td>
-                                            <td style="font-weight: bold;">WITH DEVICE</td>
-                                            <td colspan="2">{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
-                                            <td colspan="2">{{ $display->svc_type_treatment }}</td>
-                                            <td style="font-weight: bold;">DEVICE COUNT</td>
-                                            <td colspan="2">{{ $display->svc_device_count ?? 'N/A' }}</td>
-                                        </tr>
-                                    @endif
                                     <tr>
-                                        <th colspan="6" class="text-center table-light">
-                                            CLIENT PROBLEM DESCRIPTION
-                                        </th>
+                                        <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION</th>
                                     </tr>
                                     <tr>
                                         <td colspan="6" style="text-align: justify">
@@ -358,7 +373,7 @@
 
                                                 {{-- Fill empty cells if less than 5 images --}}
                                                 @for ($i = $chunk->count(); $i < 5; $i++)
-                                                    <td></td>
+                                                    <td style="vertical-align: middle;"></td>
                                                 @endfor
                                             </tr>
                                         @endforeach
