@@ -473,13 +473,13 @@ class AppointmentController extends Controller
                     'svc_modified_by' => session('usr_id'),
                 ]);
 
-                DB::table('service_orders')
-                    ->where('svc_id', $svc_id)
-                    ->update([
-                        'svcpat_id' => $request->svcpat_id,
-                        'svco_date_modified' => Carbon::now(),
-                        'svco_modified_by' => session('usr_id'),
-                    ]);
+            DB::table('service_orders')
+                ->where('svc_id', $svc_id)
+                ->update([
+                    'svcpat_id' => $request->svcpat_id,
+                    'svco_date_modified' => Carbon::now(),
+                    'svco_modified_by' => session('usr_id'),
+                ]);
 
         } else {
             // NON-TERMITE PATH
@@ -667,6 +667,7 @@ class AppointmentController extends Controller
                 'services.svc_status',
                 'services.svc_infestation',
                 'services.svc_initial_price',
+                'services.svc_device_price',
                 'services.svc_service_price',
                 'services.svc_final_price',
                 'services.svc_balance',

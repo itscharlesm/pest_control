@@ -132,25 +132,29 @@
 
                                     <tr>
                                         <td style="font-weight: bold;">IS TERMITE</td>
-                                        <td colspan="2">{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
                                         <td style="font-weight: bold;">IS PACKAGE</td>
-                                        <td colspan="2">{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                        <td style="font-weight: bold;">INFESTATION</td>
+                                        <td>{{ $display->svc_infestation }}</td>
                                     </tr>
                                     @if ($display->svc_is_termite)
                                         <tr>
                                             <th colspan="6" class="text-center table-light">TERMITE CASE</th>
                                         </tr>
                                         <tr>
+                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                            <td>{{ $display->svc_type_treatment }}</td>
+                                            <td style="font-weight: bold;">INITIAL SQM</td>
+                                            <td>{{ $display->svc_sqm_initial }}</td>
                                             <td style="font-weight: bold;">FINAL SQM</td>
                                             <td>{{ $display->svc_sqm_final }}</td>
+                                        </tr>
+                                        <tr>
                                             <td style="font-weight: bold;">WITH DEVICE</td>
                                             <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
                                             <td style="font-weight: bold;">DEVICE COUNT</td>
-                                            <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
-                                            <td colspan="5">{{ $display->svc_type_treatment }}</td>
+                                            <td colspan="3">{{ $display->svc_device_count ?? 'N/A' }}</td>
                                         </tr>
                                     @endif
                                     <tr>
