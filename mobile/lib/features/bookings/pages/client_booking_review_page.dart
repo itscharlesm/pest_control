@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/app/theme.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_step_indicator.dart';
 import 'package:mobile_app/shared/widgets/headers/app_back_header.dart';
+import 'package:mobile_app/features/appointments/pages/client_appointments_page.dart';
 
 class ClientBookingReviewPage extends StatefulWidget {
   final String email;
@@ -185,9 +186,13 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
           ),
         );
 
-        Navigator.pushNamedAndRemoveUntil(
+        Navigator.pushAndRemoveUntil(
           context,
-          '/client-home',
+          MaterialPageRoute(
+            builder: (_) => ClientAppointmentsPage(
+              email: widget.email,
+            ),
+          ),
           (route) => false,
         );
 

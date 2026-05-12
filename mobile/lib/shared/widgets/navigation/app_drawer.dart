@@ -11,6 +11,7 @@ import 'package:mobile_app/features/profiles/pages/client_profile_page.dart';
 import 'package:mobile_app/features/profiles/pages/technician_profile_page.dart';
 import 'package:mobile_app/shared/widgets/dialogs/app_confirmation_dialog.dart';
 import 'package:mobile_app/features/bookings/pages/client_booking_location_page.dart';
+import 'package:mobile_app/features/appointments/pages/client_appointments_page.dart';
 
 class AppDrawer extends StatefulWidget {
   final int userType; // 3 = Client, 2 = Technician
@@ -184,7 +185,21 @@ class _AppDrawerState extends State<AppDrawer> {
                   _drawerItem(
                     icon: Icons.calendar_month_rounded,
                     title: 'My Appointments',
-                    onTap: () => Navigator.pop(context),
+                    isSelected: widget.currentPage == 'appointments',
+                    onTap: () {
+                      Navigator.pop(context);
+
+                      if (widget.currentPage != 'appointments') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ClientAppointmentsPage(
+                              email: widget.email,
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   _drawerItem(
                     icon: Icons.history_rounded,
