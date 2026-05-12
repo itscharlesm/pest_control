@@ -47,7 +47,7 @@
                             <table id="profilingTable" class="table table-hover table-bordered table-sm responsive">
                                 <thead>
                                     <tr>
-                                        <th class="text-center">No</th>
+                                        <th class="text-center">SA Number</th>
                                         <th class="text-center">Client</th>
                                         <th class="text-center">Mobile Number</th>
                                         <th class="text-center">Branch</th>
@@ -62,7 +62,7 @@
                                     @foreach ($appointments as $appointment)
                                         <tr>
                                             <td style="vertical-align: middle; text-align: center">
-                                                {{ $loop->iteration }}
+                                                SA-{{ str_pad($appointment->svc_id, 6, '0', STR_PAD_LEFT) }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->usr_last_name }}, {{ $appointment->usr_first_name }}

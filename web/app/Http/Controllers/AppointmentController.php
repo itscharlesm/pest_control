@@ -19,7 +19,7 @@ class AppointmentController extends Controller
             ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
             ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
             ->where('services.svc_active', 1)
-            ->where('services.svc_status', 'REQUESTED');
+            ->whereIn('services.svc_status', ['REQUESTED', 'CONFIRM ASSESSMENT']);
 
         // Branch filter (same logic as users_active)
         if ($sessionBranchId != 1) {
@@ -75,6 +75,7 @@ class AppointmentController extends Controller
                 'services.svc_sqm_initial',
                 'services.svc_with_device',
                 'services.svc_device_count',
+                'services.svc_problem_description',
                 'services.svc_status',
                 'services.svc_initial_price',
                 'services.svc_balance',
@@ -394,6 +395,73 @@ class AppointmentController extends Controller
             'Appointment service order has been deleted and prices updated.'
         );
 
+        return redirect()->back();
+    }
+
+    public function requested_appointments_view_assess(Request $request)
+    {
+        $request->validate([
+            'svc_id' => 'required',
+            'svc_is_package' => 'required',
+            'svc_infestation' => 'required',
+            'svc_service_price' => 'required|numeric',
+            'svc_final_price' => 'required|numeric',
+            'svca_approved_time_from' => 'required',
+            'svca_approved_time_to' => 'required',
+        ]);
+
+        $svc_id = $request->svc_id;
+        $isPackage = $request->svc_is_package;
+        $servicePrice = $request->svc_service_price;
+        $finalPrice = $request->svc_final_price;
+
+        // Fetch existing service record
+        $service = DB::table('services')->where('svc_id', $svc_id)->first();
+
+        // Only update svc_sqm_initial if package is NO and DB value is currently null
+        $sqmInitial = $service->svc_sqm_initial; // preserve existing by default
+        if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
+            $sqmInitial = null;
+        } elseif ($isPackage == 1) {
+            $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+        }
+
+        // Update services table
+        DB::table('services')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svc_is_package' => $isPackage,
+                'svc_sqm_initial' => $sqmInitial,
+                'svc_sqm_final' => $sqmInitial,
+                'svc_status' => 'CONFIRM ASSESSMENT',
+                'svc_infestation' => $request->svc_infestation,
+                // svc_initial_price intentionally NOT updated
+                'svc_service_price' => $servicePrice,
+                'svc_final_price' => $finalPrice,
+                'svc_balance' => $finalPrice,
+                'svc_date_modified' => Carbon::now(),
+                'svc_modified_by' => session('usr_id'),
+            ]);
+
+        // Update service_appointments table
+        DB::table('service_appointments')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_time_from' => $request->svca_approved_time_from,
+                'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_modified' => Carbon::now(),
+                'svca_modified_by' => session('usr_id'),
+            ]);
+
+        $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Assessed appointment ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Appointment successfully assessed.');
         return redirect()->back();
     }
     // END REQUESTED APPOINTMENTS
