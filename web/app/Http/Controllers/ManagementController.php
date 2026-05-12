@@ -484,12 +484,32 @@ class ManagementController extends Controller
             ->orderBy('branch_name')
             ->get();
 
+        // Device Costing
+        $deviceCosts = DB::table('service_package_area_devices')
+            ->leftJoin('branches', 'service_package_area_devices.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_area_devices.svcpad_active', 1);
+
+        if ($sessionBranchId != 1) {
+            $deviceCosts->where('service_package_area_devices.branch_id', $sessionBranchId);
+        }
+
+        $deviceCosts = $deviceCosts
+            ->select(
+                'service_package_area_devices.svcpad_id',
+                'service_package_area_devices.branch_id',
+                'service_package_area_devices.svcpad_cost',
+                'branches.branch_name'
+            )
+            ->orderBy('branches.branch_name')
+            ->get();
+
         return view('management.services.active', compact(
             'services',
             'termiteServices',
             'packages',
             'branches',
-            'search'
+            'search',
+            'deviceCosts'
         ));
     }
 
@@ -659,6 +679,52 @@ class ManagementController extends Controller
         logUserActivity('Manage Services', 'Restored area ' . $service->svcpa_area);
 
         session()->flash('successMessage', 'Area has been Restored.');
+        return redirect()->back();
+    }
+
+    public function services_area_device_cost_update(Request $request, $svcpad_id)
+    {
+        // Validate request
+        $request->validate([
+            'svcpad_cost' => 'required|numeric',
+        ]);
+
+        // Get current record
+        $device = DB::table('service_package_area_devices as spad')
+            ->leftJoin('branches as b', 'spad.branch_id', '=', 'b.branch_id')
+            ->where('spad.svcpad_id', $svcpad_id)
+            ->select(
+                'spad.*',
+                'b.branch_name'
+            )
+            ->first();
+
+        // Normalize values for logging
+        $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
+
+        $oldCost = $device ? $formatCost($device->svcpad_cost) : '0.00';
+        $newCost = $formatCost($request->svcpad_cost);
+
+        // Update record
+        DB::table('service_package_area_devices')
+            ->where('svcpad_id', $svcpad_id)
+            ->update([
+                'svcpad_cost' => $request->svcpad_cost,
+                'svcpad_date_modified' => Carbon::now(),
+                'svcpad_modified_by' => session('usr_id'),
+            ]);
+
+        // Log activity
+        logUserActivity(
+            'Manage Device Costing',
+            'Updated device cost in ' . $device->branch_name .
+            ' from cost ' . $oldCost .
+            ' to ' . $newCost
+        );
+
+        // Flash message
+        session()->flash('successMessage', 'Device cost has been updated.');
+
         return redirect()->back();
     }
     // END SERVICES
