@@ -19,7 +19,7 @@ class AppointmentController extends Controller
             ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
             ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
             ->where('services.svc_active', 1)
-            ->where('services.svc_status', 'REQUESTED');
+            ->whereIn('services.svc_status', ['REQUESTED', 'CONFIRM ASSESSMENT']);
 
         // Branch filter (same logic as users_active)
         if ($sessionBranchId != 1) {
@@ -29,6 +29,7 @@ class AppointmentController extends Controller
         $query->select(
             'services.svc_id',
             'services.svc_is_termite',
+            'services.svc_is_package',
             'services.svc_status',
             'services.svc_payment_status',
             'services.svc_date_created',
@@ -75,8 +76,12 @@ class AppointmentController extends Controller
                 'services.svc_sqm_initial',
                 'services.svc_with_device',
                 'services.svc_device_count',
+                'services.svc_problem_description',
                 'services.svc_status',
+                'services.svc_infestation',
                 'services.svc_initial_price',
+                'services.svc_service_price',
+                'services.svc_final_price',
                 'services.svc_balance',
                 'services.svc_payment_status',
                 'users.usr_first_name',
@@ -396,7 +401,263 @@ class AppointmentController extends Controller
 
         return redirect()->back();
     }
+
+    public function requested_appointments_view_assess(Request $request)
+    {
+        $request->validate([
+            'svc_id' => 'required',
+            'svc_is_package' => 'required',
+            'svc_infestation' => 'required',
+            'svc_service_price' => 'required|numeric',
+            'svc_final_price' => 'required|numeric',
+            'svca_approved_time_from' => 'required',
+            'svca_approved_time_to' => 'required',
+        ]);
+
+        $svc_id = $request->svc_id;
+        $isPackage = $request->svc_is_package;
+        $servicePrice = $request->svc_service_price;
+        $finalPrice = $request->svc_final_price;
+
+        // Fetch existing service record
+        $service = DB::table('services')->where('svc_id', $svc_id)->first();
+
+        // Only update svc_sqm_initial if package is NO and DB value is currently null
+        $sqmInitial = $service->svc_sqm_initial; // preserve existing by default
+        if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
+            $sqmInitial = null;
+        } elseif ($isPackage == 1) {
+            $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+        }
+
+        // Update services table
+        DB::table('services')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svc_is_package' => $isPackage,
+                'svc_sqm_initial' => $sqmInitial,
+                'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null, // null if not package
+                'svc_status' => 'CONFIRM ASSESSMENT',
+                'svc_infestation' => $request->svc_infestation,
+                'svc_service_price' => $servicePrice,
+                'svc_final_price' => $finalPrice,
+                'svc_balance' => $finalPrice,
+                'svc_date_modified' => Carbon::now(),
+                'svc_modified_by' => session('usr_id'),
+            ]);
+
+        // Update service_appointments table
+        DB::table('service_appointments')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_time_from' => $request->svca_approved_time_from,
+                'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_modified' => Carbon::now(),
+                'svca_modified_by' => session('usr_id'),
+            ]);
+
+        $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Assessed appointment ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Appointment successfully assessed.');
+        return redirect()->back();
+    }
+
+    public function requested_appointments_view_assess_confirmation(Request $request)
+    {
+        $request->validate([
+            'svc_id' => 'required',
+            'svc_is_package' => 'required',
+            'svc_infestation' => 'required',
+            'svc_service_price' => 'required|numeric',
+            'svc_final_price' => 'required|numeric',
+            'svca_approved_time_from' => 'required',
+            'svca_approved_time_to' => 'required',
+        ]);
+
+        $svc_id = $request->svc_id;
+        $isPackage = $request->svc_is_package;
+        $servicePrice = $request->svc_service_price;
+        $finalPrice = $request->svc_final_price;
+
+        // Fetch existing service record
+        $service = DB::table('services')->where('svc_id', $svc_id)->first();
+
+        // Only update svc_sqm_initial if package is NO and DB value is currently null
+        $sqmInitial = $service->svc_sqm_initial; // preserve existing by default
+        if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
+            $sqmInitial = null;
+        } elseif ($isPackage == 1) {
+            $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+        }
+
+        // Update services table
+        DB::table('services')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svc_is_package' => $isPackage,
+                'svc_sqm_initial' => $sqmInitial,
+                'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null, // null if not package
+                'svc_status' => 'ASSESSED',
+                'svc_infestation' => $request->svc_infestation,
+                'svc_service_price' => $servicePrice,
+                'svc_final_price' => $finalPrice,
+                'svc_balance' => $finalPrice,
+                'svc_date_modified' => Carbon::now(),
+                'svc_modified_by' => session('usr_id'),
+            ]);
+
+        // Update service_appointments table
+        DB::table('service_appointments')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_time_from' => $request->svca_approved_time_from,
+                'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_modified' => Carbon::now(),
+                'svca_modified_by' => session('usr_id'),
+            ]);
+
+        $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
+
+        logUserActivity(
+            'Manage Appointments',
+            'Assessed appointment ' . $serviceOrder
+        );
+
+        session()->flash('successMessage', 'Appointment successfully assessed.');
+        return redirect()->action(
+            [AppointmentController::class, 'assessed_appointments_view'],
+            ['svc_id' => $svc_id]
+        );
+    }
     // END REQUESTED APPOINTMENTS
+
+    // START ASSESSED APPOINTMENTS
+    public function assessed_appointments_view($svc_id)
+    {
+        $display = DB::table('services')
+            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+            ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
+            ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+            ->where('services.svc_id', $svc_id)
+            ->select(
+                'services.svc_id',
+                'services.svc_is_package',
+                'services.svcpat_id',
+                'services.svc_is_termite',
+                'services.svc_type_treatment',
+                'services.svc_sqm_initial',
+                'services.svc_with_device',
+                'services.svc_device_count',
+                'services.svc_problem_description',
+                'services.svc_status',
+                'services.svc_infestation',
+                'services.svc_initial_price',
+                'services.svc_service_price',
+                'services.svc_final_price',
+                'services.svc_balance',
+                'services.svc_payment_status',
+                'users.usr_first_name',
+                'users.usr_last_name',
+                'users.usr_email',
+                'users.usr_mobile',
+                'branches.branch_name',
+                'service_appointments.svca_client_date',
+                'service_appointments.svca_client_time',
+                'service_appointments.svca_date_approved',
+                'service_appointments.svca_approved_time_from',
+                'service_appointments.svca_approved_time_to',
+                'user_addresses.uadd_street',
+                'user_addresses.uadd_barangay',
+                'user_addresses.uadd_city',
+                'user_addresses.uadd_province',
+                'user_addresses.uadd_region',
+                'addresses.add_name'
+            )
+            ->first();
+
+        // Pest Types for this service
+        $pestTypes = DB::table('service_order_pests')
+            ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+            ->where('service_order_pests.svc_id', $svc_id)
+            ->where('service_order_pests.svcop_active', 1)
+            ->select(
+                'service_order_pests.svcop_id',
+                'service_packages.svcp_id',
+                'service_packages.svcp_pest_type'
+            )
+            ->get();
+
+        // Add Pest Type
+        $existingPests = DB::table('service_order_pests')
+            ->where('svc_id', $svc_id)
+            ->where('svcop_active', 1)
+            ->pluck('svcp_id')
+            ->toArray();
+
+        $servicePackages = DB::table('service_packages')
+            ->where('svcp_id', '!=', 8)
+            ->whereNotIn('svcp_id', $existingPests)
+            ->get();
+
+        // Service Orders with Areas (non-termite: svcpat_id IS NULL)
+        $serviceAreas = DB::table('service_orders')
+            ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+            ->where('service_orders.svc_id', $svc_id)
+            ->whereNull('service_orders.svcpat_id')
+            ->where('service_orders.svco_active', 1)
+            ->select(
+                'service_orders.svco_id',
+                'service_package_areas.svcpa_id',
+                'service_package_areas.svcpa_area',
+                'service_package_areas.svcpa_cost'
+            )
+            ->get();
+
+        // Add Service Area
+        $existingAreas = DB::table('service_orders')
+            ->where('svc_id', $svc_id)
+            ->where('svco_active', 1)
+            ->pluck('svcpa_id')
+            ->toArray();
+
+        $servicePackageAreas = DB::table('service_package_areas')
+            ->whereNotIn('svcpa_id', $existingAreas)
+            ->get();
+
+        // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
+        $termiteAreas = DB::table('service_orders')
+            ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
+            ->where('service_orders.svc_id', $svc_id)
+            ->whereNotNull('service_orders.svcpat_id')
+            ->where('service_orders.svco_active', 1)
+            ->select(
+                'service_orders.svco_id',
+                'service_package_area_termites.svcpat_id',
+                'service_package_area_termites.svcpat_sqm_details',
+                'service_package_area_termites.svcpat_costs'
+            )
+            ->get();
+
+        // Client Appointment Images
+        $appointmentImages = DB::table('service_appointment_images')
+            ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
+            ->where('service_appointments.svc_id', $svc_id)
+            ->where('service_appointment_images.svcap_active', 1)
+            ->select('service_appointment_images.*')
+            ->get();
+
+        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'appointmentImages'));
+    }
+    // END ASSESSED APPOINTMENTS
 
     // START DELETED APPOINTMENTS
     public function delete_appointment(Request $request, $svc_id)

@@ -95,7 +95,10 @@ Route::post('service/orders/appointments/requested/add/pest_type', [AppointmentC
 Route::post('service/orders/appointments/requested/delete/pest_type/{svcop_id}', [AppointmentController::class, 'requested_appointments_view_delete_pest']);
 Route::post('service/orders/appointments/requested/add/service_order', [AppointmentController::class, 'requested_appointments_view_add_service']);
 Route::post('service/orders/appointments/requested/delete/service_order/{svcpa_id}', [AppointmentController::class, 'requested_appointments_view_delete_service']);
+Route::post('service/orders/appointments/requested/assess', [AppointmentController::class, 'requested_appointments_view_assess']);
+Route::post('service/orders/appointments/requested/assess/confirmation', [AppointmentController::class, 'requested_appointments_view_assess_confirmation']);
 // - Assesed Appointments
+Route::get('service/orders/appointments/assessed/{svc_id}', [AppointmentController::class, 'assessed_appointments_view']);
 // - Scheduled Appointments
 // - Ongoing Appointments
 // - Completed Appointments
