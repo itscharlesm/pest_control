@@ -121,13 +121,10 @@
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">INITIAL PRICE</td>
-                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                        <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
                                         <td style="font-weight: bold;">BALANCE</td>
-                                        <td>₱{{ number_format($display->svc_balance, 2) }}</td>
-                                        <td style="font-weight: bold;">SERVICE PRICE</td>
-                                        <td>₱{{ number_format($display->svc_service_price, 2) }}</td>
+                                        <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
                                     </tr>
-
                                     <tr>
                                         <td style="font-weight: bold;">IS TERMITE</td>
                                         <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
@@ -159,7 +156,6 @@
                                         <td style="font-weight: bold;">CLIENT DATE REQUESTED</td>
                                         <td colspan="2">
                                             {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
-
                                         <td style="font-weight: bold;">CLIENT TIME REQUESTED</td>
                                         <td colspan="2">
                                             {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
@@ -648,13 +644,10 @@
                                         </tr>
                                         <tr>
                                             <td style="font-weight: bold;">INITIAL PRICE</td>
-                                            <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                            <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
                                             <td style="font-weight: bold;">BALANCE</td>
-                                            <td>₱{{ number_format($display->svc_balance, 2) }}</td>
-                                            <td style="font-weight: bold;">SERVICE PRICE</td>
-                                            <td>₱{{ number_format($display->svc_service_price, 2) }}</td>
+                                            <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
                                         </tr>
-
                                         <tr>
                                             <td style="font-weight: bold;">IS TERMITE</td>
                                             <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
@@ -687,7 +680,6 @@
                                             <td colspan="2">
                                                 {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}
                                             </td>
-
                                             <td style="font-weight: bold;">CLIENT TIME REQUESTED</td>
                                             <td colspan="2">
                                                 {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
@@ -711,29 +703,96 @@
 
                         <hr>
 
+                        @php
+                            $isTermite = $display->svc_is_termite == 1;
+
+                            $fieldName = $isTermite ? 'svc_is_termite' : 'svc_is_package';
+                            $label = $isTermite ? 'Is Termite' : 'Is Package';
+                            $value = $isTermite ? $display->svc_is_termite : $display->svc_is_package;
+
+                            // layout control
+                            $selectCol = $isTermite ? 'col-md-6' : 'col-md-12';
+                            $sqmCol = $isTermite ? 'col-md-6' : 'col-md-4';
+                        @endphp
+
                         <div class="row">
-                            {{-- Is Package --}}
-                            <div class="col-md-12 mb-3">
-                                <label for="svc_is_package">
-                                    Is Package? <span class="text-danger">*</span>
+
+                            <div class="{{ $selectCol }} mb-3">
+                                <label>
+                                    {{ $label }} <span class="text-danger">*</span>
                                 </label>
-                                <select class="form-control" name="svc_is_package" required>
-                                    <option value="1" {{ $display->svc_is_package == 1 ? 'selected' : '' }}>
-                                        YES
-                                    </option>
-                                    <option value="0" {{ $display->svc_is_package == 0 ? 'selected' : '' }}>
-                                        NO
-                                    </option>
+
+                                <select class="form-control" name="{{ $fieldName }}" required
+                                    {{ $isTermite ? 'disabled' : '' }}>
+
+                                    <option value="1" {{ $value == 1 ? 'selected' : '' }}>YES</option>
+                                    <option value="0" {{ $value == 0 ? 'selected' : '' }}>NO</option>
                                 </select>
+
+                                {{-- IMPORTANT: keep value when disabled --}}
+                                @if ($isTermite)
+                                    <input type="hidden" name="{{ $fieldName }}" value="{{ $value }}">
+                                @endif
                             </div>
 
-                            {{-- SQM Meters --}}
-                            <div class="col-md-4 mb-3">
-                                <label for="svc_sqm_initial">SQM Meters <span class="text-danger">*</span></label>
+                            <div class="{{ $sqmCol }} mb-3">
+                                <label>SQM Meters <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" class="form-control" name="svc_sqm_initial"
                                     value="{{ $display->svc_sqm_initial }}" placeholder="Initial SQM Meters">
                             </div>
+
                         </div>
+
+                        @if ($display->svc_is_termite)
+                            <div class="row">
+                                {{-- SQM Details --}}
+                                <div class="col-md-6 mb-3">
+                                    <label>SQM DETAILS <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="svcpat_id" id="svcpat_id_select" required>
+                                        @foreach ($termiteAreaOptions as $opt)
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_costs }}"
+                                                {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
+                                                {{ $opt->svcpat_sqm_details }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- SQM Cost (read-only, derived from selected svcpat_id) --}}
+                                <div class="col-md-6 mb-3">
+                                    <label>SQM Cost</label>
+                                    <input type="number" step="0.01" class="form-control" id="svcpat_cost_display"
+                                        placeholder="SQM Cost" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                {{-- Treatment Type --}}
+                                <div class="col-md-6 mb-3">
+                                    <label for="svc_type_treatment">
+                                        Treatment Type <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" name="svc_type_treatment" required>
+                                        <option value="STANDARD TREATMENT">STANDARD TREATMENT</option>
+                                        <option value="HYBRID TREATMENT">HYBRID TREATMENT</option>
+                                    </select>
+                                </div>
+
+                                {{-- Device Count --}}
+                                <div class="col-md-6 mb-3" id="termiteDeviceCountCol" style="display:none;">
+                                    <label for="svc_device_count">
+                                        Device Count <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" name="svc_device_count"
+                                        placeholder="Device Count" data-device-cost="{{ $deviceCost->svcpad_cost ?? 0 }}"
+                                        required>
+                                    <small class="text-muted device-cost-hint" style="display:none;">
+                                        {{ $display->branch_name }} device price:
+                                        ₱{{ number_format($deviceCost->svcpad_cost ?? 0, 2) }} / unit
+                                    </small>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="row">
                             {{-- Infestation --}}
@@ -751,7 +810,7 @@
 
                         <div class="row">
                             {{-- Service Price --}}
-                            <div class="col-md-4 mb-3">
+                            <div class="{{ $display->svc_is_termite ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="svc_service_price">
                                     Service Price <span class="text-danger">*</span>
                                 </label>
@@ -759,17 +818,19 @@
                                     placeholder="Service Price" required>
                             </div>
 
-                            {{-- Service Order Price --}}
-                            <div class="col-md-4 mb-3">
-                                <label for="svc_initial_price">
-                                    Service Order Price <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" class="form-control" name="svc_initial_price"
-                                    placeholder="Price" value="{{ $display->svc_initial_price }}" required>
-                            </div>
+                            {{-- Service Order Price (non-termite only) --}}
+                            @if (!$display->svc_is_termite)
+                                <div class="col-md-4 mb-3">
+                                    <label for="svc_initial_price">
+                                        Service Order Price <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" name="svc_initial_price"
+                                        placeholder="Price" value="{{ $display->svc_initial_price }}" required>
+                                </div>
+                            @endif
 
                             {{-- Final Price --}}
-                            <div class="col-md-4 mb-3">
+                            <div class="{{ $display->svc_is_termite ? 'col-md-6' : 'col-md-4' }} mb-3">
                                 <label for="svc_final_price">Final Price</label>
                                 <input type="number" step="0.01" class="form-control" name="svc_final_price"
                                     placeholder="Final Price" readonly>
@@ -829,30 +890,32 @@
                     <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
 
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white">Assess Requested Appointment
+                        <h5 class="modal-title text-white">Confirm Assessment
                             (SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }})</h5>
                         <button type="button" class="close" data-dismiss="modal">
                             <span>&times;</span>
                         </button>
                     </div>
+
                     <div class="modal-body">
+                        {{-- Read-only info table (same as assess) --}}
                         <div class="row overflow-auto">
-                            <div class="table-responsive" id="sectionA">
+                            <div class="table-responsive">
                                 <table class="table table-bordered text-left align-middle">
                                     <tbody>
                                         <tr>
                                             <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight: bold;">CLIENT NAME</td>
+                                            <td style="font-weight:bold;">CLIENT NAME</td>
                                             <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
-                                            <td style="font-weight: bold;">EMAIL</td>
+                                            <td style="font-weight:bold;">EMAIL</td>
                                             <td>{{ $display->usr_email }}</td>
-                                            <td style="font-weight: bold;">MOBILE</td>
+                                            <td style="font-weight:bold;">MOBILE</td>
                                             <td>{{ $display->usr_mobile }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight: bold;">ADDRESS</td>
+                                            <td style="font-weight:bold;">ADDRESS</td>
                                             <td colspan="3">
                                                 {{ implode(
                                                     ', ',
@@ -865,33 +928,30 @@
                                                     ]),
                                                 ) }}
                                             </td>
-                                            <td style="font-weight: bold;">ADDRESS TYPE</td>
+                                            <td style="font-weight:bold;">ADDRESS TYPE</td>
                                             <td>{{ $display->add_name }}</td>
                                         </tr>
                                         <tr>
                                             <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight: bold;">BRANCH</td>
+                                            <td style="font-weight:bold;">BRANCH</td>
                                             <td>{{ $display->branch_name }}</td>
-                                            <td style="font-weight: bold;">STATUS</td>
+                                            <td style="font-weight:bold;">STATUS</td>
                                             <td>{{ $display->svc_status }}</td>
-                                            <td style="font-weight: bold;">PAYMENT STATUS</td>
+                                            <td style="font-weight:bold;">PAYMENT STATUS</td>
                                             <td>{{ $display->svc_payment_status }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight: bold;">INITIAL PRICE</td>
-                                            <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
-                                            <td style="font-weight: bold;">BALANCE</td>
-                                            <td>₱{{ number_format($display->svc_balance, 2) }}</td>
-                                            <td style="font-weight: bold;">SERVICE PRICE</td>
-                                            <td>₱{{ number_format($display->svc_service_price, 2) }}</td>
+                                            <td style="font-weight:bold;">INITIAL PRICE</td>
+                                            <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                            <td style="font-weight:bold;">BALANCE</td>
+                                            <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
                                         </tr>
-
                                         <tr>
-                                            <td style="font-weight: bold;">IS TERMITE</td>
+                                            <td style="font-weight:bold;">IS TERMITE</td>
                                             <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
-                                            <td style="font-weight: bold;">IS PACKAGE</td>
+                                            <td style="font-weight:bold;">IS PACKAGE</td>
                                             <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
                                             <td colspan="2"></td>
                                         </tr>
@@ -900,15 +960,15 @@
                                                 <th colspan="6" class="text-center table-light">TERMITE CASE</th>
                                             </tr>
                                             <tr>
-                                                <td style="font-weight: bold;">INITIAL SQM</td>
+                                                <td style="font-weight:bold;">INITIAL SQM</td>
                                                 <td>{{ $display->svc_sqm_initial }}</td>
-                                                <td style="font-weight: bold;">WITH DEVICE</td>
+                                                <td style="font-weight:bold;">WITH DEVICE</td>
                                                 <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-                                                <td style="font-weight: bold;">DEVICE COUNT</td>
+                                                <td style="font-weight:bold;">DEVICE COUNT</td>
                                                 <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                                <td style="font-weight:bold;">TREATMENT TYPE</td>
                                                 <td colspan="5">{{ $display->svc_type_treatment }}</td>
                                             </tr>
                                         @endif
@@ -916,12 +976,11 @@
                                             <th colspan="6" class="text-center table-light">SCHEDULE</th>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight: bold;">CLIENT DATE REQUESTED</td>
+                                            <td style="font-weight:bold;">CLIENT DATE REQUESTED</td>
                                             <td colspan="2">
                                                 {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}
                                             </td>
-
-                                            <td style="font-weight: bold;">CLIENT TIME REQUESTED</td>
+                                            <td style="font-weight:bold;">CLIENT TIME REQUESTED</td>
                                             <td colspan="2">
                                                 {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
                                             </td>
@@ -932,7 +991,7 @@
                                                 </th>
                                             </tr>
                                             <tr>
-                                                <td colspan="6" style="text-align: justify">
+                                                <td colspan="6" style="text-align:justify">
                                                     {{ $display->svc_problem_description }}
                                                 </td>
                                             </tr>
@@ -944,79 +1003,143 @@
 
                         <hr>
 
+                        @php
+                            $isTermiteConfirm = $display->svc_is_termite == 1;
+                            $sqmColConfirm = $isTermiteConfirm ? 'col-md-6' : 'col-md-4';
+                            $selectColConfirm = $isTermiteConfirm ? 'col-md-6' : 'col-md-12';
+                        @endphp
+
                         <div class="row">
-                            {{-- Is Package --}}
-                            <div class="col-md-12 mb-3">
-                                <label for="svc_is_package">
-                                    Is Package? <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-control" name="svc_is_package" required>
-                                    <option value="1" {{ $display->svc_is_package == 1 ? 'selected' : '' }}>
-                                        YES
-                                    </option>
-                                    <option value="0" {{ $display->svc_is_package == 0 ? 'selected' : '' }}>
-                                        NO
-                                    </option>
-                                </select>
+                            {{-- Is Termite (disabled, hidden) OR Is Package --}}
+                            <div class="{{ $selectColConfirm }} mb-3">
+                                @if ($isTermiteConfirm)
+                                    <label>Is Termite <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="svc_is_termite" disabled>
+                                        <option value="1" selected>YES</option>
+                                    </select>
+                                    <input type="hidden" name="svc_is_termite" value="1">
+                                @else
+                                    <label>Is Package? <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="svc_is_package" id="confirmPackageSelect"
+                                        required>
+                                        <option value="1" {{ $display->svc_is_package == 1 ? 'selected' : '' }}>YES
+                                        </option>
+                                        <option value="0" {{ $display->svc_is_package == 0 ? 'selected' : '' }}>NO
+                                        </option>
+                                    </select>
+                                @endif
                             </div>
 
                             {{-- SQM Meters --}}
-                            <div class="col-md-4 mb-3">
-                                <label for="svc_sqm_initial">SQM Meters <span class="text-danger">*</span></label>
+                            <div class="{{ $sqmColConfirm }} mb-3" id="confirmSqmCol"
+                                @if (!$isTermiteConfirm && $display->svc_is_package == 0) style="display:none;" @endif>
+                                <label>SQM Meters <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" class="form-control" name="svc_sqm_initial"
-                                    value="{{ $display->svc_sqm_initial }}" placeholder="Initial SQM Meters">
+                                    id="confirmSqmInput" value="{{ $display->svc_sqm_initial }}"
+                                    placeholder="Initial SQM Meters">
                             </div>
                         </div>
+
+                        @if ($isTermiteConfirm)
+                            <div class="row">
+                                {{-- SQM Details --}}
+                                <div class="col-md-6 mb-3">
+                                    <label>SQM DETAILS <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="svcpat_id" id="confirmSvcpatSelect" required>
+                                        @foreach ($termiteAreaOptions as $opt)
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_costs }}"
+                                                {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
+                                                {{ $opt->svcpat_sqm_details }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- SQM Cost (read-only) --}}
+                                <div class="col-md-6 mb-3">
+                                    <label>SQM Cost</label>
+                                    <input type="number" step="0.01" class="form-control"
+                                        id="confirmSvcpatCostDisplay" placeholder="SQM Cost" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                {{-- Treatment Type --}}
+                                <div class="col-md-6 mb-3" id="confirmTreatmentCol">
+                                    <label>Treatment Type <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="svc_type_treatment" id="confirmTreatmentSelect"
+                                        required>
+                                        <option value="STANDARD TREATMENT"
+                                            {{ $display->svc_type_treatment === 'STANDARD TREATMENT' ? 'selected' : '' }}>
+                                            STANDARD TREATMENT
+                                        </option>
+                                        <option value="HYBRID TREATMENT"
+                                            {{ $display->svc_type_treatment === 'HYBRID TREATMENT' ? 'selected' : '' }}>
+                                            HYBRID TREATMENT
+                                        </option>
+                                    </select>
+                                </div>
+
+                                {{-- Device Count (only shown for HYBRID) --}}
+                                <div class="col-md-6 mb-3" id="confirmDeviceCountCol" style="display:none;">
+                                    <label>Device Count <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="svc_device_count"
+                                        id="confirmDeviceCountInput" placeholder="Device Count"
+                                        value="{{ $display->svc_device_count }}"
+                                        data-device-cost="{{ $deviceCost->svcpad_cost ?? 0 }}">
+                                    <small class="text-muted" id="confirmDeviceCostHint" style="display:none;">
+                                        {{ $display->branch_name }} device price:
+                                        ₱{{ number_format($deviceCost->svcpad_cost ?? 0, 2) }} / unit
+                                    </small>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="row">
                             {{-- Infestation --}}
                             <div class="col-md-12 mb-3">
-                                <label for="svc_infestation">
-                                    Infestation <span class="text-danger">*</span>
-                                </label>
+                                <label>Infestation <span class="text-danger">*</span></label>
                                 <select class="form-control" name="svc_infestation" required>
-                                    <option value="LOW" {{ $display->svc_infestation == 'LOW' ? 'selected' : '' }}>
-                                        LOW
-                                    </option>
-                                    <option value="MID" {{ $display->svc_infestation == 'MID' ? 'selected' : '' }}>
-                                        MID
-                                    </option>
-                                    <option value="HIGH" {{ $display->svc_infestation == 'HIGH' ? 'selected' : '' }}>
-                                        HIGH
-                                    </option>
+                                    <option value="LOW" {{ $display->svc_infestation === 'LOW' ? 'selected' : '' }}>
+                                        LOW</option>
+                                    <option value="MID" {{ $display->svc_infestation === 'MID' ? 'selected' : '' }}>
+                                        MID</option>
+                                    <option value="HIGH" {{ $display->svc_infestation === 'HIGH' ? 'selected' : '' }}>
+                                        HIGH</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="row">
                             {{-- Service Price --}}
-                            <div class="col-md-4 mb-3">
-                                <label for="svc_service_price">
-                                    Service Price <span class="text-danger">*</span>
-                                </label>
+                            <div class="{{ $isTermiteConfirm ? 'col-md-6' : 'col-md-4' }} mb-3">
+                                <label>Service Price <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" class="form-control" name="svc_service_price"
-                                    placeholder="Service Price" value="{{ $display->svc_service_price }}" required>
+                                    id="confirmServicePrice" value="{{ $display->svc_service_price }}"
+                                    placeholder="Service Price" required>
                             </div>
 
-                            {{-- Service Order Price --}}
-                            <div class="col-md-4 mb-3">
-                                <label for="svc_initial_price">
-                                    Service Order Price <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" step="0.01" class="form-control" name="svc_initial_price"
-                                    placeholder="Price" value="{{ $display->svc_initial_price }}" required>
-                            </div>
+                            @if (!$isTermiteConfirm)
+                                {{-- Service Order Price (non-termite only) --}}
+                                <div class="col-md-4 mb-3">
+                                    <label>Service Order Price <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" name="svc_initial_price"
+                                        id="confirmInitialPrice" value="{{ $display->svc_initial_price }}"
+                                        placeholder="Price" required>
+                                </div>
+                            @endif
 
                             {{-- Final Price --}}
-                            <div class="col-md-4 mb-3">
-                                <label for="svc_final_price">Final Price</label>
+                            <div class="{{ $isTermiteConfirm ? 'col-md-6' : 'col-md-4' }} mb-3">
+                                <label>Final Price</label>
                                 <input type="number" step="0.01" class="form-control" name="svc_final_price"
-                                    value="{{ $display->svc_final_price }}" placeholder="Final Price" readonly>
+                                    id="confirmFinalPrice" value="{{ $display->svc_final_price }}"
+                                    placeholder="Final Price" readonly>
                             </div>
                         </div>
 
                         <div class="row">
-                            {{-- Appointment Date --}}
+                            {{-- Approved Date --}}
                             <div class="col-md-4 mb-3">
                                 <label>Approve Appointment Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" name="svca_date_approved"
@@ -1024,20 +1147,17 @@
                                     required>
                             </div>
 
-                            {{-- Appointment From --}}
+                            {{-- Time From --}}
                             <div class="col-md-4 mb-3">
-                                <label for="svca_approved_time_from">
-                                    Approve Time From <span class="text-danger">*</span>
-                                </label>
+                                <label>Approve Time From <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_from"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
                                     required>
                             </div>
 
-                            {{-- Appointment To --}}
+                            {{-- Time To --}}
                             <div class="col-md-4 mb-3">
-                                <label for="svca_approved_time_to">Approve Time To <span
-                                        class="text-danger">*</span></label>
+                                <label>Approve Time To <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_to"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
                                     required>
@@ -1137,6 +1257,7 @@
                 const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
 
                 const packageSelect = modal.querySelector('[name="svc_is_package"]');
+                const termiteSelect = modal.querySelector('[name="svc_is_termite"]');
                 const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
 
                 // Prevent errors if fields do not exist
@@ -1169,20 +1290,43 @@
                 // Run on load
                 updateFinalPrice();
 
-                // PACKAGE / SQM TOGGLE
-                if (packageSelect && sqmInput) {
+                // TERMITE / PACKAGE + SQM TOGGLE (UPDATED)
+                if (sqmInput) {
 
-                    const sqmCol = sqmInput.closest('.col-md-4');
-                    const packageCol = packageSelect.closest('.col-md-12, .col-md-6');
+                    const sqmCol = sqmInput.closest('.col-md-4, .col-md-6');
+                    const packageCol = (packageSelect || termiteSelect) ?
+                        (packageSelect || termiteSelect).closest('.col-md-12, .col-md-6') :
+                        null;
 
                     function toggleSQM() {
 
-                        if (packageSelect.value == "1") {
+                        // TERMITE MODE (READONLY + 6 COL LAYOUT)
+                        if (termiteSelect && termiteSelect.value == "1") {
+
+                            termiteSelect.setAttribute('disabled', true);
 
                             sqmCol.style.display = 'block';
 
-                            packageCol.classList.remove('col-md-12');
-                            packageCol.classList.add('col-md-6');
+                            sqmCol.classList.remove('col-md-4');
+                            sqmCol.classList.add('col-md-6');
+
+                            if (packageCol) {
+                                packageCol.classList.remove('col-md-12');
+                                packageCol.classList.add('col-md-6');
+                            }
+
+                            return;
+                        }
+
+                        // PACKAGE MODE (existing logic)
+                        if (packageSelect && packageSelect.value == "1") {
+
+                            sqmCol.style.display = 'block';
+
+                            if (packageCol) {
+                                packageCol.classList.remove('col-md-12');
+                                packageCol.classList.add('col-md-6');
+                            }
 
                             sqmCol.classList.remove('col-md-4');
                             sqmCol.classList.add('col-md-6');
@@ -1191,19 +1335,115 @@
 
                             sqmCol.style.display = 'none';
 
-                            packageCol.classList.remove('col-md-6');
-                            packageCol.classList.add('col-md-12');
+                            if (packageCol) {
+                                packageCol.classList.remove('col-md-6');
+                                packageCol.classList.add('col-md-12');
+                            }
                         }
                     }
 
                     toggleSQM();
 
-                    packageSelect.addEventListener('change', toggleSQM);
+                    if (packageSelect) {
+                        packageSelect.addEventListener('change', toggleSQM);
+                    }
+
+                    if (termiteSelect) {
+                        termiteSelect.addEventListener('change', toggleSQM);
+                    }
+                }
+
+                // TREATMENT TYPE <-> DEVICE COUNT TOGGLE (UPDATED: hybrid adds device cost to final price)
+                const treatmentSelect = modal.querySelector('[name="svc_type_treatment"]');
+                const deviceCountInput = modal.querySelector('[name="svc_device_count"]');
+                const deviceCountCol = modal.querySelector('#termiteDeviceCountCol');
+
+                if (treatmentSelect && deviceCountCol) {
+
+                    const treatmentCol = treatmentSelect.closest('.col-md-6');
+                    const deviceCostHint = deviceCountCol.querySelector('.device-cost-hint');
+
+                    const deviceCostPerUnit = parseFloat(deviceCountInput?.getAttribute(
+                        'data-device-cost') || 0);
+
+                    // Updated final price function that factors in device cost for hybrid
+                    function updateFinalPriceWithDevice() {
+
+                        let servicePrice = parseFloat(servicePriceInput.value) || 0;
+                        let initialPrice = parseFloat(initialPriceInput.value) || 0;
+
+                        let base = 0;
+
+                        if (servicePrice === 0) {
+                            base = initialPrice;
+                        } else if (initialPrice === 0) {
+                            base = servicePrice;
+                        } else {
+                            base = servicePrice + initialPrice;
+                        }
+
+                        let deviceTotal = 0;
+
+                        if (treatmentSelect.value === 'HYBRID TREATMENT') {
+                            const deviceCount = parseInt(deviceCountInput?.value) || 0;
+                            deviceTotal = deviceCount * deviceCostPerUnit;
+                        }
+
+                        finalPriceInput.value = (base + deviceTotal).toFixed(2);
+                    }
+
+                    // Re-bind service/initial price listeners to use the device-aware function
+                    servicePriceInput.removeEventListener('input', updateFinalPrice);
+                    initialPriceInput.removeEventListener('input', updateFinalPrice);
+                    servicePriceInput.addEventListener('input', updateFinalPriceWithDevice);
+                    initialPriceInput.addEventListener('input', updateFinalPriceWithDevice);
+
+                    // Device count change also updates final price
+                    if (deviceCountInput) {
+                        deviceCountInput.addEventListener('input', updateFinalPriceWithDevice);
+                    }
+
+                    function toggleTreatmentLayout() {
+
+                        if (treatmentSelect.value === 'HYBRID TREATMENT') {
+
+                            if (treatmentCol) {
+                                treatmentCol.classList.remove('col-md-12');
+                                treatmentCol.classList.add('col-md-6');
+                            }
+
+                            deviceCountCol.style.display = '';
+
+                            if (deviceCostHint) deviceCostHint.style.display = 'block';
+
+                        } else {
+
+                            if (treatmentCol) {
+                                treatmentCol.classList.remove('col-md-6');
+                                treatmentCol.classList.add('col-md-12');
+                            }
+
+                            deviceCountCol.style.display = 'none';
+
+                            if (deviceCostHint) deviceCostHint.style.display = 'none';
+
+                            // Clear device count so it doesn't affect price when switching back to standard
+                            if (deviceCountInput) deviceCountInput.value = '';
+                        }
+
+                        // Recompute price whenever treatment type changes
+                        updateFinalPriceWithDevice();
+                    }
+
+                    treatmentSelect.addEventListener('change', toggleTreatmentLayout);
+
+                    // Run on load
+                    toggleTreatmentLayout();
                 }
 
             });
 
-            // AREA COST DISPLAY
+            // AREA COST DISPLAY (UNCHANGED)
             const svcpaSelect = document.getElementById('svcpaSelect');
 
             if (svcpaSelect) {
@@ -1218,6 +1458,270 @@
                     }
                 });
             }
+
+            // TERMITE SQM DETAILS → price computation + device count toggle
+            // Scoped to termite modal only. Does NOT interfere with non-termite logic above.
+            (function() {
+                const modal = document.getElementById('assessAppointmentModal');
+                if (!modal) return;
+
+                const svcpatSelect = modal.querySelector('#svcpat_id_select');
+                const svcpatCostDisplay = modal.querySelector('#svcpat_cost_display');
+                const treatmentSelect = modal.querySelector('[name="svc_type_treatment"]');
+                const deviceCountInput = modal.querySelector('[name="svc_device_count"]');
+                const deviceCountCol = modal.querySelector('#termiteDeviceCountCol');
+                const deviceCostHint = deviceCountCol?.querySelector('.device-cost-hint');
+                const treatmentCol = treatmentSelect?.closest('.col-md-6');
+                const servicePriceInput = modal.querySelector('[name="svc_service_price"]');
+                const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
+                const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
+
+                // Only run when termite SQM select exists (termite service only)
+                if (!svcpatSelect) return;
+
+                const deviceCostPerUnit = parseFloat(
+                    deviceCountInput?.getAttribute('data-device-cost') || 0
+                );
+
+                function getSelectedSvcpatCost() {
+                    const selected = svcpatSelect.options[svcpatSelect.selectedIndex];
+                    return parseFloat(selected?.getAttribute('data-cost') || 0);
+                }
+
+                // Checks if the selected SQM detail label is the 1–50 sqm tier (upper bound <= 50)
+                function isFixedPriceTier() {
+                    const selected = svcpatSelect.options[svcpatSelect.selectedIndex];
+                    const label = selected?.text || '';
+
+                    // Match patterns like "1sqm - 50sqm", "1 sqm - 50 sqm", "1-50sqm", etc.
+                    const match = label.match(/(\d+)\s*sqm?\s*[-–to]+\s*(\d+)\s*sqm?/i);
+
+                    if (match) {
+                        const upperBound = parseInt(match[2]);
+                        return upperBound <= 50;
+                    }
+
+                    return false;
+                }
+
+                // COMPUTATION RULES:
+                // 1–50 sqm tier  → svcpat_cost as-is (fixed, no multiplication) + service price
+                // 51+  sqm tier  → svcpat_cost × sqm_meters + service price
+                // HYBRID adds    → + (device_count × svcpad_cost) on top of either
+                function updateTermiteFinalPrice() {
+                    const svcpatCost = getSelectedSvcpatCost();
+                    const sqmMeters = parseFloat(sqmInput?.value) || 0;
+                    const servicePrice = parseFloat(servicePriceInput?.value) || 0;
+                    const deviceCount = parseInt(deviceCountInput?.value) || 0;
+                    const isHybrid = treatmentSelect?.value === 'HYBRID TREATMENT';
+
+                    // Reflect the sqm cost in the read-only display field
+                    if (svcpatCostDisplay) {
+                        svcpatCostDisplay.value = svcpatCost.toFixed(2);
+                    }
+
+                    // 1–50 sqm: use svcpat_cost directly (already the fixed total from DB)
+                    // 51+ sqm:  multiply svcpat_cost × actual sqm meters entered
+                    let sqmTotal = isFixedPriceTier() ?
+                        svcpatCost :
+                        svcpatCost * sqmMeters;
+
+                    // STANDARD: sqmTotal + svc_service_price
+                    // HYBRID:   sqmTotal + svc_service_price + (device_count × svcpad_cost)
+                    let finalPrice = sqmTotal + servicePrice;
+
+                    if (isHybrid) {
+                        finalPrice += deviceCount * deviceCostPerUnit;
+                    }
+
+                    if (finalPriceInput) {
+                        finalPriceInput.value = finalPrice.toFixed(2);
+                    }
+                }
+
+                // DEVICE COUNT VISIBILITY TOGGLE (termite only)
+                function toggleTermiteDeviceCount() {
+                    if (!treatmentSelect || !deviceCountCol) return;
+
+                    const isHybrid = treatmentSelect.value === 'HYBRID TREATMENT';
+
+                    if (isHybrid) {
+
+                        if (treatmentCol) {
+                            treatmentCol.classList.remove('col-md-12');
+                            treatmentCol.classList.add('col-md-6');
+                        }
+
+                        deviceCountCol.style.display = '';
+
+                        if (deviceCostHint) deviceCostHint.style.display = 'block';
+
+                    } else {
+
+                        if (treatmentCol) {
+                            treatmentCol.classList.remove('col-md-6');
+                            treatmentCol.classList.add('col-md-12');
+                        }
+
+                        deviceCountCol.style.display = 'none';
+
+                        if (deviceCostHint) deviceCostHint.style.display = 'none';
+
+                        // Clear device count when switching back to standard
+                        if (deviceCountInput) deviceCountInput.value = '';
+                    }
+
+                    // Recompute price after toggling
+                    updateTermiteFinalPrice();
+                }
+
+                // Bind all relevant inputs
+                svcpatSelect.addEventListener('change', updateTermiteFinalPrice);
+                if (sqmInput) sqmInput.addEventListener('input', updateTermiteFinalPrice);
+                if (treatmentSelect) treatmentSelect.addEventListener('change', toggleTermiteDeviceCount);
+                if (deviceCountInput) deviceCountInput.addEventListener('input', updateTermiteFinalPrice);
+                if (servicePriceInput) servicePriceInput.addEventListener('input', updateTermiteFinalPrice);
+
+                // Run on load — toggle first so visibility is correct, then price
+                toggleTermiteDeviceCount();
+                updateTermiteFinalPrice();
+            })();
+
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // CONFIRM ASSESSMENT MODAL – price & toggle logic
+            (function() {
+                const modal = document.getElementById('confirmAssessmentAppointmentModal');
+                if (!modal) return;
+
+                const servicePriceInput = modal.querySelector('#confirmServicePrice');
+                const initialPriceInput = modal.querySelector('#confirmInitialPrice'); // null for termite
+                const finalPriceInput = modal.querySelector('#confirmFinalPrice');
+
+                // Termite-specific elements (null when non-termite)
+                const svcpatSelect = modal.querySelector('#confirmSvcpatSelect');
+                const svcpatCostDisplay = modal.querySelector('#confirmSvcpatCostDisplay');
+                const treatmentSelect = modal.querySelector('#confirmTreatmentSelect');
+                const treatmentCol = modal.querySelector('#confirmTreatmentCol');
+                const deviceCountCol = modal.querySelector('#confirmDeviceCountCol');
+                const deviceCountInput = modal.querySelector('#confirmDeviceCountInput');
+                const deviceCostHint = modal.querySelector('#confirmDeviceCostHint');
+
+                // Non-termite-specific elements (null for termite)
+                const packageSelect = modal.querySelector('#confirmPackageSelect');
+                const sqmCol = modal.querySelector('#confirmSqmCol');
+                const sqmInput = modal.querySelector('#confirmSqmInput');
+
+                const deviceCostPerUnit = parseFloat(deviceCountInput?.getAttribute('data-device-cost') || 0);
+
+                // TERMITE PATH
+                if (svcpatSelect) {
+
+                    function getSelectedSvcpatCost() {
+                        const sel = svcpatSelect.options[svcpatSelect.selectedIndex];
+                        return parseFloat(sel?.getAttribute('data-cost') || 0);
+                    }
+
+                    function isFixedPriceTier() {
+                        const label = svcpatSelect.options[svcpatSelect.selectedIndex]?.text || '';
+                        const match = label.match(/(\d+)\s*sqm?\s*[-–to]+\s*(\d+)\s*sqm?/i);
+                        return match ? parseInt(match[2]) <= 50 : false;
+                    }
+
+                    function updateTermiteFinalPrice() {
+                        const svcpatCost = getSelectedSvcpatCost();
+                        const sqmMeters = parseFloat(sqmInput?.value) || 0;
+                        const servicePrice = parseFloat(servicePriceInput?.value) || 0;
+                        const deviceCount = parseInt(deviceCountInput?.value) || 0;
+                        const isHybrid = treatmentSelect?.value === 'HYBRID TREATMENT';
+
+                        if (svcpatCostDisplay) {
+                            svcpatCostDisplay.value = svcpatCost.toFixed(2);
+                        }
+
+                        const sqmTotal = isFixedPriceTier() ? svcpatCost : svcpatCost * sqmMeters;
+                        let finalPrice = sqmTotal + servicePrice;
+
+                        if (isHybrid) {
+                            finalPrice += deviceCount * deviceCostPerUnit;
+                        }
+
+                        if (finalPriceInput) finalPriceInput.value = finalPrice.toFixed(2);
+                    }
+
+                    function toggleTermiteDeviceCount() {
+                        const isHybrid = treatmentSelect?.value === 'HYBRID TREATMENT';
+
+                        if (isHybrid) {
+                            treatmentCol?.classList.replace('col-md-12', 'col-md-6');
+                            if (deviceCountCol) deviceCountCol.style.display = '';
+                            if (deviceCostHint) deviceCostHint.style.display = 'block';
+                        } else {
+                            treatmentCol?.classList.replace('col-md-6', 'col-md-12');
+                            if (deviceCountCol) deviceCountCol.style.display = 'none';
+                            if (deviceCostHint) deviceCostHint.style.display = 'none';
+                            if (deviceCountInput) deviceCountInput.value = '';
+                        }
+
+                        updateTermiteFinalPrice();
+                    }
+
+                    svcpatSelect.addEventListener('change', updateTermiteFinalPrice);
+                    sqmInput?.addEventListener('input', updateTermiteFinalPrice);
+                    treatmentSelect?.addEventListener('change', toggleTermiteDeviceCount);
+                    deviceCountInput?.addEventListener('input', updateTermiteFinalPrice);
+                    servicePriceInput?.addEventListener('input', updateTermiteFinalPrice);
+
+                    // Init
+                    toggleTermiteDeviceCount();
+                    updateTermiteFinalPrice();
+                    return; // done — skip non-termite block
+                }
+
+                // NON-TERMITE PATH
+                function updateNonTermiteFinalPrice() {
+                    const servicePrice = parseFloat(servicePriceInput?.value) || 0;
+                    const initialPrice = parseFloat(initialPriceInput?.value) || 0;
+
+                    let finalPrice = (servicePrice === 0) ? initialPrice :
+                        (initialPrice === 0) ? servicePrice :
+                        servicePrice + initialPrice;
+
+                    if (finalPriceInput) finalPriceInput.value = finalPrice.toFixed(2);
+                }
+
+                function togglePackageSqm() {
+                    if (!packageSelect || !sqmCol) return;
+                    const isPackage = packageSelect.value == '1';
+
+                    sqmCol.style.display = isPackage ? 'block' : 'none';
+
+                    const parentCol = packageSelect.closest('.col-md-12, .col-md-6');
+                    if (parentCol) {
+                        if (isPackage) {
+                            parentCol.classList.replace('col-md-12', 'col-md-6');
+                            sqmCol.classList.replace('col-md-4', 'col-md-6');
+                        } else {
+                            parentCol.classList.replace('col-md-6', 'col-md-12');
+                        }
+                    }
+
+                    updateNonTermiteFinalPrice();
+                }
+
+                servicePriceInput?.addEventListener('input', updateNonTermiteFinalPrice);
+                initialPriceInput?.addEventListener('input', updateNonTermiteFinalPrice);
+                packageSelect?.addEventListener('change', togglePackageSqm);
+
+                // Init
+                togglePackageSqm();
+                updateNonTermiteFinalPrice();
+
+            })();
 
         });
     </script>

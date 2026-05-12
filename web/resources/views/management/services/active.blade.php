@@ -320,19 +320,125 @@
                                 <div class="card-header bg-light d-flex align-items-center">
                                     <span class="fa fa-info-circle"></span>
                                     <div>
-                                        <strong>Service Packages</strong>
+                                        <strong>Device Costing</strong>
                                     </div>
-                                    <span class="badge badge-light ml-auto">{{ $packages->count() }} types</span>
+                                    <span class="badge badge-light ml-auto">{{ $deviceCosts->count() }} items</span>
                                 </div>
                                 <div class="card-body" style="overflow-y: auto;">
-                                    @foreach ($packages as $package)
-                                        <div class="mb-3">
-                                            <h6 class="text-dark mb-1">
-                                                <i class="fa fa-bug"></i> {{ $package->svcp_pest_type }}
-                                            </h6>
-                                            <hr>
+
+                                    {{-- Device Costing --}}
+                                    <table class="table table-bordered table-sm table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="text-align:center; vertical-align:middle;">
+                                                    Branch
+                                                </th>
+                                                <th style="text-align:center; vertical-align:middle;">
+                                                    Cost
+                                                </th>
+                                                <th style="text-align:center; vertical-align:middle;" width="60">
+                                                    Action
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @foreach ($deviceCosts as $device)
+                                                <tr>
+                                                    <td style="vertical-align:middle; text-align:center; font-size: 12px;">
+                                                        {{ $device->branch_name }}
+                                                    </td>
+
+                                                    <td style="vertical-align:middle; text-align:center; font-size: 12px;">
+                                                        ₱ {{ number_format($device->svcpad_cost, 2) }}
+                                                    </td>
+
+                                                    <td style="vertical-align:middle; text-align:center;">
+                                                        <a class="btn btn-warning btn-sm" href="javascript:void(0)"
+                                                            data-toggle="modal"
+                                                            data-target="#editDeviceCostModal-{{ $device->svcpad_id }}">
+                                                            <span class="fa fa-edit"></span>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+
+                                                {{-- Edit Device Cost Modal --}}
+                                                <div class="modal fade" id="editDeviceCostModal-{{ $device->svcpad_id }}"
+                                                    tabindex="-1" role="dialog" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <form
+                                                            action="{{ url('management/services/area/device/cost/update', $device->svcpad_id) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            <div class="modal-content">
+                                                                <div class="modal-header bg-warning text-white">
+                                                                    <h5 class="modal-title text-black">
+                                                                        Edit Device Cost
+                                                                    </h5>
+                                                                    <button type="button" class="close"
+                                                                        data-dismiss="modal">
+                                                                        <span>&times;</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="form-group">
+                                                                        <label>Branch</label>
+                                                                        <input type="text" class="form-control"
+                                                                            value="{{ $device->branch_name }}" readonly>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label>
+                                                                            Cost (₱)
+                                                                            <span class="text-danger">*</span>
+                                                                        </label>
+                                                                        <input type="number" step="0.01"
+                                                                            class="form-control" name="svcpad_cost"
+                                                                            value="{{ $device->svcpad_cost }}" required>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-dismiss="modal">
+                                                                        <span class="fa fa-close"></span> Close
+                                                                    </button>
+                                                                    <button type="submit" class="btn btn-warning">
+                                                                        <span class="fa fa-save"></span> Update
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+
+                                    {{-- Service Packages --}}
+                                    <div class="card mt-3">
+                                        <div class="card-header bg-light d-flex align-items-center">
+                                            <span class="fa fa-bug"></span>
+
+                                            <div class="ml-2">
+                                                <strong>Pest Types</strong>
+                                            </div>
+
+                                            <span class="badge badge-light ml-auto">
+                                                {{ $packages->count() }} types
+                                            </span>
                                         </div>
-                                    @endforeach
+
+                                        <div class="card-body">
+                                            @foreach ($packages as $package)
+                                                <div class="mb-3">
+                                                    <h6 class="text-dark mb-1">
+                                                        <i class="fa fa-bug"></i>
+                                                        {{ $package->svcp_pest_type }}
+                                                    </h6>
+                                                    <hr>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
