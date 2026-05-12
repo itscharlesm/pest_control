@@ -91,7 +91,6 @@
                                         <td style="font-weight: bold;">MOBILE</td>
                                         <td>{{ $display->usr_mobile }}</td>
                                     </tr>
-
                                     <tr>
                                         <td style="font-weight: bold;">ADDRESS</td>
                                         <td colspan="3">
@@ -120,7 +119,6 @@
                                         <td style="font-weight: bold;">PAYMENT STATUS</td>
                                         <td>{{ $display->svc_payment_status }}</td>
                                     </tr>
-
                                     <tr>
                                         <td style="font-weight: bold;">INITIAL PRICE</td>
                                         <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
@@ -135,7 +133,6 @@
                                         <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
                                         <td style="font-weight: bold;">IS PACKAGE</td>
                                         <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-
                                         <td colspan="2"></td>
                                     </tr>
                                     @if ($display->svc_is_termite)
@@ -145,14 +142,11 @@
                                         <tr>
                                             <td style="font-weight: bold;">INITIAL SQM</td>
                                             <td>{{ $display->svc_sqm_initial }}</td>
-
                                             <td style="font-weight: bold;">WITH DEVICE</td>
                                             <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-
                                             <td style="font-weight: bold;">DEVICE COUNT</td>
                                             <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
                                         </tr>
-
                                         <tr>
                                             <td style="font-weight: bold;">TREATMENT TYPE</td>
                                             <td colspan="5">{{ $display->svc_type_treatment }}</td>
@@ -181,7 +175,6 @@
                                             </td>
                                         </tr>
                                     @endif
-
                                 </tbody>
                             </table>
                         </div>
@@ -625,7 +618,6 @@
                                             <td style="font-weight: bold;">MOBILE</td>
                                             <td>{{ $display->usr_mobile }}</td>
                                         </tr>
-
                                         <tr>
                                             <td style="font-weight: bold;">ADDRESS</td>
                                             <td colspan="3">
@@ -654,7 +646,6 @@
                                             <td style="font-weight: bold;">PAYMENT STATUS</td>
                                             <td>{{ $display->svc_payment_status }}</td>
                                         </tr>
-
                                         <tr>
                                             <td style="font-weight: bold;">INITIAL PRICE</td>
                                             <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
@@ -669,7 +660,6 @@
                                             <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
                                             <td style="font-weight: bold;">IS PACKAGE</td>
                                             <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-
                                             <td colspan="2"></td>
                                         </tr>
                                         @if ($display->svc_is_termite)
@@ -679,14 +669,11 @@
                                             <tr>
                                                 <td style="font-weight: bold;">INITIAL SQM</td>
                                                 <td>{{ $display->svc_sqm_initial }}</td>
-
                                                 <td style="font-weight: bold;">WITH DEVICE</td>
                                                 <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-
                                                 <td style="font-weight: bold;">DEVICE COUNT</td>
                                                 <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
                                             </tr>
-
                                             <tr>
                                                 <td style="font-weight: bold;">TREATMENT TYPE</td>
                                                 <td colspan="5">{{ $display->svc_type_treatment }}</td>
@@ -717,7 +704,6 @@
                                                 </td>
                                             </tr>
                                         @endif
-
                                     </tbody>
                                 </table>
                             </div>
@@ -865,7 +851,6 @@
                                             <td style="font-weight: bold;">MOBILE</td>
                                             <td>{{ $display->usr_mobile }}</td>
                                         </tr>
-
                                         <tr>
                                             <td style="font-weight: bold;">ADDRESS</td>
                                             <td colspan="3">
@@ -894,7 +879,6 @@
                                             <td style="font-weight: bold;">PAYMENT STATUS</td>
                                             <td>{{ $display->svc_payment_status }}</td>
                                         </tr>
-
                                         <tr>
                                             <td style="font-weight: bold;">INITIAL PRICE</td>
                                             <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
@@ -909,7 +893,6 @@
                                             <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
                                             <td style="font-weight: bold;">IS PACKAGE</td>
                                             <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-
                                             <td colspan="2"></td>
                                         </tr>
                                         @if ($display->svc_is_termite)
@@ -919,14 +902,11 @@
                                             <tr>
                                                 <td style="font-weight: bold;">INITIAL SQM</td>
                                                 <td>{{ $display->svc_sqm_initial }}</td>
-
                                                 <td style="font-weight: bold;">WITH DEVICE</td>
                                                 <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-
                                                 <td style="font-weight: bold;">DEVICE COUNT</td>
                                                 <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
                                             </tr>
-
                                             <tr>
                                                 <td style="font-weight: bold;">TREATMENT TYPE</td>
                                                 <td colspan="5">{{ $display->svc_type_treatment }}</td>
@@ -957,7 +937,6 @@
                                                 </td>
                                             </tr>
                                         @endif
-
                                     </tbody>
                                 </table>
                             </div>
@@ -995,16 +974,13 @@
                                 <label for="svc_infestation">
                                     Infestation <span class="text-danger">*</span>
                                 </label>
-
                                 <select class="form-control" name="svc_infestation" required>
                                     <option value="LOW" {{ $display->svc_infestation == 'LOW' ? 'selected' : '' }}>
                                         LOW
                                     </option>
-
                                     <option value="MID" {{ $display->svc_infestation == 'MID' ? 'selected' : '' }}>
                                         MID
                                     </option>
-
                                     <option value="HIGH" {{ $display->svc_infestation == 'HIGH' ? 'selected' : '' }}>
                                         HIGH
                                     </option>
