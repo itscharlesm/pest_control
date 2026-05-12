@@ -179,7 +179,7 @@
                             @if ($display->svc_status == 'CONFIRM ASSESSMENT')
                                 <button type="button" class="btn btn-success mr-2 mb-2" data-toggle="modal"
                                     data-target="#confirmAssessmentAppointmentModal">
-                                    <span class="fa fa-pen"></span> Confirm Appointment
+                                    <span class="fa fa-check"></span> Confirm Appointment
                                 </button>
                             @endif
 
@@ -797,6 +797,238 @@
         </div>
     </div>
 
+    {{-- Confirm Assessment Modal --}}
+    <div class="modal fade" id="confirmAssessmentAppointmentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <form method="POST"
+                    action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_assess_confirmation') }}">
+                    @csrf
+
+                    <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
+
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white">Assess Requested Appointment
+                            (SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }})</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row overflow-auto">
+                            <div class="table-responsive" id="sectionA">
+                                <table class="table table-bordered text-left align-middle">
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: bold;">CLIENT NAME</td>
+                                            <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
+                                            <td style="font-weight: bold;">PAYMENT STATUS</td>
+                                            <td>{{ $display->svc_payment_status }}</td>
+                                            <td style="font-weight: bold;">INITIAL PRICE</td>
+                                            <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">EMAIL</td>
+                                            <td>{{ $display->usr_email }}</td>
+                                            <td style="font-weight: bold;">IS TERMITE</td>
+                                            <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                            <td style="font-weight: bold;">BALANCE</td>
+                                            <td>₱{{ number_format($display->svc_balance, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">MOBILE NUMBER</td>
+                                            <td>{{ $display->usr_mobile }}</td>
+                                            <td style="font-weight: bold;">IS PACKAGE</td>
+                                            <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                            <td style="font-weight: bold;">BRANCH</td>
+                                            <td>{{ $display->branch_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">ADDRESS</td>
+                                            <td>{{ implode(
+                                                ', ',
+                                                array_filter([
+                                                    $display->uadd_street,
+                                                    $display->uadd_barangay,
+                                                    $display->uadd_city,
+                                                    $display->uadd_province,
+                                                    $display->uadd_region,
+                                                ]),
+                                            ) }}
+                                            </td>
+                                            <td style="font-weight: bold;">ADDRESS TYPE</td>
+                                            <td>{{ $display->add_name }}</td>
+                                            <td style="font-weight: bold;">STATUS</td>
+                                            <td>{{ $display->svc_status }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">
+                                                SCHEDULE
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">DATE REQUESTED</td>
+                                            <td colspan="2">
+                                                {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}
+                                            </td>
+                                            <td style="font-weight: bold;">TIME REQUESTED</td>
+                                            <td colspan="2">
+                                                {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
+                                            </td>
+                                        </tr>
+                                        @if ($display->svc_is_termite)
+                                            <tr>
+                                                <th colspan="6" class="text-center table-light">
+                                                    TERMITE CASE
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">INITIAL SQM</td>
+                                                <td colspan="2">{{ $display->svc_sqm_initial }}</td>
+                                                <td style="font-weight: bold;">WITH DEVICE</td>
+                                                <td colspan="2">{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                                <td colspan="2">{{ $display->svc_type_treatment }}</td>
+                                                <td style="font-weight: bold;">DEVICE COUNT</td>
+                                                <td colspan="2">{{ $display->svc_device_count ?? 'N/A' }}</td>
+                                            </tr>
+                                        @endif
+                                        @if (!empty($display->svc_problem_description))
+                                            <tr>
+                                                <th colspan="6" class="text-center table-light">
+                                                    CLIENT PROBLEM DESCRIPTION
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" style="text-align: justify">
+                                                    {{ $display->svc_problem_description }}
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            {{-- Is Package --}}
+                            <div class="col-md-12 mb-3">
+                                <label for="svc_is_package">
+                                    Is Package? <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-control" name="svc_is_package" required>
+                                    <option value="1" {{ $display->svc_is_package == 1 ? 'selected' : '' }}>
+                                        YES
+                                    </option>
+                                    <option value="0" {{ $display->svc_is_package == 0 ? 'selected' : '' }}>
+                                        NO
+                                    </option>
+                                </select>
+                            </div>
+
+                            {{-- SQM Meters --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svc_sqm_initial">SQM Meters <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="svc_sqm_initial"
+                                    value="{{ $display->svc_sqm_initial }}" placeholder="Initial SQM Meters">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Infestation --}}
+                            <div class="col-md-12 mb-3">
+                                <label for="svc_infestation">
+                                    Infestation <span class="text-danger">*</span>
+                                </label>
+
+                                <select class="form-control" name="svc_infestation" required>
+                                    <option value="LOW" {{ $display->svc_infestation == 'LOW' ? 'selected' : '' }}>
+                                        LOW
+                                    </option>
+
+                                    <option value="MID" {{ $display->svc_infestation == 'MID' ? 'selected' : '' }}>
+                                        MID
+                                    </option>
+
+                                    <option value="HIGH" {{ $display->svc_infestation == 'HIGH' ? 'selected' : '' }}>
+                                        HIGH
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Service Price --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svc_service_price">
+                                    Service Price <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svc_service_price"
+                                    placeholder="Service Price" value="{{ $display->svc_service_price }}" required>
+                            </div>
+
+                            {{-- Service Order Price --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svc_initial_price">
+                                    Service Order Price <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svc_initial_price"
+                                    placeholder="Price" value="{{ $display->svc_initial_price }}" required>
+                            </div>
+
+                            {{-- Final Price --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svc_final_price">Final Price</label>
+                                <input type="number" step="0.01" class="form-control" name="svc_final_price"
+                                    value="{{ $display->svc_final_price }}" placeholder="Final Price" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Appointment Date --}}
+                            <div class="col-md-4 mb-3">
+                                <label>Appointment Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="svca_date_approved"
+                                    value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
+                                    required>
+                            </div>
+
+                            {{-- Appointment From --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svca_approved_time_from">
+                                    From <span class="text-danger">*</span>
+                                </label>
+                                <input type="time" class="form-control" name="svca_approved_time_from"
+                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
+                                    required>
+                            </div>
+
+                            {{-- Appointment To --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svca_approved_time_to">To <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="svca_approved_time_to"
+                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
+                                    required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-check"></span> Confirm Assessment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function printDefault() {
             window.print();
@@ -865,73 +1097,100 @@
     </script>
 
     <script>
-        function updateFinalPrice() {
-            let servicePrice = parseFloat(document.querySelector('[name="svc_service_price"]').value) || 0;
-            let initialPrice = parseFloat(document.querySelector('[name="svc_initial_price"]').value) || 0;
-
-            // If one is null/empty, use the other
-            let finalPrice = servicePrice + initialPrice;
-
-            if (servicePrice === 0) {
-                finalPrice = initialPrice;
-            }
-
-            if (initialPrice === 0) {
-                finalPrice = servicePrice;
-            }
-
-            document.querySelector('[name="svc_final_price"]').value = finalPrice.toFixed(2);
-        }
-
-        // Area cost display (without peso sign)
-        document.getElementById('svcpaSelect').addEventListener('change', function() {
-            let cost = this.options[this.selectedIndex].getAttribute('data-cost');
-            document.getElementById('areaCost').value = cost ? parseFloat(cost).toFixed(2) : '';
-        });
-
-        // Auto compute final price
-        document.querySelector('[name="svc_service_price"]').addEventListener('input', updateFinalPrice);
-        document.querySelector('[name="svc_initial_price"]').addEventListener('input', updateFinalPrice);
-
-        // Run on page load
-        updateFinalPrice();
-    </script>
-
-    <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            const packageSelect = document.querySelector('[name="svc_is_package"]');
-            const sqmCol = document.querySelector('[name="svc_sqm_initial"]').closest('.col-md-4');
-            const packageCol = packageSelect.closest('.col-md-12');
+            // Target both modals
+            const modals = document.querySelectorAll('#assessAppointmentModal, #confirmAssessmentAppointmentModal');
 
-            function toggleSQM() {
+            modals.forEach(modal => {
 
-                if (packageSelect.value == "1") {
-                    // YES
-                    sqmCol.style.display = 'block';
+                const servicePriceInput = modal.querySelector('[name="svc_service_price"]');
+                const initialPriceInput = modal.querySelector('[name="svc_initial_price"]');
+                const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
 
-                    packageCol.classList.remove('col-md-12');
-                    packageCol.classList.add('col-md-6');
+                const packageSelect = modal.querySelector('[name="svc_is_package"]');
+                const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
 
-                    sqmCol.classList.remove('col-md-4');
-                    sqmCol.classList.add('col-md-6');
-
-                } else {
-                    // NO
-                    sqmCol.style.display = 'none';
-
-                    packageCol.classList.remove('col-md-6');
-                    packageCol.classList.add('col-md-12');
+                // Prevent errors if fields do not exist
+                if (!servicePriceInput || !initialPriceInput || !finalPriceInput) {
+                    return;
                 }
+
+                // FINAL PRICE COMPUTATION
+                function updateFinalPrice() {
+
+                    let servicePrice = parseFloat(servicePriceInput.value) || 0;
+                    let initialPrice = parseFloat(initialPriceInput.value) || 0;
+
+                    let finalPrice = servicePrice + initialPrice;
+
+                    if (servicePrice === 0) {
+                        finalPrice = initialPrice;
+                    }
+
+                    if (initialPrice === 0) {
+                        finalPrice = servicePrice;
+                    }
+
+                    finalPriceInput.value = finalPrice.toFixed(2);
+                }
+
+                servicePriceInput.addEventListener('input', updateFinalPrice);
+                initialPriceInput.addEventListener('input', updateFinalPrice);
+
+                // Run on load
+                updateFinalPrice();
+
+                // PACKAGE / SQM TOGGLE
+                if (packageSelect && sqmInput) {
+
+                    const sqmCol = sqmInput.closest('.col-md-4');
+                    const packageCol = packageSelect.closest('.col-md-12, .col-md-6');
+
+                    function toggleSQM() {
+
+                        if (packageSelect.value == "1") {
+
+                            sqmCol.style.display = 'block';
+
+                            packageCol.classList.remove('col-md-12');
+                            packageCol.classList.add('col-md-6');
+
+                            sqmCol.classList.remove('col-md-4');
+                            sqmCol.classList.add('col-md-6');
+
+                        } else {
+
+                            sqmCol.style.display = 'none';
+
+                            packageCol.classList.remove('col-md-6');
+                            packageCol.classList.add('col-md-12');
+                        }
+                    }
+
+                    toggleSQM();
+
+                    packageSelect.addEventListener('change', toggleSQM);
+                }
+
+            });
+
+            // AREA COST DISPLAY
+            const svcpaSelect = document.getElementById('svcpaSelect');
+
+            if (svcpaSelect) {
+                svcpaSelect.addEventListener('change', function() {
+
+                    let cost = this.options[this.selectedIndex].getAttribute('data-cost');
+
+                    const areaCost = document.getElementById('areaCost');
+
+                    if (areaCost) {
+                        areaCost.value = cost ? parseFloat(cost).toFixed(2) : '';
+                    }
+                });
             }
-
-            // Run on page load
-            toggleSQM();
-
-            // Dynamic change
-            packageSelect.addEventListener('change', toggleSQM);
 
         });
     </script>
-
 @endsection
