@@ -18,7 +18,9 @@ class MobileServiceAppointmentController extends Controller
             'client_time' => 'required',
             'initial_price' => 'nullable|numeric',
             'service_packages' => 'required',
-            'service_areas' => 'required',
+            'service_areas' => 'nullable',
+            'is_termite' => 'nullable|in:0,1',
+            'termite_sqm_id' => 'nullable|integer',
             'images.*' => 'mimes:jpeg,jpg,png,webp|max:8192',
         ]);
 
@@ -38,6 +40,8 @@ class MobileServiceAppointmentController extends Controller
 
             $servicePackages = json_decode($request->service_packages, true) ?? [];
             $serviceAreas = json_decode($request->service_areas, true) ?? [];
+            $isTermite = $request->is_termite == 1;
+            $termiteSqmId = $request->termite_sqm_id;
             $initialPrice = $request->filled('initial_price')
                 ? $request->initial_price
                 : 0;
@@ -47,8 +51,8 @@ class MobileServiceAppointmentController extends Controller
                 'branch_id' => $user->branch_id,
                 'usr_id' => $user->usr_id,
                 'svc_is_package' => count($servicePackages) > 1 ? 1 : 0,
-                'svcpat_id' => null,
-                'svc_is_termite' => 0,
+                'svcpat_id' => $isTermite ? $termiteSqmId : null,
+                'svc_is_termite' => $isTermite ? 1 : 0,
                 'svc_type_treatment' => null,
                 'svc_sqm_initial' => null,
                 'svc_sqm_final' => null,
@@ -86,18 +90,32 @@ class MobileServiceAppointmentController extends Controller
                 ]);
             }
 
-            foreach ($serviceAreas as $area) {
+            if ($isTermite && $termiteSqmId) {
                 DB::table('service_orders')->insert([
                     'svco_uuid' => Str::uuid(),
                     'svc_id' => $serviceId,
-                    'svcpa_id' => $area['id'],
-                    'svcpat_id' => null,
+                    'svcpa_id' => null,
+                    'svcpat_id' => $termiteSqmId,
                     'svco_date_created' => now(),
                     'svco_created_by' => $user->usr_id,
                     'svco_date_modified' => null,
                     'svco_modified_by' => null,
                     'svco_active' => 1,
                 ]);
+            } else {
+                foreach ($serviceAreas as $area) {
+                    DB::table('service_orders')->insert([
+                        'svco_uuid' => Str::uuid(),
+                        'svc_id' => $serviceId,
+                        'svcpa_id' => $area['id'],
+                        'svcpat_id' => null,
+                        'svco_date_created' => now(),
+                        'svco_created_by' => $user->usr_id,
+                        'svco_date_modified' => null,
+                        'svco_modified_by' => null,
+                        'svco_active' => 1,
+                    ]);
+                }
             }
 
             $appointmentId = DB::table('service_appointments')->insertGetId([
@@ -182,5 +200,24 @@ class MobileServiceAppointmentController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getTermiteAreaSizes($branchId)
+    {
+        $data = DB::table('service_package_area_termites')
+            ->where('branch_id', $branchId)
+            ->where('svcpat_active', 1)
+            ->select(
+                'svcpat_id',
+                'svcpat_sqm_details',
+                'svcpat_costs'
+            )
+            ->orderBy('svcpat_id', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
     }
 }

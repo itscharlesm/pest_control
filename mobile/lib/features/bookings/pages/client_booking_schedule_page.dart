@@ -10,6 +10,7 @@ class ClientBookingSchedulePage extends StatefulWidget {
   final Map<String, dynamic> selectedAddress;
   final List<Map<String, dynamic>> selectedServicePackages;
   final List<Map<String, dynamic>> selectedAreas;
+  final Map<String, dynamic>? selectedTermiteSqm;
   final String description;
   final List<XFile> selectedImages;
 
@@ -19,6 +20,7 @@ class ClientBookingSchedulePage extends StatefulWidget {
     required this.selectedAddress,
     required this.selectedServicePackages,
     required this.selectedAreas,
+    required this.selectedTermiteSqm,
     required this.description,
     required this.selectedImages,
   });
@@ -84,16 +86,17 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
       context,
       MaterialPageRoute(
         builder: (_) => ClientBookingReviewPage(
-          email: widget.email,
-          selectedAddress: widget.selectedAddress,
-          selectedServicePackages: widget.selectedServicePackages,
-          selectedAreas: widget.selectedAreas,
-          description: widget.description,
-          selectedImages: widget.selectedImages,
-          selectedDate: selectedDate!,
-          selectedTime: selectedTimeWindow!['time']!,
-          selectedUrgency: selectedTimeWindow!['title']!,
-        ),
+        email: widget.email,
+        selectedAddress: widget.selectedAddress,
+        selectedServicePackages: widget.selectedServicePackages,
+        selectedAreas: widget.selectedAreas,
+        selectedTermiteSqm: widget.selectedTermiteSqm,
+        description: widget.description,
+        selectedImages: widget.selectedImages,
+        selectedDate: selectedDate!,
+        selectedTime: selectedTimeWindow!['time']!,
+        selectedUrgency: selectedTimeWindow!['title']!,
+      ),
       ),
     );
   }
