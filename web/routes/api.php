@@ -147,4 +147,5 @@
         Route::get('/service-package-areas/{branch_id}', [MobileServicePackageController::class, 'areas']);
         Route::post('/service-appointments/store', [MobileServiceAppointmentController::class, 'store']);
         Route::get('/service-package-area-termites/{branchId}', [MobileServiceAppointmentController::class, 'getTermiteAreaSizes']);
+        Route::post('/appointments/client', [MobileServiceAppointmentController::class, 'clientAppointments']);
     });

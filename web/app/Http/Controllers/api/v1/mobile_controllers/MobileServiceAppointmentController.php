@@ -220,4 +220,53 @@ class MobileServiceAppointmentController extends Controller
             'data' => $data,
         ]);
     }
+
+    public function clientAppointments(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = DB::table('users')
+            ->where('usr_email', $request->email)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        $appointments = DB::table('service_appointments as sa')
+            ->join('services as s', 'sa.svc_id', '=', 's.svc_id')
+            ->leftJoin('user_addresses as ua', 'sa.uadd_id', '=', 'ua.uadd_id')
+            ->leftJoin('service_package_area_termites as spat', 's.svcpat_id', '=', 'spat.svcpat_id')
+            ->where('s.usr_id', $user->usr_id)
+            ->where('sa.svca_active', 1)
+            ->select(
+                'sa.svca_id',
+                'sa.svca_status',
+                'sa.svca_client_date',
+                'sa.svca_client_time',
+                'sa.svca_date_created',
+                's.svc_id',
+                's.svc_is_termite',
+                's.svc_initial_price',
+                's.svc_balance',
+                's.svc_payment_status',
+                'ua.uadd_street',
+                'ua.uadd_barangay',
+                'ua.uadd_city',
+                'ua.uadd_province',
+                'spat.svcpat_sqm_details'
+            )
+            ->orderBy('sa.svca_id', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $appointments,
+        ]);
+    }
 }
