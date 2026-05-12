@@ -10,6 +10,7 @@ import 'package:mobile_app/features/bookings/pages/client_booking_schedule_page.
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_problem_card.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
+import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.dart';
 
   class ClientBookingProblemPage extends StatefulWidget {
     final String email;
@@ -27,6 +28,10 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
   }
 
   class _ClientBookingProblemPageState extends State<ClientBookingProblemPage> {
+
+    List<Map<String, dynamic>> termiteSqmOptions = [];
+    Map<String, dynamic>? selectedTermiteSqm;
+    bool isLoadingTermiteSqm = false;
 
     List<Map<String, dynamic>> selectedServicePackages = [];
     List<Map<String, dynamic>> selectedAreas = [];
@@ -53,11 +58,18 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
       return total;
     }
 
+    bool get hasTermitesSelected {
+      return selectedServicePackages.any(
+        (service) => service['name'].toString().toUpperCase() == 'TERMITES',
+      );
+    }
+
     @override
     void initState() {
       super.initState();
       _loadServicePackages();
       _loadServiceAreas(2);
+      _loadTermiteSqmOptions(2);
 
       descriptionController.addListener(() {
         setState(() {});
@@ -85,6 +97,36 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
                       selectedServicePackages: selectedServicePackages,
                       onToggleService: (service) {
                         setState(() {
+                          final serviceName = service['name'].toString().toUpperCase();
+
+                          if (serviceName == 'TERMITES') {
+
+                            final alreadySelected = selectedServicePackages.any(
+                              (selected) =>
+                                  selected['name'].toString().toUpperCase() == 'TERMITES',
+                            );
+
+                            if (alreadySelected) {
+                              selectedServicePackages.clear();
+                              selectedAreas.clear();
+                              selectedTermiteSqm = null;
+                              return;
+                            }
+
+                            selectedServicePackages.clear();
+                            selectedAreas.clear();
+                            selectedTermiteSqm = null;
+
+                            selectedServicePackages.add(service);
+                            return;
+                          }
+
+                          selectedTermiteSqm = null;
+
+                          selectedServicePackages.removeWhere(
+                            (selected) => selected['name'].toString().toUpperCase() == 'TERMITES',
+                          );
+
                           final isSelected = selectedServicePackages.any(
                             (selected) => selected['id'] == service['id'],
                           );
@@ -101,36 +143,50 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
                       onClearAll: () {
                         setState(() {
                           selectedServicePackages.clear();
+                          selectedAreas.clear();
+                          selectedTermiteSqm = null;
                         });
                       },
                     ),
 
                     const SizedBox(height: 20),
 
-                    BookingAreaCard(
-                      serviceAreas: serviceAreas,
-                      selectedAreas: selectedAreas,
-                      onToggleArea: (area) {
-                        setState(() {
-                          final isSelected = selectedAreas.any(
-                            (selected) => selected['id'] == area['id'],
-                          );
-
-                          if (isSelected) {
-                            selectedAreas.removeWhere(
+                    if (hasTermitesSelected)
+                      BookingTermiteSqmCard(
+                        isLoading: isLoadingTermiteSqm,
+                        termiteSqmOptions: termiteSqmOptions,
+                        selectedTermiteSqm: selectedTermiteSqm,
+                        onSelect: (option) {
+                          setState(() {
+                            selectedTermiteSqm = option;
+                          });
+                        },
+                      )
+                    else
+                      BookingAreaCard(
+                        serviceAreas: serviceAreas,
+                        selectedAreas: selectedAreas,
+                        onToggleArea: (area) {
+                          setState(() {
+                            final isSelected = selectedAreas.any(
                               (selected) => selected['id'] == area['id'],
                             );
-                          } else {
-                            selectedAreas.add(area);
-                          }
-                        });
-                      },
-                      onClearAll: () {
-                        setState(() {
-                          selectedAreas.clear();
-                        });
-                      },
-                    ),
+
+                            if (isSelected) {
+                              selectedAreas.removeWhere(
+                                (selected) => selected['id'] == area['id'],
+                              );
+                            } else {
+                              selectedAreas.add(area);
+                            }
+                          });
+                        },
+                        onClearAll: () {
+                          setState(() {
+                            selectedAreas.clear();
+                          });
+                        },
+                      ),
                     const SizedBox(height: 20),
                     _descriptionCard(),
                     const SizedBox(height: 20),
@@ -389,7 +445,7 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
         padding: const EdgeInsets.all(16),
         color: AppTheme.white,
         child: ElevatedButton(
-          onPressed: (selectedServicePackages.isNotEmpty && selectedAreas.isNotEmpty)
+          onPressed: selectedServicePackages.isNotEmpty && (hasTermitesSelected ? selectedTermiteSqm != null : selectedAreas.isNotEmpty)
               ? () {
                   Navigator.push(
                     context,
@@ -399,6 +455,7 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
                         selectedAddress: widget.selectedAddress,
                         selectedServicePackages: selectedServicePackages,
                         selectedAreas: selectedAreas,
+                        selectedTermiteSqm: selectedTermiteSqm,
                         description: descriptionController.text.trim(),
                         selectedImages: selectedImages,
                       ),
@@ -495,6 +552,49 @@ import 'package:mobile_app/features/bookings/widgets/booking_area_card.dart';
         if (mounted) {
           setState(() {
             isLoadingAreas = false;
+          });
+        }
+      }
+    }
+
+    Future<void> _loadTermiteSqmOptions(int branchId) async {
+      setState(() {
+        isLoadingTermiteSqm = true;
+      });
+
+      try {
+        final response = await http.get(
+          Uri.parse('${ApiConfig.baseUrl}/api/mobile/service-package-area-termites/$branchId'),
+          headers: {
+            'Accept': 'application/json',
+          },
+        );
+
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true) {
+          final List sqmData = data['data'] ?? [];
+
+          setState(() {
+            termiteSqmOptions = sqmData.map((item) {
+              return {
+                'id': item['svcpat_id'],
+                'sqm_details': item['svcpat_sqm_details'],
+                'cost': item['svcpat_costs'],
+              };
+            }).toList();
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to load termite treatment sizes.'),
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            isLoadingTermiteSqm = false;
           });
         }
       }

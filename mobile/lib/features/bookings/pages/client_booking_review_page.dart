@@ -7,12 +7,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/app/theme.dart';
 import 'package:mobile_app/features/bookings/widgets/booking_step_indicator.dart';
 import 'package:mobile_app/shared/widgets/headers/app_back_header.dart';
+import 'package:mobile_app/features/appointments/pages/client_appointments_page.dart';
 
 class ClientBookingReviewPage extends StatefulWidget {
   final String email;
   final Map<String, dynamic> selectedAddress;
   final List<Map<String, dynamic>> selectedServicePackages;
   final List<Map<String, dynamic>> selectedAreas;
+  final Map<String, dynamic>? selectedTermiteSqm;
   final String description;
   final List<XFile> selectedImages;
   final DateTime selectedDate;
@@ -25,6 +27,7 @@ class ClientBookingReviewPage extends StatefulWidget {
     required this.selectedAddress,
     required this.selectedServicePackages,
     required this.selectedAreas,
+    required this.selectedTermiteSqm,
     required this.description,
     required this.selectedImages,
     required this.selectedDate,
@@ -40,6 +43,12 @@ class ClientBookingReviewPage extends StatefulWidget {
 class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
   bool isSubmitting = false;
 
+  bool get hasTermitesSelected {
+    return widget.selectedServicePackages.any(
+      (service) => service['name'].toString().toUpperCase() == 'TERMITES',
+    );
+  }
+
   String _timeStart(String timeWindow) {
     if (timeWindow.contains('8:00 AM')) return '08:00:00';
     if (timeWindow.contains('12:00 PM')) return '12:00:00';
@@ -49,11 +58,17 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
   }
   
   double get totalPrice {
+    if (hasTermitesSelected && widget.selectedTermiteSqm != null) {
+      return double.tryParse(
+            widget.selectedTermiteSqm?['cost'].toString() ?? '0',
+          ) ??
+          0;
+    }
+
     double total = 0;
 
     for (final area in widget.selectedAreas) {
       final value = area['cost'] ?? area['price'] ?? area['svcpa_cost'] ?? 0;
-
       total += double.tryParse(value.toString()) ?? 0;
     }
 
@@ -113,6 +128,13 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
 
       request.fields['initial_price'] = totalPrice.toStringAsFixed(2);
 
+      request.fields['is_termite'] = hasTermitesSelected ? '1' : '0';
+
+      if (hasTermitesSelected && widget.selectedTermiteSqm != null) {
+        request.fields['termite_sqm_id'] =
+            widget.selectedTermiteSqm!['id'].toString();
+      }
+
       request.fields['problem_description'] =
           widget.description.trim().toUpperCase();
 
@@ -164,9 +186,13 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
           ),
         );
 
-        Navigator.pushNamedAndRemoveUntil(
+        Navigator.pushAndRemoveUntil(
           context,
-          '/client-home',
+          MaterialPageRoute(
+            builder: (_) => ClientAppointmentsPage(
+              email: widget.email,
+            ),
+          ),
           (route) => false,
         );
 
@@ -209,7 +235,7 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
                   const SizedBox(height: 14),
                   _pestCard(),
                   const SizedBox(height: 14),
-                  _areasCard(),
+                  hasTermitesSelected ? _termiteSqmCard() : _areasCard(),
                   const SizedBox(height: 14),
                   _descriptionCard(),
                   const SizedBox(height: 14),
@@ -299,6 +325,27 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
         ),
         const SizedBox(height: 14),
         _totalRow('Estimated Total', '₱${totalPrice.toStringAsFixed(2)}'),
+      ],
+    );
+  }
+
+  Widget _termiteSqmCard() {
+    final termiteSqm = widget.selectedTermiteSqm;
+
+    return _summaryBox(
+      icon: Icons.square_foot_outlined,
+      title: 'Termite Treatment Size',
+      children: [
+        _MainValue(
+          termiteSqm?['sqm_details'] ?? 'No size selected',
+        ),
+
+        const SizedBox(height: 14),
+
+        _totalRow(
+          'Estimated Total',
+          '₱${double.tryParse((termiteSqm?['cost'] ?? 0).toString())?.toStringAsFixed(2) ?? '0.00'}',
+        ),
       ],
     );
   }
