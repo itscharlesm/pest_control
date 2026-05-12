@@ -54,6 +54,7 @@ class MobileServiceAppointmentController extends Controller
                 'svc_sqm_final' => null,
                 'svc_with_device' => null,
                 'svc_device_count' => null,
+                'svc_problem_description' => strtoupper($request->problem_description),
                 'svc_status' => 'REQUESTED',
                 'svc_infestation' => null,
                 'svc_initial_price' => $initialPrice,
