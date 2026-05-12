@@ -52,6 +52,7 @@
                                         <th class="text-center">Mobile Number</th>
                                         <th class="text-center">Branch</th>
                                         <th class="text-center">Is Termite</th>
+                                        <th class="text-center">Is Package</th>
                                         <th class="text-center">Payment Status</th>
                                         <th class="text-center">Date Requested</th>
                                         <th class="text-center">Status</th>
@@ -75,6 +76,13 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if ($appointment->svc_is_termite == 1)
+                                                    YES
+                                                @else
+                                                    NO
+                                                @endif
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                @if ($appointment->svc_is_package== 1)
                                                     YES
                                                 @else
                                                     NO

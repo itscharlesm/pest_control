@@ -29,6 +29,7 @@ class AppointmentController extends Controller
         $query->select(
             'services.svc_id',
             'services.svc_is_termite',
+            'services.svc_is_package',
             'services.svc_status',
             'services.svc_payment_status',
             'services.svc_date_created',
