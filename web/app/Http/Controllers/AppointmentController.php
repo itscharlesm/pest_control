@@ -522,7 +522,6 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'svc_id' => 'required',
-            'svc_is_package' => 'required',
             'svc_infestation' => 'required',
             'svc_service_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
@@ -531,6 +530,7 @@ class AppointmentController extends Controller
         ]);
 
         $svc_id = $request->svc_id;
+        $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
         $servicePrice = $request->svc_service_price;
         $finalPrice = $request->svc_final_price;
@@ -538,31 +538,70 @@ class AppointmentController extends Controller
         // Fetch existing service record
         $service = DB::table('services')->where('svc_id', $svc_id)->first();
 
-        // Only update svc_sqm_initial if package is NO and DB value is currently null
-        $sqmInitial = $service->svc_sqm_initial; // preserve existing by default
-        if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
-            $sqmInitial = null;
-        } elseif ($isPackage == 1) {
+        if ($isTermite == 1) {
+            // TERMITE PATH
+            $treatmentType = $request->svc_type_treatment;
+            $withDevice = ($treatmentType === 'HYBRID TREATMENT') ? 1 : 0;
+            $deviceCount = $withDevice ? (int) $request->svc_device_count : null;
             $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+
+            // Recompute device price server-side (mirrors JS: count × unit cost)
+            $deviceCostRow = DB::table('service_package_area_devices')
+                ->where('branch_id', $service->branch_id)
+                ->where('svcpad_active', 1)
+                ->first();
+
+            $devicePrice = ($withDevice && $deviceCount && $deviceCostRow)
+                ? $deviceCount * $deviceCostRow->svcpad_cost
+                : 0;
+
+            DB::table('services')
+                ->where('svc_id', $svc_id)
+                ->update([
+                    'svc_is_termite' => 1,
+                    'svcpat_id' => $request->svcpat_id,
+                    'svc_type_treatment' => $treatmentType,
+                    'svc_with_device' => $withDevice,
+                    'svc_device_count' => $deviceCount,
+                    'svc_device_price' => $devicePrice,
+                    'svc_sqm_initial' => $sqmInitial,
+                    'svc_sqm_final' => $sqmInitial,
+                    'svc_status' => 'ASSESSED',
+                    'svc_infestation' => $request->svc_infestation,
+                    'svc_service_price' => $servicePrice,
+                    'svc_final_price' => $finalPrice,
+                    'svc_balance' => $finalPrice,
+                    'svc_date_modified' => Carbon::now(),
+                    'svc_modified_by' => session('usr_id'),
+                ]);
+
+        } else {
+            // NON-TERMITE PATH
+            $sqmInitial = $service->svc_sqm_initial;
+            if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
+                $sqmInitial = null;
+            } elseif ($isPackage == 1) {
+                $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+            }
+
+            DB::table('services')
+                ->where('svc_id', $svc_id)
+                ->update([
+                    'svc_is_package' => $isPackage,
+                    'svc_sqm_initial' => $sqmInitial,
+                    'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
+                    'svc_status' => 'ASSESSED',
+                    'svc_infestation' => $request->svc_infestation,
+                    'svc_service_price' => $servicePrice,
+                    'svc_initial_price' => $request->svc_initial_price ?? $service->svc_initial_price,
+                    'svc_final_price' => $finalPrice,
+                    'svc_balance' => $finalPrice,
+                    'svc_date_modified' => Carbon::now(),
+                    'svc_modified_by' => session('usr_id'),
+                ]);
         }
 
-        // Update services table
-        DB::table('services')
-            ->where('svc_id', $svc_id)
-            ->update([
-                'svc_is_package' => $isPackage,
-                'svc_sqm_initial' => $sqmInitial,
-                'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null, // null if not package
-                'svc_status' => 'ASSESSED',
-                'svc_infestation' => $request->svc_infestation,
-                'svc_service_price' => $servicePrice,
-                'svc_final_price' => $finalPrice,
-                'svc_balance' => $finalPrice,
-                'svc_date_modified' => Carbon::now(),
-                'svc_modified_by' => session('usr_id'),
-            ]);
-
-        // Update service_appointments table
+        // APPOINTMENT (shared) 
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
