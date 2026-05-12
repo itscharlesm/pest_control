@@ -473,6 +473,14 @@ class AppointmentController extends Controller
                     'svc_modified_by' => session('usr_id'),
                 ]);
 
+                DB::table('service_orders')
+                    ->where('svc_id', $svc_id)
+                    ->update([
+                        'svcpat_id' => $request->svcpat_id,
+                        'svco_date_modified' => Carbon::now(),
+                        'svco_modified_by' => session('usr_id'),
+                    ]);
+
         } else {
             // NON-TERMITE PATH
             $sqmInitial = $service->svc_sqm_initial;
@@ -575,6 +583,14 @@ class AppointmentController extends Controller
                     'svc_modified_by' => session('usr_id'),
                 ]);
 
+            DB::table('service_orders')
+                ->where('svc_id', $svc_id)
+                ->update([
+                    'svcpat_id' => $request->svcpat_id,
+                    'svco_date_modified' => Carbon::now(),
+                    'svco_modified_by' => session('usr_id'),
+                ]);
+
         } else {
             // NON-TERMITE PATH
             $sqmInitial = $service->svc_sqm_initial;
@@ -644,6 +660,7 @@ class AppointmentController extends Controller
                 'services.svc_is_termite',
                 'services.svc_type_treatment',
                 'services.svc_sqm_initial',
+                'services.svc_sqm_final',
                 'services.svc_with_device',
                 'services.svc_device_count',
                 'services.svc_problem_description',
