@@ -759,7 +759,7 @@
                         <div class="row">
                             {{-- Appointment Date --}}
                             <div class="col-md-4 mb-3">
-                                <label>Appointment Date <span class="text-danger">*</span></label>
+                                <label>Approve Appointment Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" name="svca_date_approved"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
                                     required>
@@ -768,7 +768,7 @@
                             {{-- Appointment From --}}
                             <div class="col-md-4 mb-3">
                                 <label for="svca_approved_time_from">
-                                    From <span class="text-danger">*</span>
+                                    Approve Time From <span class="text-danger">*</span>
                                 </label>
                                 <input type="time" class="form-control" name="svca_approved_time_from"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
@@ -777,7 +777,7 @@
 
                             {{-- Appointment To --}}
                             <div class="col-md-4 mb-3">
-                                <label for="svca_approved_time_to">To <span class="text-danger">*</span></label>
+                                <label for="svca_approved_time_to">Approve Time To <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_to"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
                                     required>
@@ -867,11 +867,11 @@
                                             </th>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight: bold;">DATE REQUESTED</td>
+                                            <td style="font-weight: bold;">CLIENT DATE REQUESTED</td>
                                             <td colspan="2">
                                                 {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}
                                             </td>
-                                            <td style="font-weight: bold;">TIME REQUESTED</td>
+                                            <td style="font-weight: bold;">CLIENT TIME REQUESTED</td>
                                             <td colspan="2">
                                                 {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
                                             </td>
@@ -991,7 +991,7 @@
                         <div class="row">
                             {{-- Appointment Date --}}
                             <div class="col-md-4 mb-3">
-                                <label>Appointment Date <span class="text-danger">*</span></label>
+                                <label>Approve Appointment Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" name="svca_date_approved"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
                                     required>
@@ -1000,7 +1000,7 @@
                             {{-- Appointment From --}}
                             <div class="col-md-4 mb-3">
                                 <label for="svca_approved_time_from">
-                                    From <span class="text-danger">*</span>
+                                    Approve Time From <span class="text-danger">*</span>
                                 </label>
                                 <input type="time" class="form-control" name="svca_approved_time_from"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
@@ -1009,7 +1009,7 @@
 
                             {{-- Appointment To --}}
                             <div class="col-md-4 mb-3">
-                                <label for="svca_approved_time_to">To <span class="text-danger">*</span></label>
+                                <label for="svca_approved_time_to">Approve Time To <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_to"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
                                     required>
