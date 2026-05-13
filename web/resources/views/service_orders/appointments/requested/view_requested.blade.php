@@ -424,7 +424,7 @@
                                                     <td style="vertical-align: middle; text-align: center">
                                                         {{ $area->svcpat_sqm_details }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
-                                                        ₱{{ number_format($area->svcpat_costs, 2) }}</td>
+                                                        ₱{{ number_format($area->svcpat_cost, 2) }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
                                                         {{-- @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
                                                             <p>STANDARD TREATMENT: sqm × cost</p>
@@ -750,7 +750,7 @@
                                     <label>SQM DETAILS <span class="text-danger">*</span></label>
                                     <select class="form-control" name="svcpat_id" id="svcpat_id_select" required>
                                         @foreach ($termiteAreaOptions as $opt)
-                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_costs }}"
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_cost }}"
                                                 {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
                                                 {{ $opt->svcpat_sqm_details }}
                                             </option>
@@ -1047,7 +1047,7 @@
                                     <label>SQM DETAILS <span class="text-danger">*</span></label>
                                     <select class="form-control" name="svcpat_id" id="confirmSvcpatSelect" required>
                                         @foreach ($termiteAreaOptions as $opt)
-                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_costs }}"
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_cost }}"
                                                 {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
                                                 {{ $opt->svcpat_sqm_details }}
                                             </option>

@@ -313,7 +313,7 @@
                                                     <td style="vertical-align: middle; text-align: center">
                                                         {{ $area->svcpat_sqm_details }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
-                                                        ₱{{ number_format($area->svcpat_costs, 2) }}</td>
+                                                        ₱{{ number_format($area->svcpat_cost, 2) }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
                                                         @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
                                                             <p>STANDARD TREATMENT: sqm × cost</p>

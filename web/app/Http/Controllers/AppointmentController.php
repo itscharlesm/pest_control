@@ -160,7 +160,7 @@ class AppointmentController extends Controller
                 'service_orders.svco_id',
                 'service_package_area_termites.svcpat_id',
                 'service_package_area_termites.svcpat_sqm_details',
-                'service_package_area_termites.svcpat_costs'
+                'service_package_area_termites.svcpat_cost'
             )
             ->get();
 
@@ -174,7 +174,7 @@ class AppointmentController extends Controller
         $termiteAreaOptions = DB::table('service_package_area_termites')
             ->where('branch_id', $display->branch_id)
             ->where('svcpat_active', 1)
-            ->select('svcpat_id', 'svcpat_sqm_details', 'svcpat_costs')
+            ->select('svcpat_id', 'svcpat_sqm_details', 'svcpat_cost')
             ->get();
 
         // Client Appointment Images
@@ -751,7 +751,7 @@ class AppointmentController extends Controller
                 'service_orders.svco_id',
                 'service_package_area_termites.svcpat_id',
                 'service_package_area_termites.svcpat_sqm_details',
-                'service_package_area_termites.svcpat_costs'
+                'service_package_area_termites.svcpat_cost'
             )
             ->get();
 
