@@ -426,13 +426,6 @@
                                                     <td style="vertical-align: middle; text-align: center">
                                                         ₱{{ number_format($area->svcpat_cost, 2) }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
-                                                        {{-- @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
-                                                            <p>STANDARD TREATMENT: sqm × cost</p>
-                                                        @elseif ($display->svc_type_treatment == 'HYBRID TREATMENT')
-                                                            <p>HYBRID TREATMENT: sqm × cost + device</p>
-                                                        @else
-                                                            <p>{{ $display->svc_type_treatment }}: sqm × cost</p>
-                                                        @endif --}}
                                                         <p>STANDARD TREATMENT: sqm × cost</p>
                                                         <p>HYBRID TREATMENT: sqm × cost + device</p>
                                                     </td>
@@ -841,7 +834,7 @@
                             {{-- Appointment Date --}}
                             <div class="col-md-4 mb-3">
                                 <label>Approve Appointment Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="svca_date_approved"
+                                <input type="date" class="form-control" name="svca_approved_date"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
                                     required>
                             </div>
@@ -1142,8 +1135,8 @@
                             {{-- Approved Date --}}
                             <div class="col-md-4 mb-3">
                                 <label>Approve Appointment Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="svca_date_approved"
-                                    value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
+                                <input type="date" class="form-control" name="svca_approved_date"
+                                    value="{{ $display->svca_approved_date }}"
                                     required>
                             </div>
 
@@ -1151,7 +1144,7 @@
                             <div class="col-md-4 mb-3">
                                 <label>Approve Time From <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_from"
-                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
+                                    value="{{ $display->svca_approved_time_from }}"
                                     required>
                             </div>
 
@@ -1159,7 +1152,7 @@
                             <div class="col-md-4 mb-3">
                                 <label>Approve Time To <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_to"
-                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
+                                    value="{{ $display->svca_approved_time_to }}"
                                     required>
                             </div>
                         </div>

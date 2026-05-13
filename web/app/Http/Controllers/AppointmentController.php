@@ -92,6 +92,9 @@ class AppointmentController extends Controller
                 'branches.branch_name',
                 'service_appointments.svca_client_date',
                 'service_appointments.svca_client_time',
+                'service_appointments.svca_approved_date',
+                'service_appointments.svca_approved_time_from',
+                'service_appointments.svca_approved_time_to',
                 'user_addresses.uadd_street',
                 'user_addresses.uadd_barangay',
                 'user_addresses.uadd_city',
@@ -423,6 +426,7 @@ class AppointmentController extends Controller
             'svc_infestation' => 'required',
             'svc_service_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
+            'svca_approved_date' => 'required',
             'svca_approved_time_from' => 'required',
             'svca_approved_time_to' => 'required',
         ]);
@@ -511,9 +515,11 @@ class AppointmentController extends Controller
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
-                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_date' => $request->svca_approved_date,
                 'svca_approved_time_from' => $request->svca_approved_time_from,
                 'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_approved' => Carbon::now(),
+                'svca_approved_by' => session('usr_id'),
                 'svca_date_modified' => Carbon::now(),
                 'svca_modified_by' => session('usr_id'),
             ]);
@@ -533,6 +539,7 @@ class AppointmentController extends Controller
             'svc_infestation' => 'required',
             'svc_service_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
+            'svca_approved_date' => 'required',
             'svca_approved_time_from' => 'required',
             'svca_approved_time_to' => 'required',
         ]);
@@ -621,9 +628,11 @@ class AppointmentController extends Controller
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
-                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_date' => $request->svca_approved_date,
                 'svca_approved_time_from' => $request->svca_approved_time_from,
                 'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_approved' => Carbon::now(),
+                'svca_approved_by' => session('usr_id'),
                 'svca_date_modified' => Carbon::now(),
                 'svca_modified_by' => session('usr_id'),
             ]);
@@ -632,7 +641,7 @@ class AppointmentController extends Controller
 
         logUserActivity(
             'Manage Appointments',
-            'Assessed appointment ' . $serviceOrder
+            'Confirmed Assessment ' . $serviceOrder
         );
 
         session()->flash('successMessage', 'Appointment successfully assessed.');
