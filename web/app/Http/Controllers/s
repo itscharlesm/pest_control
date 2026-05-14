@@ -1,413 +1,712 @@
-@extends('layouts.themes.main')
+{{-- Assess Modal --}}
+    <div class="modal fade" id="assessAppointmentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <form method="POST"
+                    action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_assess') }}">
+                    @csrf
 
-@section('content')
-    {{-- Content Header --}}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Branches</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item">
-                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
-                        </li>
-                        <li class="breadcrumb-item">Management</li>
-                        <li class="breadcrumb-item active">Branches</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
 
-    {{-- Main Content --}}
-    <section class="content">
-        @include('layouts.partials.onclick')
-        @include('layouts.partials.alerts')
-        @include('layouts.partials.modal_style')
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-body overflow-auto">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <a class="btn btn-danger btn-md mb-3" href="{{ url('management/branches/deleted') }}">
-                                <span class="fa fa-archive"></span> Deleted Branches
-                            </a>
-                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                <button type="button" class="btn btn-success mb-3" data-toggle="modal"
-                                    data-target="#addBranchModal">
-                                    <span class="fa fa-plus"></span> Add Branch
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <!-- Table Column -->
-                        <div class="col-lg-12 col-md-7">
-                            <form method="GET" action="{{ url('management/branches/active') }}" class="mb-3">
-                                <div class="input-group">
-                                    <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search branches..." value="{{ request('search') }}">
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-primary">
-                                            <span class="fa fa-search"></span> Search
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-
-                            <table id="profilingTable" class="table table-hover table-bordered table-sm responsive">
-                                <thead>
-                                    <tr>
-                                        <th style="vertical-align: middle; text-align: center">No</th>
-                                        <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        <th style="vertical-align: middle; text-align: center">Created By</th>
-                                        <th style="vertical-align: middle; text-align: center">Modified By</th>
-                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($branches as $branch)
-                                        <tr>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                {{ $loop->iteration }}
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                {{ $branch->branch_name }}
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($branch->created_first_name))
-                                                    {{ $branch->created_first_name }} {{ $branch->created_last_name }} -
-                                                    {{ \Carbon\Carbon::parse($branch->branch_date_created)->format('m/d/Y | h:i A') }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if (!empty($branch->modified_first_name))
-                                                    {{ $branch->modified_first_name }}
-                                                    {{ $branch->modified_last_name }} -
-                                                    {{ \Carbon\Carbon::parse($branch->branch_date_modified)->format('m/d/Y | h:i A') }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                @if ($branch->branch_id != 1)
-                                                    <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
-                                                        data-toggle="modal"
-                                                        data-target="#updateBranchModal-{{ $branch->branch_id }}">
-                                                        <span class="fa fa-edit"></span>
-                                                    </a>
-
-                                                    @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                                        <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
-                                                            data-toggle="modal"
-                                                            data-target="#deleteModal-{{ $branch->branch_id }}">
-                                                            <span class="fa fa-trash"></span>
-                                                        </a>
-                                                    @endif
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                        </tr>
-
-                                        {{-- Update Branch Modal --}}
-                                        <div class="modal fade" id="updateBranchModal-{{ $branch->branch_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="updateBranchModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog modal-xs" role="document">
-                                                <form
-                                                    action="{{ url('management/branches/update/' . $branch->branch_id) }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    <div class="modal-content">
-                                                        <div class="modal-header bg-warning text-black">
-                                                            <h5 class="modal-title text-black"
-                                                                id="updateBranchModalLabel-{{ $branch->branch_id }}">
-                                                                <span class="fa fa-edit"></span> Update Branch
-                                                            </h5>
-
-                                                            <button type="button" class="close text-black"
-                                                                data-dismiss="modal">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-
-                                                        <div class="modal-body">
-                                                            {{-- Branch Name --}}
-                                                            <div class="form-group">
-                                                                <label>Branch Name <span
-                                                                        class="text-danger">*</span></label>
-                                                                <input type="text" class="form-control"
-                                                                    name="branch_name" value="{{ $branch->branch_name }}"
-                                                                    required>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-
-                                                            <button type="submit" class="btn btn-warning">
-                                                                <span class="fa fa-save"></span> Update
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-
-                                        {{-- Delete Modal --}}
-                                        <div class="modal fade" id="deleteModal-{{ $branch->branch_id }}" tabindex="-1"
-                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <form method="POST"
-                                                        action="{{ action('App\Http\Controllers\ManagementController@branches_delete', [$branch->branch_id]) }}">
-                                                        @csrf
-                                                        <div class="modal-header bg-danger text-white">
-                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                Please Confirm
-                                                            </h5>
-                                                            <button type="button" class="close" data-dismiss="modal"
-                                                                aria-label="Close">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <p>Are you sure you want to <strong>DELETE</strong> branch -
-                                                                <strong>{{ $branch->branch_name }}</strong>?
-                                                            </p>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-                                                            <button type="submit" class="btn btn-danger">
-                                                                <span class="fa fa-trash"></span> Confirm Delete
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- Add Branch Modal --}}
-    <div class="modal fade" id="addBranchModal" tabindex="-1" role="dialog" aria-labelledby="addBranchModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xs" role="document">
-            <form action="{{ url('management/branches/add') }}" method="POST">
-                @csrf
-
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white" id="addBranchModalLabel">
-                            <span class="fa fa-plus text-white"></span> Add Branch
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                    <div class="modal-header bg-warning text-black">
+                        <h5 class="modal-title text-black">Assess Requested Appointment
+                            (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }})</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
                         </button>
                     </div>
-
                     <div class="modal-body">
+                        <div class="row overflow-auto">
+                            <div class="table-responsive" id="sectionA">
+                                <table class="table table-bordered text-left align-middle">
+                                    <tbody>
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">CLIENT NAME</td>
+                                            <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
+                                            <td style="font-weight: bold;">EMAIL</td>
+                                            <td>{{ $display->usr_email }}</td>
+                                            <td style="font-weight: bold;">MOBILE</td>
+                                            <td>{{ $display->usr_mobile }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">ADDRESS</td>
+                                            <td colspan="3">
+                                                {{ implode(
+                                                    ', ',
+                                                    array_filter([
+                                                        $display->uadd_street,
+                                                        $display->uadd_barangay,
+                                                        $display->uadd_city,
+                                                        $display->uadd_province,
+                                                        $display->uadd_region,
+                                                    ]),
+                                                ) }}
+                                            </td>
+                                            <td style="font-weight: bold;">ADDRESS TYPE</td>
+                                            <td>{{ $display->add_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">BRANCH</td>
+                                            <td>{{ $display->branch_name }}</td>
+                                            <td style="font-weight: bold;">STATUS</td>
+                                            <td>{{ $display->svc_status }}</td>
+                                            <td style="font-weight: bold;">PAYMENT STATUS</td>
+                                            <td>{{ $display->svc_payment_status }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">INITIAL PRICE</td>
+                                            <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                            <td style="font-weight: bold;">BALANCE</td>
+                                            <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">IS TERMITE</td>
+                                            <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                            <td style="font-weight: bold;">IS PACKAGE</td>
+                                            <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                        @if ($display->svc_is_termite)
+                                            <tr>
+                                                <th colspan="6" class="text-center table-light">TERMITE CASE</th>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">INITIAL SQM</td>
+                                                <td>{{ $display->svc_sqm_initial }}</td>
+                                                <td style="font-weight: bold;">WITH DEVICE</td>
+                                                <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
+                                                <td style="font-weight: bold;">DEVICE COUNT</td>
+                                                <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                                <td colspan="5">{{ $display->svc_type_treatment }}</td>
+                                            </tr>
+                                        @endif
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">SCHEDULE</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">CLIENT DATE REQUESTED</td>
+                                            <td colspan="2">
+                                                {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}
+                                            </td>
+                                            <td style="font-weight: bold;">CLIENT TIME REQUESTED</td>
+                                            <td colspan="2">
+                                                {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
+                                            </td>
+                                        </tr>
+                                        @if (!empty($display->svc_problem_description))
+                                            <tr>
+                                                <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" style="text-align: justify">
+                                                    {{ $display->svc_problem_description }}
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <hr>
+
                         <div class="row">
-                            {{-- Branch Name --}}
+                            {{-- SA Number --}}
+                            <div class="col-md-6 mb-3">
+                                <label for="svc_sa_number">
+                                    SA Number (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }}) <span class="text-muted">(Ignore starting 0 digits)</span> <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" name="svc_sa_number"
+                                    placeholder="Chemical Quantity" value="{{ $display->svc_sa_number }}" required>
+                            </div>
+
+                            {{-- Property Type --}}
+                            <div class="col-md-6 mb-3">
+                                <label>Property Type <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svc_property_type" required>
+                                    <option value="PIECES" {{ $display->svc_property_type === 'PERSONAL' ? 'selected' : '' }}>
+                                        PERSONAL</option>
+                                    <option value="MILLILITERS" {{ $display->svc_property_type === 'COMMERCIAL' ? 'selected' : '' }}>
+                                        COMMERCIAL</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        @php
+                            $isTermite = $display->svc_is_termite == 1;
+
+                            $fieldName = $isTermite ? 'svc_is_termite' : 'svc_is_package';
+                            $label = $isTermite ? 'Is Termite' : 'Is Package';
+                            $value = $isTermite ? $display->svc_is_termite : $display->svc_is_package;
+
+                            // layout control
+                            $selectCol = $isTermite ? 'col-md-6' : 'col-md-12';
+                            $sqmCol = $isTermite ? 'col-md-6' : 'col-md-4';
+                        @endphp
+
+                        <div class="row">
+
+                            <div class="{{ $selectCol }} mb-3">
+                                <label>
+                                    {{ $label }} <span class="text-danger">*</span>
+                                </label>
+
+                                <select class="form-control" name="{{ $fieldName }}" required
+                                    {{ $isTermite ? 'disabled' : '' }}>
+
+                                    <option value="1" {{ $value == 1 ? 'selected' : '' }}>YES</option>
+                                    <option value="0" {{ $value == 0 ? 'selected' : '' }}>NO</option>
+                                </select>
+
+                                {{-- IMPORTANT: keep value when disabled --}}
+                                @if ($isTermite)
+                                    <input type="hidden" name="{{ $fieldName }}" value="{{ $value }}">
+                                @endif
+                            </div>
+
+                            <div class="{{ $sqmCol }} mb-3">
+                                <label>SQM Meters <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="svc_sqm_initial"
+                                    value="{{ $display->svc_sqm_initial }}" placeholder="Initial SQM Meters">
+                            </div>
+
+                        </div>
+
+                        @if ($display->svc_is_termite)
+                            <div class="row">
+                                {{-- SQM Details --}}
+                                <div class="col-md-6 mb-3">
+                                    <label>SQM DETAILS <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="svcpat_id" id="svcpat_id_select" required>
+                                        @foreach ($termiteAreaOptions as $opt)
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_cost }}"
+                                                {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
+                                                {{ $opt->svcpat_sqm_details }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- SQM Cost (read-only, derived from selected svcpat_id) --}}
+                                <div class="col-md-6 mb-3">
+                                    <label>SQM Cost</label>
+                                    <input type="number" step="0.01" class="form-control" id="svcpat_cost_display"
+                                        placeholder="SQM Cost" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                {{-- Treatment Type --}}
+                                <div class="col-md-6 mb-3">
+                                    <label for="svc_type_treatment">
+                                        Treatment Type <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control" name="svc_type_treatment" required>
+                                        <option value="STANDARD TREATMENT">STANDARD TREATMENT</option>
+                                        <option value="HYBRID TREATMENT">HYBRID TREATMENT</option>
+                                    </select>
+                                </div>
+
+                                {{-- Device Count --}}
+                                <div class="col-md-6 mb-3" id="termiteDeviceCountCol" style="display:none;">
+                                    <label for="svc_device_count">
+                                        Device Count <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" name="svc_device_count"
+                                        placeholder="Device Count" data-device-cost="{{ $deviceCost->svcpad_cost ?? 0 }}"
+                                        required>
+                                    <small class="text-muted device-cost-hint" style="display:none;">
+                                        {{ $display->branch_name }} device price:
+                                        ₱{{ number_format($deviceCost->svcpad_cost ?? 0, 2) }} / unit
+                                    </small>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="row">
+                            {{-- Infestation --}}
                             <div class="col-md-12 mb-3">
-                                <label for="branch_name">Branch Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="add_branch_name" name="branch_name"
-                                    placeholder="Branch Name" required>
+                                <label>Infestation <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svc_infestation" required>
+                                    <option value="LOW" {{ $display->svc_infestation === 'LOW' ? 'selected' : '' }}>
+                                        LOW</option>
+                                    <option value="MID" {{ $display->svc_infestation === 'MID' ? 'selected' : '' }}>
+                                        MID</option>
+                                    <option value="HIGH" {{ $display->svc_infestation === 'HIGH' ? 'selected' : '' }}>
+                                        HIGH</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Location Price --}}
+                            <div class="{{ $display->svc_is_termite ? 'col-md-6' : 'col-md-4' }} mb-3">
+                                <label for="svc_location_price">
+                                    Location Price <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svc_location_price"
+                                    placeholder="Location Price" value="{{ $display->svc_location_price }}" required>
+                            </div>
+
+                            {{-- Service Order Price (non-termite only) --}}
+                            @if (!$display->svc_is_termite)
+                                <div class="col-md-4 mb-3">
+                                    <label for="svc_initial_price">
+                                        Service Order Price <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" name="svc_initial_price"
+                                        placeholder="Price" value="{{ $display->svc_initial_price }}" required>
+                                </div>
+                            @endif
+
+                            {{-- Final Price --}}
+                            <div class="{{ $display->svc_is_termite ? 'col-md-6' : 'col-md-4' }} mb-3">
+                                <label for="svc_final_price">Final Price</label>
+                                <input type="number" step="0.01" class="form-control" name="svc_final_price"
+                                    placeholder="Final Price" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Appointment Date --}}
+                            <div class="col-md-4 mb-3">
+                                <label>Approve Appointment Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="svca_approved_date"
+                                    value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
+                                    required>
+                            </div>
+
+                            {{-- Appointment From --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svca_approved_time_from">
+                                    Approve Time From <span class="text-danger">*</span>
+                                </label>
+                                <input type="time" class="form-control" name="svca_approved_time_from"
+                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
+                                    required>
+                            </div>
+
+                            {{-- Appointment To --}}
+                            <div class="col-md-4 mb-3">
+                                <label for="svca_approved_time_to">Approve Time To <span
+                                        class="text-danger">*</span></label>
+                                <input type="time" class="form-control" name="svca_approved_time_to"
+                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Chemical Quantity --}}
+                            <div class="col-md-6 mb-3">
+                                <label for="svc_chemical_quantity">
+                                    Chemical Quantity <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svc_chemical_quantity"
+                                    placeholder="Chemical Quantity" value="{{ $display->svc_chemical_quantity }}" required>
+                            </div>
+
+                            {{-- Chemical Metric --}}
+                            <div class="col-md-6 mb-3">
+                                <label>Chemical Metric <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svc_chemical_metric" required>
+                                    <option value="PIECES" {{ $display->svc_chemical_metric === 'PIECES' ? 'selected' : '' }}>
+                                        PIECES</option>
+                                    <option value="MILLILITERS" {{ $display->svc_chemical_metric === 'MILLILITERS' ? 'selected' : '' }}>
+                                        MILLILITERS</option>
+                                    <option value="LITERS" {{ $display->svc_chemical_metric === 'LITERS' ? 'selected' : '' }}>
+                                        LITERS</option>
+                                    <option value="MILLIGRAMS" {{ $display->svc_chemical_metric === 'MILLIGRAMS' ? 'selected' : '' }}>
+                                        MILLIGRAMS</option>
+                                    <option value="GRAMS" {{ $display->svc_chemical_metric === 'GRAMS' ? 'selected' : '' }}>
+                                        GRAMS</option>
+                                    <option value="KILOGRAMS" {{ $display->svc_chemical_metric === 'KILOGRAMS' ? 'selected' : '' }}>
+                                        KILOGRAMS</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="svc_assessment_recommendation">
+                                    Assessment Recommendation <span class="text-muted">(Optional)</span>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    name="svc_assessment_recommendation" 
+                                    rows="3" 
+                                    maxlength="500"
+                                    placeholder="Enter assessment recommendation here...">{{ $display->svc_assessment_recommendation }}</textarea>
                             </div>
                         </div>
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">
                             <span class="fa fa-close"></span> Close
                         </button>
-                        <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save Branch
+                        <button type="submit" class="btn btn-warning">
+                            <span class="fa fa-save"></span> Save Assessment
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 
-    {{-- Dynamic Search While Typing --}}
     <script>
-        document.getElementById("searchInput").addEventListener("keyup", function() {
-            let value = this.value.toLowerCase();
+        document.addEventListener('DOMContentLoaded', function() {
 
-            // Select all tables with ID containing "Table"
-            let tables = document.querySelectorAll('table[id*="Table"]');
+            // Target both modals
+            const modals = document.querySelectorAll('#assessAppointmentModal, #confirmAssessmentAppointmentModal');
 
-            tables.forEach(function(table) {
-                let rows = table.querySelectorAll("tbody tr");
+            modals.forEach(modal => {
 
-                rows.forEach(function(row) {
-                    let text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(value) ? "" : "none";
-                });
+                const locationPriceInput = modal.querySelector('[name="svc_location_price"]');
+                const initialPriceInput = modal.querySelector('[name="svc_initial_price"]');
+                const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
+
+                const packageSelect = modal.querySelector('[name="svc_is_package"]');
+                const termiteSelect = modal.querySelector('[name="svc_is_termite"]');
+                const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
+
+                // Prevent errors if fields do not exist
+                if (!locationPriceInput || !initialPriceInput || !finalPriceInput) {
+                    return;
+                }
+
+                // FINAL PRICE COMPUTATION
+                function updateFinalPrice() {
+
+                    let locationPrice = parseFloat(locationPriceInput.value) || 0;
+                    let initialPrice = parseFloat(initialPriceInput.value) || 0;
+
+                    let finalPrice = locationPrice + initialPrice;
+
+                    if (locationPrice === 0) {
+                        finalPrice = initialPrice;
+                    }
+
+                    if (initialPrice === 0) {
+                        finalPrice = locationPrice;
+                    }
+
+                    finalPriceInput.value = finalPrice.toFixed(2);
+                }
+
+                locationPriceInput.addEventListener('input', updateFinalPrice);
+                initialPriceInput.addEventListener('input', updateFinalPrice);
+
+                // Run on load
+                updateFinalPrice();
+
+                // TERMITE / PACKAGE + SQM TOGGLE (UPDATED)
+                if (sqmInput) {
+
+                    const sqmCol = sqmInput.closest('.col-md-4, .col-md-6');
+                    const packageCol = (packageSelect || termiteSelect) ?
+                        (packageSelect || termiteSelect).closest('.col-md-12, .col-md-6') :
+                        null;
+
+                    function toggleSQM() {
+
+                        // TERMITE MODE (READONLY + 6 COL LAYOUT)
+                        if (termiteSelect && termiteSelect.value == "1") {
+
+                            termiteSelect.setAttribute('disabled', true);
+
+                            sqmCol.style.display = 'block';
+
+                            sqmCol.classList.remove('col-md-4');
+                            sqmCol.classList.add('col-md-6');
+
+                            if (packageCol) {
+                                packageCol.classList.remove('col-md-12');
+                                packageCol.classList.add('col-md-6');
+                            }
+
+                            return;
+                        }
+
+                        // PACKAGE MODE (existing logic)
+                        if (packageSelect && packageSelect.value == "1") {
+
+                            sqmCol.style.display = 'block';
+
+                            if (packageCol) {
+                                packageCol.classList.remove('col-md-12');
+                                packageCol.classList.add('col-md-6');
+                            }
+
+                            sqmCol.classList.remove('col-md-4');
+                            sqmCol.classList.add('col-md-6');
+
+                        } else {
+
+                            sqmCol.style.display = 'none';
+
+                            if (packageCol) {
+                                packageCol.classList.remove('col-md-6');
+                                packageCol.classList.add('col-md-12');
+                            }
+                        }
+                    }
+
+                    toggleSQM();
+
+                    if (packageSelect) {
+                        packageSelect.addEventListener('change', toggleSQM);
+                    }
+
+                    if (termiteSelect) {
+                        termiteSelect.addEventListener('change', toggleSQM);
+                    }
+                }
+
+                // TREATMENT TYPE <-> DEVICE COUNT TOGGLE (UPDATED: hybrid adds device cost to final price)
+                const treatmentSelect = modal.querySelector('[name="svc_type_treatment"]');
+                const deviceCountInput = modal.querySelector('[name="svc_device_count"]');
+                const deviceCountCol = modal.querySelector('#termiteDeviceCountCol');
+
+                if (treatmentSelect && deviceCountCol) {
+
+                    const treatmentCol = treatmentSelect.closest('.col-md-6');
+                    const deviceCostHint = deviceCountCol.querySelector('.device-cost-hint');
+
+                    const deviceCostPerUnit = parseFloat(deviceCountInput?.getAttribute(
+                        'data-device-cost') || 0);
+
+                    // Updated final price function that factors in device cost for hybrid
+                    function updateFinalPriceWithDevice() {
+
+                        let locationPrice = parseFloat(locationPriceInput.value) || 0;
+                        let initialPrice = parseFloat(initialPriceInput.value) || 0;
+
+                        let base = 0;
+
+                        if (locationPrice === 0) {
+                            base = initialPrice;
+                        } else if (initialPrice === 0) {
+                            base = locationPrice;
+                        } else {
+                            base = locationPrice + initialPrice;
+                        }
+
+                        let deviceTotal = 0;
+
+                        if (treatmentSelect.value === 'HYBRID TREATMENT') {
+                            const deviceCount = parseInt(deviceCountInput?.value) || 0;
+                            deviceTotal = deviceCount * deviceCostPerUnit;
+                        }
+
+                        finalPriceInput.value = (base + deviceTotal).toFixed(2);
+                    }
+
+                    // Re-bind service/initial price listeners to use the device-aware function
+                    locationPriceInput.removeEventListener('input', updateFinalPrice);
+                    initialPriceInput.removeEventListener('input', updateFinalPrice);
+                    locationPriceInput.addEventListener('input', updateFinalPriceWithDevice);
+                    initialPriceInput.addEventListener('input', updateFinalPriceWithDevice);
+
+                    // Device count change also updates final price
+                    if (deviceCountInput) {
+                        deviceCountInput.addEventListener('input', updateFinalPriceWithDevice);
+                    }
+
+                    function toggleTreatmentLayout() {
+
+                        if (treatmentSelect.value === 'HYBRID TREATMENT') {
+
+                            if (treatmentCol) {
+                                treatmentCol.classList.remove('col-md-12');
+                                treatmentCol.classList.add('col-md-6');
+                            }
+
+                            deviceCountCol.style.display = '';
+
+                            if (deviceCostHint) deviceCostHint.style.display = 'block';
+
+                        } else {
+
+                            if (treatmentCol) {
+                                treatmentCol.classList.remove('col-md-6');
+                                treatmentCol.classList.add('col-md-12');
+                            }
+
+                            deviceCountCol.style.display = 'none';
+
+                            if (deviceCostHint) deviceCostHint.style.display = 'none';
+
+                            // Clear device count so it doesn't affect price when switching back to standard
+                            if (deviceCountInput) deviceCountInput.value = '';
+                        }
+
+                        // Recompute price whenever treatment type changes
+                        updateFinalPriceWithDevice();
+                    }
+
+                    treatmentSelect.addEventListener('change', toggleTreatmentLayout);
+
+                    // Run on load
+                    toggleTreatmentLayout();
+                }
+
             });
+
+            // AREA COST DISPLAY (UNCHANGED)
+            const svcpaSelect = document.getElementById('svcpaSelect');
+
+            if (svcpaSelect) {
+                svcpaSelect.addEventListener('change', function() {
+
+                    let cost = this.options[this.selectedIndex].getAttribute('data-cost');
+
+                    const areaCost = document.getElementById('areaCost');
+
+                    if (areaCost) {
+                        areaCost.value = cost ? parseFloat(cost).toFixed(2) : '';
+                    }
+                });
+            }
+
+            // TERMITE SQM DETAILS → price computation + device count toggle
+            // Scoped to termite modal only. Does NOT interfere with non-termite logic above.
+            (function() {
+                const modal = document.getElementById('assessAppointmentModal');
+                if (!modal) return;
+
+                const svcpatSelect = modal.querySelector('#svcpat_id_select');
+                const svcpatCostDisplay = modal.querySelector('#svcpat_cost_display');
+                const treatmentSelect = modal.querySelector('[name="svc_type_treatment"]');
+                const deviceCountInput = modal.querySelector('[name="svc_device_count"]');
+                const deviceCountCol = modal.querySelector('#termiteDeviceCountCol');
+                const deviceCostHint = deviceCountCol?.querySelector('.device-cost-hint');
+                const treatmentCol = treatmentSelect?.closest('.col-md-6');
+                const locationPriceInput = modal.querySelector('[name="svc_location_price"]');
+                const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
+                const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
+
+                // Only run when termite SQM select exists (termite service only)
+                if (!svcpatSelect) return;
+
+                const deviceCostPerUnit = parseFloat(
+                    deviceCountInput?.getAttribute('data-device-cost') || 0
+                );
+
+                function getSelectedSvcpatCost() {
+                    const selected = svcpatSelect.options[svcpatSelect.selectedIndex];
+                    return parseFloat(selected?.getAttribute('data-cost') || 0);
+                }
+
+                // Checks if the selected SQM detail label is the 1–50 sqm tier (upper bound <= 50)
+                function isFixedPriceTier() {
+                    const selected = svcpatSelect.options[svcpatSelect.selectedIndex];
+                    const label = selected?.text || '';
+
+                    // Match patterns like "1sqm - 50sqm", "1 sqm - 50 sqm", "1-50sqm", etc.
+                    const match = label.match(/(\d+)\s*sqm?\s*[-–to]+\s*(\d+)\s*sqm?/i);
+
+                    if (match) {
+                        const upperBound = parseInt(match[2]);
+                        return upperBound <= 50;
+                    }
+
+                    return false;
+                }
+
+                // COMPUTATION RULES:
+                // 1–50 sqm tier  → svcpat_cost as-is (fixed, no multiplication) + location price
+                // 51+  sqm tier  → svcpat_cost × sqm_meters + location price
+                // HYBRID adds    → + (device_count × svcpad_cost) on top of either
+                function updateTermiteFinalPrice() {
+                    const svcpatCost = getSelectedSvcpatCost();
+                    const sqmMeters = parseFloat(sqmInput?.value) || 0;
+                    const locationPrice = parseFloat(locationPriceInput?.value) || 0;
+                    const deviceCount = parseInt(deviceCountInput?.value) || 0;
+                    const isHybrid = treatmentSelect?.value === 'HYBRID TREATMENT';
+
+                    // Reflect the sqm cost in the read-only display field
+                    if (svcpatCostDisplay) {
+                        svcpatCostDisplay.value = svcpatCost.toFixed(2);
+                    }
+
+                    // 1–50 sqm: use svcpat_cost directly (already the fixed total from DB)
+                    // 51+ sqm:  multiply svcpat_cost × actual sqm meters entered
+                    let sqmTotal = isFixedPriceTier() ?
+                        svcpatCost :
+                        svcpatCost * sqmMeters;
+
+                    // STANDARD: sqmTotal + svc_location_price
+                    // HYBRID:   sqmTotal + svc_location_price + (device_count × svcpad_cost)
+                    let finalPrice = sqmTotal + locationPrice;
+
+                    if (isHybrid) {
+                        finalPrice += deviceCount * deviceCostPerUnit;
+                    }
+
+                    if (finalPriceInput) {
+                        finalPriceInput.value = finalPrice.toFixed(2);
+                    }
+                }
+
+                // DEVICE COUNT VISIBILITY TOGGLE (termite only)
+                function toggleTermiteDeviceCount() {
+                    if (!treatmentSelect || !deviceCountCol) return;
+
+                    const isHybrid = treatmentSelect.value === 'HYBRID TREATMENT';
+
+                    if (isHybrid) {
+
+                        if (treatmentCol) {
+                            treatmentCol.classList.remove('col-md-12');
+                            treatmentCol.classList.add('col-md-6');
+                        }
+
+                        deviceCountCol.style.display = '';
+
+                        if (deviceCostHint) deviceCostHint.style.display = 'block';
+
+                    } else {
+
+                        if (treatmentCol) {
+                            treatmentCol.classList.remove('col-md-6');
+                            treatmentCol.classList.add('col-md-12');
+                        }
+
+                        deviceCountCol.style.display = 'none';
+
+                        if (deviceCostHint) deviceCostHint.style.display = 'none';
+
+                        // Clear device count when switching back to standard
+                        if (deviceCountInput) deviceCountInput.value = '';
+                    }
+
+                    // Recompute price after toggling
+                    updateTermiteFinalPrice();
+                }
+
+                // Bind all relevant inputs
+                svcpatSelect.addEventListener('change', updateTermiteFinalPrice);
+                if (sqmInput) sqmInput.addEventListener('input', updateTermiteFinalPrice);
+                if (treatmentSelect) treatmentSelect.addEventListener('change', toggleTermiteDeviceCount);
+                if (deviceCountInput) deviceCountInput.addEventListener('input', updateTermiteFinalPrice);
+                if (locationPriceInput) locationPriceInput.addEventListener('input', updateTermiteFinalPrice);
+
+                // Run on load — toggle first so visibility is correct, then price
+                toggleTermiteDeviceCount();
+                updateTermiteFinalPrice();
+            })();
+
         });
     </script>
-@endsection
 
-public function branches_add(Request $request)
-{
-    $request->validate([
-        'branch_name' => 'required|string|max:255'
-    ]);
-
-    // Check if branch already exists (active or inactive)
-    $existingBranch = DB::table('branches')
-        ->where('branch_name', $request->branch_name)
-        ->first();
-
-    // If existing branch found
-    if ($existingBranch) {
-
-        // If inactive, reactivate it
-        if ($existingBranch->branch_active == 0) {
-
-            DB::table('branches')
-                ->where('branch_id', $existingBranch->branch_id)
-                ->update([
-                    'branch_active' => 1
-                ]);
-
-            // RESTORE RELATED RECORDS (add this block)
-            DB::table('service_package_areas')
-                ->where('branch_id', $existingBranch->branch_id)
-                ->update(['svcpa_active' => 1]);
-
-            DB::table('service_package_area_termites')
-                ->where('branch_id', $existingBranch->branch_id)
-                ->update(['svcpat_active' => 1]);
-
-            DB::table('service_package_area_devices')
-                ->where('branch_id', $existingBranch->branch_id)
-                ->update(['svcpad_active' => 1]);
-
-            DB::table('service_package_area_locations')
-                ->where('branch_id', $existingBranch->branch_id)
-                ->update(['svcpal_active' => 1]);
-
-            logUserActivity('Manage Branches', 'Reactivated branch ' . $request->branch_name);
-
-            session()->flash('successMessage', 'Existing branch has been reactivated.');
-            return redirect()->back();
-        }
-
-        // If already active
-        session()->flash('errorMessage', 'Branch already exists.');
-        return redirect()->back();
-    }
-
-    // Create new branch
-    $branch_id = DB::table('branches')->insertGetId([
-        'branch_uuid' => generateuuid(),
-        'branch_name' => $request->branch_name,
-        'branch_date_created' => Carbon::now(),
-        'branch_created_by' => session('usr_id'),
-        'branch_active' => 1
-    ]);
-
-    $areas = [
-        ['svcpa_area' => 'ATTIC', 'svcpa_cost' => 10.00],
-        ['svcpa_area' => 'BASEMENT', 'svcpa_cost' => 20.00],
-        ['svcpa_area' => 'BATHROOM', 'svcpa_cost' => 30.00],
-        ['svcpa_area' => 'BEDROOM', 'svcpa_cost' => 40.00],
-        ['svcpa_area' => 'DINING ROOM', 'svcpa_cost' => 50.00],
-        ['svcpa_area' => 'GARAGE', 'svcpa_cost' => 60.00],
-        ['svcpa_area' => 'GARDEN/YARD', 'svcpa_cost' => 70.00],
-        ['svcpa_area' => 'KITCHEN', 'svcpa_cost' => 80.00],
-        ['svcpa_area' => 'LIVING ROOM', 'svcpa_cost' => 90.00],
-        ['svcpa_area' => 'OFFICE/STUDY', 'svcpa_cost' => 100.00],
-        ['svcpa_area' => 'OTHERS', 'svcpa_cost' => 0.00],
-        ['svcpa_area' => 'STORAGE ROOM', 'svcpa_cost' => 110.00],
-        ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00],
-    ];
-
-    $servicePackageAreas = [];
-
-    foreach ($areas as $area) {
-        $servicePackageAreas[] = [
-            'svcpa_uuid' => generateuuid(),
-            'branch_id' => $branch_id,
-            'svcpa_area' => $area['svcpa_area'],
-            'svcpa_cost' => $area['svcpa_cost'],
-            'svcpa_date_created' => Carbon::now(),
-            'svcpa_created_by' => session('usr_id'),
-            'svcpa_active' => 1
-        ];
-    }
-
-    DB::table('service_package_areas')->insert($servicePackageAreas);
-
-    $termites = [
-        ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_cost' => 10000.00],
-        ['svcpat_sqm_details' => '51sqm - 100sqm', 'svcpat_cost' => 184.00],
-        ['svcpat_sqm_details' => '101sqm - 500sqm', 'svcpat_cost' => 150.00],
-        ['svcpat_sqm_details' => '501sqm - 1000sqm', 'svcpat_cost' => 120.00],
-        ['svcpat_sqm_details' => '1001sqm - 999999sqm', 'svcpat_cost' => 100.00],
-    ];
-
-    $servicePackageAreaTermites = [];
-
-    foreach ($termites as $termite) {
-        $servicePackageAreaTermites[] = [
-            'svcpat_uuid' => generateuuid(),
-            'branch_id' => $branch_id,
-            'svcpat_sqm_details' => $termite['svcpat_sqm_details'],
-            'svcpat_cost' => $termite['svcpat_cost'],
-            'svcpat_date_created' => Carbon::now(),
-            'svcpat_created_by' => session('usr_id'),
-            'svcpat_active' => 1
-        ];
-    }
-
-    DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
-
-    DB::table('service_package_area_devices')->insert([
-        'svcpad_uuid' => generateuuid(),
-        'branch_id' => $branch_id,
-        'svcpad_cost' => 15000,
-        'svcpad_date_created' => Carbon::now(),
-        'svcpad_created_by' => session('usr_id'),
-        'svcpad_active' => 1
-    ]);
-
-    DB::table('service_package_area_locations')->insert([
-        'svcpal_uuid' => generateuuid(),
-        'branch_id' => $branch_id,
-        'svcpal_first_cost' => 100.00,
-        'svcpal_succeeding_cost' => 10.00,
-        'svcpal_date_created' => Carbon::now(),
-        'svcpal_created_by' => session('usr_id'),
-        'svcpal_active' => 1,
-    ]);
-
-    logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
-    session()->flash('successMessage', 'Branch has been added.');
-    return redirect()->back();
-}
-
-in my add branch modal i have addition
-
-so below branch name add a row with 2 columns label longitude and latitude, branch_longitude and branch_latitude but the input is just readonly but both are required, so below the row for longitutde and latitude is a button pin map, so if i click pin map it will show an google iframe so first it will ask for location to turn on then pin on the location but the user can manually pin, make it simple no need for installation packages just vanilla code
+    beside final price can you add Fixed Price svc_fixed_price, so it's the same logic with final price but I'll make my final price not readonly

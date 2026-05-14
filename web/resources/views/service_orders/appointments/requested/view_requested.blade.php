@@ -696,6 +696,28 @@
 
                         <hr>
 
+                        <div class="row">
+                            {{-- SA Number --}}
+                            <div class="col-md-6 mb-3">
+                                <label for="svc_sa_number">
+                                    SA Number (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }}) <span class="text-muted">(Ignore starting 0 digits)</span> <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" name="svc_sa_number"
+                                    placeholder="Chemical Quantity" value="{{ $display->svc_sa_number }}" required>
+                            </div>
+
+                            {{-- Property Type --}}
+                            <div class="col-md-6 mb-3">
+                                <label>Property Type <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svc_property_type" required>
+                                    <option value="PIECES" {{ $display->svc_property_type === 'PERSONAL' ? 'selected' : '' }}>
+                                        PERSONAL</option>
+                                    <option value="MILLILITERS" {{ $display->svc_property_type === 'COMMERCIAL' ? 'selected' : '' }}>
+                                        COMMERCIAL</option>
+                                </select>
+                            </div>
+                        </div>
+
                         @php
                             $isTermite = $display->svc_is_termite == 1;
 
@@ -790,13 +812,14 @@
                         <div class="row">
                             {{-- Infestation --}}
                             <div class="col-md-12 mb-3">
-                                <label for="svc_infestation">
-                                    Infestation <span class="text-danger">*</span>
-                                </label>
+                                <label>Infestation <span class="text-danger">*</span></label>
                                 <select class="form-control" name="svc_infestation" required>
-                                    <option value="LOW">LOW</option>
-                                    <option value="MID">MID</option>
-                                    <option value="HIGH">HIGH</option>
+                                    <option value="LOW" {{ $display->svc_infestation === 'LOW' ? 'selected' : '' }}>
+                                        LOW</option>
+                                    <option value="MID" {{ $display->svc_infestation === 'MID' ? 'selected' : '' }}>
+                                        MID</option>
+                                    <option value="HIGH" {{ $display->svc_infestation === 'HIGH' ? 'selected' : '' }}>
+                                        HIGH</option>
                                 </select>
                             </div>
                         </div>
@@ -808,7 +831,7 @@
                                     Location Price <span class="text-danger">*</span>
                                 </label>
                                 <input type="number" step="0.01" class="form-control" name="svc_location_price"
-                                    placeholder="Location Price" required>
+                                    placeholder="Location Price" value="{{ $display->svc_location_price }}" required>
                             </div>
 
                             {{-- Service Order Price (non-termite only) --}}
@@ -856,6 +879,50 @@
                                 <input type="time" class="form-control" name="svca_approved_time_to"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
                                     required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            {{-- Chemical Quantity --}}
+                            <div class="col-md-6 mb-3">
+                                <label for="svc_chemical_quantity">
+                                    Chemical Quantity <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svc_chemical_quantity"
+                                    placeholder="Chemical Quantity" value="{{ $display->svc_chemical_quantity }}" required>
+                            </div>
+
+                            {{-- Chemical Metric --}}
+                            <div class="col-md-6 mb-3">
+                                <label>Chemical Metric <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svc_chemical_metric" required>
+                                    <option value="PIECES" {{ $display->svc_chemical_metric === 'PIECES' ? 'selected' : '' }}>
+                                        PIECES</option>
+                                    <option value="MILLILITERS" {{ $display->svc_chemical_metric === 'MILLILITERS' ? 'selected' : '' }}>
+                                        MILLILITERS</option>
+                                    <option value="LITERS" {{ $display->svc_chemical_metric === 'LITERS' ? 'selected' : '' }}>
+                                        LITERS</option>
+                                    <option value="MILLIGRAMS" {{ $display->svc_chemical_metric === 'MILLIGRAMS' ? 'selected' : '' }}>
+                                        MILLIGRAMS</option>
+                                    <option value="GRAMS" {{ $display->svc_chemical_metric === 'GRAMS' ? 'selected' : '' }}>
+                                        GRAMS</option>
+                                    <option value="KILOGRAMS" {{ $display->svc_chemical_metric === 'KILOGRAMS' ? 'selected' : '' }}>
+                                        KILOGRAMS</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="svc_assessment_recommendation">
+                                    Assessment Recommendation <span class="text-muted">(Optional)</span>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    name="svc_assessment_recommendation" 
+                                    rows="3" 
+                                    maxlength="500"
+                                    placeholder="Enter assessment recommendation here...">{{ $display->svc_assessment_recommendation }}</textarea>
                             </div>
                         </div>
                     </div>
