@@ -17,7 +17,8 @@ class ManagementController extends Controller
         $query = DB::table('branches')
             ->leftJoin('users as creator', 'branches.branch_created_by', '=', 'creator.usr_id')
             ->leftJoin('users as modifier', 'branches.branch_modified_by', '=', 'modifier.usr_id')
-            ->where('branches.branch_active', '=', '1');
+            ->where('branches.branch_active', '=', '1')
+            ->where('branches.branch_id', '!=', 1);
 
         $query->select(
             'branches.branch_id',
@@ -148,7 +149,7 @@ class ManagementController extends Controller
             ['svcpa_area' => 'KITCHEN', 'svcpa_cost' => 80.00],
             ['svcpa_area' => 'LIVING ROOM', 'svcpa_cost' => 90.00],
             ['svcpa_area' => 'OFFICE/STUDY', 'svcpa_cost' => 100.00],
-            ['svcpa_area' => 'OTHERS', 'svcpa_cost' => 120.00],
+            ['svcpa_area' => 'OTHERS', 'svcpa_cost' => 0.00],
             ['svcpa_area' => 'STORAGE ROOM', 'svcpa_cost' => 110.00],
             ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00], 
         ];
