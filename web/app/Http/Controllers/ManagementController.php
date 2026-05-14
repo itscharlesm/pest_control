@@ -148,8 +148,9 @@ class ManagementController extends Controller
             ['svcpa_area' => 'KITCHEN', 'svcpa_cost' => 80.00],
             ['svcpa_area' => 'LIVING ROOM', 'svcpa_cost' => 90.00],
             ['svcpa_area' => 'OFFICE/STUDY', 'svcpa_cost' => 100.00],
+            ['svcpa_area' => 'OTHERS', 'svcpa_cost' => 120.00],
             ['svcpa_area' => 'STORAGE ROOM', 'svcpa_cost' => 110.00],
-            ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00],
+            ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00], 
         ];
 
         $servicePackageAreas = [];
