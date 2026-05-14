@@ -95,17 +95,22 @@
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal"
-                                                    data-target="#updateBranchModal-{{ $branch->branch_id }}">
-                                                    <span class="fa fa-edit"></span>
-                                                </a>
-                                                @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
-                                                    <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+                                                @if ($branch->branch_id != 1)
+                                                    <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
                                                         data-toggle="modal"
-                                                        data-target="#deleteModal-{{ $branch->branch_id }}">
-                                                        <span class="fa fa-trash"></span>
+                                                        data-target="#updateBranchModal-{{ $branch->branch_id }}">
+                                                        <span class="fa fa-edit"></span>
                                                     </a>
+
+                                                    @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                        <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+                                                            data-toggle="modal"
+                                                            data-target="#deleteModal-{{ $branch->branch_id }}">
+                                                            <span class="fa fa-trash"></span>
+                                                        </a>
+                                                    @endif
+                                                @else
+                                                    -
                                                 @endif
                                             </td>
                                         </tr>

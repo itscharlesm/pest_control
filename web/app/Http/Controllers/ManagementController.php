@@ -17,8 +17,7 @@ class ManagementController extends Controller
         $query = DB::table('branches')
             ->leftJoin('users as creator', 'branches.branch_created_by', '=', 'creator.usr_id')
             ->leftJoin('users as modifier', 'branches.branch_modified_by', '=', 'modifier.usr_id')
-            ->where('branches.branch_active', '=', '1')
-            ->where('branches.branch_id', '!=', 1);
+            ->where('branches.branch_active', '=', '1');
 
         $query->select(
             'branches.branch_id',
@@ -192,14 +191,25 @@ class ManagementController extends Controller
             ];
         }
 
+        DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
+
         DB::table('service_package_area_devices')->insert([
             'svcpad_uuid' => generateuuid(),
             'branch_id' => $branch_id,
             'svcpad_cost' => 15000,
-            'svcpad_active' => 1
+            'svcpad_active' => 1,
+            'svcpad_date_created' => Carbon::now(),
+            'svcpad_created_by' => session('usr_id')
         ]);
 
-        DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
+        DB::table('service_package_area_locations')->insert([
+            'svcpal_uuid' => generateuuid(),
+            'branch_id' => $branch_id,
+            'svcpal_first_cost' => 100.00,
+            'svcpal_succeeding_cost' => 10.00,
+            'svcpal_date_created' => Carbon::now(),
+            'svcpal_created_by' => session('usr_id')
+        ]);
 
         logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
         session()->flash('successMessage', 'Branch has been added.');
