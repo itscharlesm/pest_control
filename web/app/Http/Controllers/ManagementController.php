@@ -150,7 +150,7 @@ class ManagementController extends Controller
             ['svcpa_area' => 'OFFICE/STUDY', 'svcpa_cost' => 100.00],
             ['svcpa_area' => 'OTHERS', 'svcpa_cost' => 0.00],
             ['svcpa_area' => 'STORAGE ROOM', 'svcpa_cost' => 110.00],
-            ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00], 
+            ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00],
         ];
 
         $servicePackageAreas = [];
@@ -617,61 +617,40 @@ class ManagementController extends Controller
             ->orderBy('branches.branch_name')
             ->get();
 
+        $locationCosts = DB::table('service_package_area_locations')
+            ->leftJoin('branches', 'service_package_area_locations.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_area_locations.svcpal_active', 1);
+
+        if ($sessionBranchId != 1) {
+            $locationCosts->where('service_package_area_locations.branch_id', $sessionBranchId);
+        }
+
+        if (!empty($search)) {
+            $locationCosts->where(function ($q) use ($search) {
+                $q->where('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $locationCosts = $locationCosts
+            ->select(
+                'service_package_area_locations.svcpal_id',
+                'service_package_area_locations.branch_id',
+                'service_package_area_locations.svcpal_first_cost',
+                'service_package_area_locations.svcpal_succeeding_cost',
+                'service_package_area_locations.svcpal_active',
+                'branches.branch_name'
+            )
+            ->orderBy('branches.branch_name')
+            ->get();
+
         return view('management.services.active', compact(
             'services',
             'termiteServices',
             'packages',
             'branches',
             'search',
-            'deviceCosts'
-        ));
-    }
-
-    public function services_deleted(Request $request)
-    {
-        $search = $request->search ?? '';
-        $sessionBranchId = session('branch_id');
-
-        // General Service Package Areas
-        $query = DB::table('service_package_areas')
-            ->leftJoin('branches', 'service_package_areas.branch_id', '=', 'branches.branch_id')
-            ->where('service_package_areas.svcpa_active', 0);
-
-        if ($sessionBranchId != 1) {
-            $query->where('service_package_areas.branch_id', $sessionBranchId);
-        }
-
-        $query->select(
-            'service_package_areas.svcpa_id',
-            'service_package_areas.branch_id',
-            'branches.branch_name',
-            'service_package_areas.svcpa_area',
-            'service_package_areas.svcpa_cost',
-            'service_package_areas.svcpa_date_created'
-        );
-
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('service_package_areas.svcpa_area', 'LIKE', "%$search%")
-                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
-            });
-        }
-
-        $query->orderBy('branches.branch_name')
-            ->orderBy('service_package_areas.svcpa_area');
-
-        $services = $query->paginate(500);
-
-        // Branches (for any dropdowns)
-        $branches = DB::table('branches')
-            ->where('branch_active', 1)
-            ->orderBy('branch_name')
-            ->get();
-
-        return view('management.services.deleted', compact(
-            'services',
-            'branches',
-            'search'
+            'deviceCosts',
+            'locationCosts'
         ));
     }
 
@@ -838,6 +817,56 @@ class ManagementController extends Controller
 
         // Flash message
         session()->flash('successMessage', 'Device cost has been updated.');
+
+        return redirect()->back();
+    }
+
+    public function services_area_location_cost_update(Request $request, $svcpal_id)
+    {
+        // Validate request
+        $request->validate([
+            'svcpal_first_cost' => 'required|numeric',
+            'svcpal_succeeding_cost' => 'required|numeric',
+        ]);
+
+        // Get current record
+        $location = DB::table('service_package_area_locations')
+            ->leftJoin('branches', 'service_package_area_locations.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_area_locations.svcpal_id', $svcpal_id)
+            ->select(
+                'service_package_area_locations.*',
+                'branches.branch_name'
+            )
+            ->first();
+
+        // Normalize values for logging
+        $format = fn($value) => number_format((float) $value, 2, '.', '');
+
+        $oldFirst = $location ? $format($location->svcpal_first_cost) : '0.00';
+        $oldSucceeding = $location ? $format($location->svcpal_succeeding_cost) : '0.00';
+
+        $newFirst = $format($request->svcpal_first_cost);
+        $newSucceeding = $format($request->svcpal_succeeding_cost);
+
+        // Update record
+        DB::table('service_package_area_locations')
+            ->where('svcpal_id', $svcpal_id)
+            ->update([
+                'svcpal_first_cost' => $request->svcpal_first_cost,
+                'svcpal_succeeding_cost' => $request->svcpal_succeeding_cost,
+                'svcpal_date_modified' => Carbon::now(),
+                'svcpal_modified_by' => session('usr_id'),
+            ]);
+
+        // Log activity (same style as device function)
+        logUserActivity(
+            'Manage Location Costing',
+            'Updated location cost in ' . $location->branch_name .
+            ' from cost ' . $oldFirst . ' / ' . $oldSucceeding .
+            ' to ' . $newFirst . ' / ' . $newSucceeding
+        );
+
+        session()->flash('successMessage', 'Location cost has been updated.');
 
         return redirect()->back();
     }

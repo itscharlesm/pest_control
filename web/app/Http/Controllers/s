@@ -1,138 +1,45 @@
-sample:
-public function services_area_cost_update(Request $request, $svcpa_id)
-    {
-        // Get current record
-        $service = DB::table('service_package_areas')
-            ->where('svcpa_id', $svcpa_id)
-            ->first();
+public function services_area_location_cost_update(Request $request, $svcpal_id)
+{
+    // Validate request
+    $request->validate([
+        'svcpal_cost' => 'required|numeric',
+    ]);
 
-        // Normalize values for consistent logging
-        $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
+    // Get current record
+    $location = DB::table('service_package_area_locations')
+        ->leftJoin('branches', 'service_package_area_locations.branch_id', '=', 'branches.branch_id')
+        ->where('service_package_area_locations.svcpal_id', $svcpal_id)
+        ->select(
+            'service_package_area_locations.*',
+            'branches.branch_name'
+        )
+        ->first();
 
-        $oldCost = $service ? $formatCost($service->svcpa_cost) : '0.00';
-        $newCost = $formatCost($request->svcpa_cost);
+    // Normalize values for logging
+    $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
 
-        // Update record
-        DB::table('service_package_areas')
-            ->where('svcpa_id', $svcpa_id)
-            ->update([
-                'svcpa_cost' => $request->svcpa_cost,
-                'svcpa_date_modified' => Carbon::now(),
-                'svcpa_modified_by' => session('usr_id'),
-            ]);
+    $oldCost = $location ? $formatCost($location->svcpal_cost) : '0.00';
+    $newCost = $formatCost($request->svcpal_cost);
 
-        // Log activity
-        logUserActivity(
-            'Manage Service Pricing',
-            'Updated service area ' . $request->svcpa_area .
-            ' in ' . $request->branch_name .
-            ' from cost ' . $oldCost .
-            ' to ' . $newCost
-        );
+    // Update record
+    DB::table('service_package_area_locations')
+        ->where('svcpal_id', $svcpal_id)
+        ->update([
+            'svcpal_cost' => $request->svcpal_cost,
+            'svcpal_date_modified' => Carbon::now(),
+            'svcpal_modified_by' => session('usr_id'),
+        ]);
 
-        session()->flash('successMessage', 'Service cost has been updated.');
+    // Log activity
+    logUserActivity(
+        'Manage Location Costing',
+        'Updated location cost in ' . $location->branch_name .
+        ' from cost ' . $oldCost .
+        ' to ' . $newCost
+    );
 
-        return redirect()->back();
-    }
+    // Flash message
+    session()->flash('successMessage', 'Location cost has been updated.');
 
-    new:
-    Route::post('management/services/area/device/cost/update/{svcpad_id}', [ManagementController::class, 'services_area_device_cost_update']);
-
-    <div class="mt-4">
-        <div class="d-flex align-items-center mb-2">
-            <span class="fa fa-microchip mr-2"></span>
-            <strong>Device Costing</strong>
-        </div>
-
-        <table class="table table-bordered table-sm table-hover">
-            <thead class="thead-light">
-                <tr>
-                    <th style="text-align:center; vertical-align:middle;">
-                        Branch
-                    </th>
-                    <th style="text-align:center; vertical-align:middle;">
-                        Cost
-                    </th>
-                    <th style="text-align:center; vertical-align:middle;" width="60">
-                        Action
-                    </th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach ($deviceCosts as $device)
-                    <tr>
-                        <td style="vertical-align:middle;">
-                            {{ $device->branch_name }}
-                        </td>
-
-                        <td style="vertical-align:middle; text-align:center;">
-                            ₱ {{ number_format($device->svcpad_cost, 2) }}
-                        </td>
-
-                        <td style="vertical-align:middle; text-align:center;">
-                            <a class="btn btn-warning btn-sm" href="javascript:void(0)"
-                                data-toggle="modal"
-                                data-target="#editDeviceCostModal-{{ $device->svcpad_id }}">
-                                <span class="fa fa-edit"></span>
-                            </a>
-                        </td>
-                    </tr>
-
-                    {{-- Edit Device Cost Modal --}}
-                    <div class="modal fade"
-                        id="editDeviceCostModal-{{ $device->svcpad_id }}" tabindex="-1"
-                        role="dialog" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <form
-                                action="{{ url('management/services/area/device/cost/update/', $device->svcpad_id) }}"
-                                method="POST">
-                                @csrf
-                                <div class="modal-content">
-                                    <div class="modal-header bg-warning text-white">
-                                        <h5 class="modal-title text-black">
-                                            Edit Device Cost
-                                        </h5>
-
-                                        <button type="button" class="close"
-                                            data-dismiss="modal">
-                                            <span>&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label>Branch</label>
-
-                                            <input type="text" class="form-control"
-                                                value="{{ $device->branch_name }}"
-                                                readonly>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>
-                                                Cost (₱)
-                                                <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="number" step="0.01"
-                                                class="form-control" name="svcpad_cost"
-                                                value="{{ $device->svcpad_cost }}"
-                                                required>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-dismiss="modal">
-                                            <span class="fa fa-close"></span> Close
-                                        </button>
-
-                                        <button type="submit" class="btn btn-warning">
-                                            <span class="fa fa-save"></span> Update
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+    return redirect()->back();
+}
