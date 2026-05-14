@@ -191,6 +191,7 @@ class ManagementController extends Controller
         }
 
         DB::table('service_package_area_devices')->insert([
+            'svcpad_uuid' => generateuuid(),
             'branch_id' => $branch_id,
             'svcpad_cost' => 15000,
             'svcpad_active' => 1
@@ -726,12 +727,12 @@ class ManagementController extends Controller
         ]);
 
         // Get current record
-        $device = DB::table('service_package_area_devices as spad')
-            ->leftJoin('branches as b', 'spad.branch_id', '=', 'b.branch_id')
-            ->where('spad.svcpad_id', $svcpad_id)
+        $device = DB::table('service_package_area_devices')
+            ->leftJoin('branches', 'service_package_area_devices.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_area_devices.svcpad_id', $svcpad_id)
             ->select(
-                'spad.*',
-                'b.branch_name'
+                'service_package_area_devices.*',
+                'branches.branch_name'
             )
             ->first();
 
