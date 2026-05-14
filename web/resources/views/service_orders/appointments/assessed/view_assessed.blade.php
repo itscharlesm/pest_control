@@ -126,8 +126,8 @@
                                         <td style="font-weight: bold;">FINAL PRICE</td>
                                         <td>₱{{ number_format($display->svc_balance, 2) }}</td>
 
-                                        <td style="font-weight: bold;">SERVICE PRICE</td>
-                                        <td>₱{{ number_format($display->svc_service_price, 2) }}</td>
+                                        <td style="font-weight: bold;">LOCATION PRICE</td>
+                                        <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
                                     </tr>
 
                                     <tr>

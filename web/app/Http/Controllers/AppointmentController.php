@@ -80,7 +80,7 @@ class AppointmentController extends Controller
                 'services.svc_status',
                 'services.svc_infestation',
                 'services.svc_initial_price',
-                'services.svc_service_price',
+                'services.svc_location_price',
                 'services.svc_final_price',
                 'services.svc_balance',
                 'services.svc_payment_status',
@@ -424,7 +424,7 @@ class AppointmentController extends Controller
         $request->validate([
             'svc_id' => 'required',
             'svc_infestation' => 'required',
-            'svc_service_price' => 'required|numeric',
+            'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
             'svca_approved_date' => 'required',
             'svca_approved_time_from' => 'required',
@@ -434,7 +434,7 @@ class AppointmentController extends Controller
         $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
-        $servicePrice = $request->svc_service_price;
+        $servicePrice = $request->svc_location_price;
         $finalPrice = $request->svc_final_price;
 
         // Fetch existing service record
@@ -470,7 +470,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $sqmInitial,
                     'svc_status' => 'CONFIRM ASSESSMENT',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
@@ -502,7 +502,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
                     'svc_status' => 'CONFIRM ASSESSMENT',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_initial_price' => $request->svc_initial_price ?? $service->svc_initial_price,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
@@ -537,7 +537,7 @@ class AppointmentController extends Controller
         $request->validate([
             'svc_id' => 'required',
             'svc_infestation' => 'required',
-            'svc_service_price' => 'required|numeric',
+            'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
             'svca_approved_date' => 'required',
             'svca_approved_time_from' => 'required',
@@ -547,7 +547,7 @@ class AppointmentController extends Controller
         $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
-        $servicePrice = $request->svc_service_price;
+        $servicePrice = $request->svc_location_price;
         $finalPrice = $request->svc_final_price;
 
         // Fetch existing service record
@@ -583,7 +583,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $sqmInitial,
                     'svc_status' => 'ASSESSED',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
@@ -615,7 +615,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
                     'svc_status' => 'ASSESSED',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_initial_price' => $request->svc_initial_price ?? $service->svc_initial_price,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
@@ -677,7 +677,7 @@ class AppointmentController extends Controller
                 'services.svc_infestation',
                 'services.svc_initial_price',
                 'services.svc_device_price',
-                'services.svc_service_price',
+                'services.svc_location_price',
                 'services.svc_final_price',
                 'services.svc_balance',
                 'services.svc_payment_status',
