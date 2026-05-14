@@ -371,7 +371,107 @@
     {{-- Leaflet JS --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    {{-- Branch Map Logic --}}
+    {{-- Add Branch Map Logic --}}
+    <script>
+        let branchMap = null;
+        let branchMarker = null;
+        let mapInitialized = false;
+
+        document.getElementById('pinMapBtn').addEventListener('click', function() {
+            const mapContainer = document.getElementById('mapContainer');
+
+            if (mapContainer.style.display === 'none') {
+                mapContainer.style.display = 'block';
+
+                if (!mapInitialized) {
+                    initBranchMap();
+                } else {
+                    // Leaflet needs a size invalidation when shown after being hidden
+                    setTimeout(() => branchMap.invalidateSize(), 100);
+                }
+            } else {
+                mapContainer.style.display = 'none';
+            }
+        });
+
+        function initBranchMap() {
+            mapInitialized = true;
+
+            const defaultLat = 7.1907;
+            const defaultLng = 125.4553;
+
+            branchMap = L.map('branchMap').setView([defaultLat, defaultLng], 13);
+
+            // OpenStreetMap tiles - free, no API key
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19,
+            }).addTo(branchMap);
+
+            // Try to get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        branchMap.setView([lat, lng], 15);
+                    },
+                    function() {
+                        // Denied - stay on default
+                    }
+                );
+            }
+
+            // Click map to place marker
+            branchMap.on('click', function(e) {
+                placeMarker(e.latlng);
+            });
+        }
+
+        function placeMarker(latlng) {
+            if (branchMarker) {
+                branchMap.removeLayer(branchMarker);
+            }
+
+            branchMarker = L.marker(latlng, {
+                draggable: true
+            }).addTo(branchMap);
+            branchMarker.bindPopup('📍 Branch Location').openPopup();
+
+            updateCoordinates(latlng);
+
+            branchMarker.on('dragend', function(event) {
+                updateCoordinates(event.target.getLatLng());
+            });
+        }
+
+        function updateCoordinates(latlng) {
+            document.getElementById('add_branch_latitude').value = latlng.lat.toFixed(7);
+            document.getElementById('add_branch_longitude').value = latlng.lng.toFixed(7);
+        }
+
+        // Reset when modal closes
+        $('#addBranchModal').on('hidden.bs.modal', function() {
+            document.getElementById('add_branch_longitude').value = '';
+            document.getElementById('add_branch_latitude').value = '';
+            document.getElementById('mapContainer').style.display = 'none';
+
+            if (branchMarker && branchMap) {
+                branchMap.removeLayer(branchMarker);
+                branchMarker = null;
+            }
+
+            // Full reset so geolocation re-runs on next open
+            if (branchMap) {
+                branchMap.remove();
+                branchMap = null;
+            }
+
+            mapInitialized = false;
+        });
+    </script>
+
+    {{-- Update Branch Map Logic --}}
     <script>
         const updateMapInstances = {};
 
