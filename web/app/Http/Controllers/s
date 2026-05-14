@@ -1,45 +1,413 @@
-public function services_area_location_cost_update(Request $request, $svcpal_id)
+@extends('layouts.themes.main')
+
+@section('content')
+    {{-- Content Header --}}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Branches</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item">
+                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
+                        </li>
+                        <li class="breadcrumb-item">Management</li>
+                        <li class="breadcrumb-item active">Branches</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <section class="content">
+        @include('layouts.partials.onclick')
+        @include('layouts.partials.alerts')
+        @include('layouts.partials.modal_style')
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-body overflow-auto">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <a class="btn btn-danger btn-md mb-3" href="{{ url('management/branches/deleted') }}">
+                                <span class="fa fa-archive"></span> Deleted Branches
+                            </a>
+                            @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                <button type="button" class="btn btn-success mb-3" data-toggle="modal"
+                                    data-target="#addBranchModal">
+                                    <span class="fa fa-plus"></span> Add Branch
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Table Column -->
+                        <div class="col-lg-12 col-md-7">
+                            <form method="GET" action="{{ url('management/branches/active') }}" class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" name="search" id="searchInput" class="form-control"
+                                        placeholder="Search branches..." value="{{ request('search') }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="fa fa-search"></span> Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <table id="profilingTable" class="table table-hover table-bordered table-sm responsive">
+                                <thead>
+                                    <tr>
+                                        <th style="vertical-align: middle; text-align: center">No</th>
+                                        <th style="vertical-align: middle; text-align: center">Branch</th>
+                                        <th style="vertical-align: middle; text-align: center">Created By</th>
+                                        <th style="vertical-align: middle; text-align: center">Modified By</th>
+                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($branches as $branch)
+                                        <tr>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $loop->iteration }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $branch->branch_name }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                @if (!empty($branch->created_first_name))
+                                                    {{ $branch->created_first_name }} {{ $branch->created_last_name }} -
+                                                    {{ \Carbon\Carbon::parse($branch->branch_date_created)->format('m/d/Y | h:i A') }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                @if (!empty($branch->modified_first_name))
+                                                    {{ $branch->modified_first_name }}
+                                                    {{ $branch->modified_last_name }} -
+                                                    {{ \Carbon\Carbon::parse($branch->branch_date_modified)->format('m/d/Y | h:i A') }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                @if ($branch->branch_id != 1)
+                                                    <a class="btn btn-warning btn-sm mb-1" href="javascript:void(0)"
+                                                        data-toggle="modal"
+                                                        data-target="#updateBranchModal-{{ $branch->branch_id }}">
+                                                        <span class="fa fa-edit"></span>
+                                                    </a>
+
+                                                    @if (session('SUPERADMIN') == '1' || session('ADMIN') == '1')
+                                                        <a class="btn btn-danger btn-sm mb-1" href="javascript:void(0)"
+                                                            data-toggle="modal"
+                                                            data-target="#deleteModal-{{ $branch->branch_id }}">
+                                                            <span class="fa fa-trash"></span>
+                                                        </a>
+                                                    @endif
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                        </tr>
+
+                                        {{-- Update Branch Modal --}}
+                                        <div class="modal fade" id="updateBranchModal-{{ $branch->branch_id }}" tabindex="-1"
+                                                role="dialog" aria-labelledby="updateBranchModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-xs" role="document">
+                                                <form
+                                                    action="{{ url('management/branches/update/' . $branch->branch_id) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-black">
+                                                            <h5 class="modal-title text-black"
+                                                                id="updateBranchModalLabel-{{ $branch->branch_id }}">
+                                                                <span class="fa fa-edit"></span> Update Branch
+                                                            </h5>
+
+                                                            <button type="button" class="close text-black"
+                                                                data-dismiss="modal">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="modal-body">
+                                                            {{-- Branch Name --}}
+                                                            <div class="form-group">
+                                                                <label>Branch Name <span
+                                                                        class="text-danger">*</span></label>
+                                                                <input type="text" class="form-control"
+                                                                    name="branch_name" value="{{ $branch->branch_name }}"
+                                                                    required>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+
+                                                            <button type="submit" class="btn btn-warning">
+                                                                <span class="fa fa-save"></span> Update
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                        {{-- Delete Modal --}}
+                                        <div class="modal fade" id="deleteModal-{{ $branch->branch_id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ManagementController@branches_delete', [$branch->branch_id]) }}">
+                                                        @csrf
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                                                Please Confirm
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to <strong>DELETE</strong> branch -
+                                                                <strong>{{ $branch->branch_name }}</strong>?
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <span class="fa fa-trash"></span> Confirm Delete
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Add Branch Modal --}}
+    <div class="modal fade" id="addBranchModal" tabindex="-1" role="dialog" aria-labelledby="addBranchModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xs" role="document">
+            <form action="{{ url('management/branches/add') }}" method="POST">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white" id="addBranchModalLabel">
+                            <span class="fa fa-plus text-white"></span> Add Branch
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="row">
+                            {{-- Branch Name --}}
+                            <div class="col-md-12 mb-3">
+                                <label for="branch_name">Branch Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="add_branch_name" name="branch_name"
+                                    placeholder="Branch Name" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save Branch
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Dynamic Search While Typing --}}
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            let value = this.value.toLowerCase();
+
+            // Select all tables with ID containing "Table"
+            let tables = document.querySelectorAll('table[id*="Table"]');
+
+            tables.forEach(function(table) {
+                let rows = table.querySelectorAll("tbody tr");
+
+                rows.forEach(function(row) {
+                    let text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(value) ? "" : "none";
+                });
+            });
+        });
+    </script>
+@endsection
+
+public function branches_add(Request $request)
 {
-    // Validate request
     $request->validate([
-        'svcpal_cost' => 'required|numeric',
+        'branch_name' => 'required|string|max:255'
     ]);
 
-    // Get current record
-    $location = DB::table('service_package_area_locations')
-        ->leftJoin('branches', 'service_package_area_locations.branch_id', '=', 'branches.branch_id')
-        ->where('service_package_area_locations.svcpal_id', $svcpal_id)
-        ->select(
-            'service_package_area_locations.*',
-            'branches.branch_name'
-        )
+    // Check if branch already exists (active or inactive)
+    $existingBranch = DB::table('branches')
+        ->where('branch_name', $request->branch_name)
         ->first();
 
-    // Normalize values for logging
-    $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
+    // If existing branch found
+    if ($existingBranch) {
 
-    $oldCost = $location ? $formatCost($location->svcpal_cost) : '0.00';
-    $newCost = $formatCost($request->svcpal_cost);
+        // If inactive, reactivate it
+        if ($existingBranch->branch_active == 0) {
 
-    // Update record
-    DB::table('service_package_area_locations')
-        ->where('svcpal_id', $svcpal_id)
-        ->update([
-            'svcpal_cost' => $request->svcpal_cost,
-            'svcpal_date_modified' => Carbon::now(),
-            'svcpal_modified_by' => session('usr_id'),
-        ]);
+            DB::table('branches')
+                ->where('branch_id', $existingBranch->branch_id)
+                ->update([
+                    'branch_active' => 1
+                ]);
 
-    // Log activity
-    logUserActivity(
-        'Manage Location Costing',
-        'Updated location cost in ' . $location->branch_name .
-        ' from cost ' . $oldCost .
-        ' to ' . $newCost
-    );
+            // RESTORE RELATED RECORDS (add this block)
+            DB::table('service_package_areas')
+                ->where('branch_id', $existingBranch->branch_id)
+                ->update(['svcpa_active' => 1]);
 
-    // Flash message
-    session()->flash('successMessage', 'Location cost has been updated.');
+            DB::table('service_package_area_termites')
+                ->where('branch_id', $existingBranch->branch_id)
+                ->update(['svcpat_active' => 1]);
 
+            DB::table('service_package_area_devices')
+                ->where('branch_id', $existingBranch->branch_id)
+                ->update(['svcpad_active' => 1]);
+
+            DB::table('service_package_area_locations')
+                ->where('branch_id', $existingBranch->branch_id)
+                ->update(['svcpal_active' => 1]);
+
+            logUserActivity('Manage Branches', 'Reactivated branch ' . $request->branch_name);
+
+            session()->flash('successMessage', 'Existing branch has been reactivated.');
+            return redirect()->back();
+        }
+
+        // If already active
+        session()->flash('errorMessage', 'Branch already exists.');
+        return redirect()->back();
+    }
+
+    // Create new branch
+    $branch_id = DB::table('branches')->insertGetId([
+        'branch_uuid' => generateuuid(),
+        'branch_name' => $request->branch_name,
+        'branch_date_created' => Carbon::now(),
+        'branch_created_by' => session('usr_id'),
+        'branch_active' => 1
+    ]);
+
+    $areas = [
+        ['svcpa_area' => 'ATTIC', 'svcpa_cost' => 10.00],
+        ['svcpa_area' => 'BASEMENT', 'svcpa_cost' => 20.00],
+        ['svcpa_area' => 'BATHROOM', 'svcpa_cost' => 30.00],
+        ['svcpa_area' => 'BEDROOM', 'svcpa_cost' => 40.00],
+        ['svcpa_area' => 'DINING ROOM', 'svcpa_cost' => 50.00],
+        ['svcpa_area' => 'GARAGE', 'svcpa_cost' => 60.00],
+        ['svcpa_area' => 'GARDEN/YARD', 'svcpa_cost' => 70.00],
+        ['svcpa_area' => 'KITCHEN', 'svcpa_cost' => 80.00],
+        ['svcpa_area' => 'LIVING ROOM', 'svcpa_cost' => 90.00],
+        ['svcpa_area' => 'OFFICE/STUDY', 'svcpa_cost' => 100.00],
+        ['svcpa_area' => 'OTHERS', 'svcpa_cost' => 0.00],
+        ['svcpa_area' => 'STORAGE ROOM', 'svcpa_cost' => 110.00],
+        ['svcpa_area' => 'WHOLE PROPERTY', 'svcpa_cost' => 120.00],
+    ];
+
+    $servicePackageAreas = [];
+
+    foreach ($areas as $area) {
+        $servicePackageAreas[] = [
+            'svcpa_uuid' => generateuuid(),
+            'branch_id' => $branch_id,
+            'svcpa_area' => $area['svcpa_area'],
+            'svcpa_cost' => $area['svcpa_cost'],
+            'svcpa_date_created' => Carbon::now(),
+            'svcpa_created_by' => session('usr_id'),
+            'svcpa_active' => 1
+        ];
+    }
+
+    DB::table('service_package_areas')->insert($servicePackageAreas);
+
+    $termites = [
+        ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_cost' => 10000.00],
+        ['svcpat_sqm_details' => '51sqm - 100sqm', 'svcpat_cost' => 184.00],
+        ['svcpat_sqm_details' => '101sqm - 500sqm', 'svcpat_cost' => 150.00],
+        ['svcpat_sqm_details' => '501sqm - 1000sqm', 'svcpat_cost' => 120.00],
+        ['svcpat_sqm_details' => '1001sqm - 999999sqm', 'svcpat_cost' => 100.00],
+    ];
+
+    $servicePackageAreaTermites = [];
+
+    foreach ($termites as $termite) {
+        $servicePackageAreaTermites[] = [
+            'svcpat_uuid' => generateuuid(),
+            'branch_id' => $branch_id,
+            'svcpat_sqm_details' => $termite['svcpat_sqm_details'],
+            'svcpat_cost' => $termite['svcpat_cost'],
+            'svcpat_date_created' => Carbon::now(),
+            'svcpat_created_by' => session('usr_id'),
+            'svcpat_active' => 1
+        ];
+    }
+
+    DB::table('service_package_area_termites')->insert($servicePackageAreaTermites);
+
+    DB::table('service_package_area_devices')->insert([
+        'svcpad_uuid' => generateuuid(),
+        'branch_id' => $branch_id,
+        'svcpad_cost' => 15000,
+        'svcpad_date_created' => Carbon::now(),
+        'svcpad_created_by' => session('usr_id'),
+        'svcpad_active' => 1
+    ]);
+
+    DB::table('service_package_area_locations')->insert([
+        'svcpal_uuid' => generateuuid(),
+        'branch_id' => $branch_id,
+        'svcpal_first_cost' => 100.00,
+        'svcpal_succeeding_cost' => 10.00,
+        'svcpal_date_created' => Carbon::now(),
+        'svcpal_created_by' => session('usr_id'),
+        'svcpal_active' => 1,
+    ]);
+
+    logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
+    session()->flash('successMessage', 'Branch has been added.');
     return redirect()->back();
 }
+
+in my add branch modal i have addition
+
+so below branch name add a row with 2 columns label longitude and latitude, branch_longitude and branch_latitude but the input is just readonly but both are required, so below the row for longitutde and latitude is a button pin map, so if i click pin map it will show an google iframe so first it will ask for location to turn on then pin on the location but the user can manually pin, make it simple no need for installation packages just vanilla code

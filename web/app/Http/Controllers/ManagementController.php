@@ -97,7 +97,9 @@ class ManagementController extends Controller
     public function branches_add(Request $request)
     {
         $request->validate([
-            'branch_name' => 'required|string|max:255'
+            'branch_name' => 'required|string|max:255',
+            'branch_longitude' => 'required|string|max:255',
+            'branch_latitude' => 'required|string|max:255'
         ]);
 
         // Check if branch already exists (active or inactive)
@@ -149,6 +151,8 @@ class ManagementController extends Controller
         $branch_id = DB::table('branches')->insertGetId([
             'branch_uuid' => generateuuid(),
             'branch_name' => $request->branch_name,
+            'branch_longitude' => $request->branch_longitude,
+            'branch_latitude' => $request->branch_latitude,
             'branch_date_created' => Carbon::now(),
             'branch_created_by' => session('usr_id'),
             'branch_active' => 1
