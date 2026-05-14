@@ -122,6 +122,13 @@
                         <ul class="nav nav-treeview">
 
                             <li class="nav-item">
+                                <a href="" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    <p>CREATE</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
                                 <a href="{{ action('App\Http\Controllers\AppointmentController@requested_appointments') }}"
                                     class="nav-link {{ request()->is('service/orders/appointments/requested*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>

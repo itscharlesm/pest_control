@@ -71,7 +71,7 @@
                         <strong style="color: red;">SERVICE ORDER</strong>
 
                         <strong style="position: absolute; right: 0; top: 0;">
-                            SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }}
+                            SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }}
                         </strong>
                     </div>
                     <div class="row">

@@ -71,7 +71,7 @@
                         <strong style="color: red;">SERVICE ORDER</strong>
 
                         <strong style="position: absolute; right: 0; top: 0;">
-                            SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }}
+                            SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }}
                         </strong>
                     </div>
                     <div class="row">
@@ -586,7 +586,7 @@
 
                     <div class="modal-header bg-warning text-black">
                         <h5 class="modal-title text-black">Assess Requested Appointment
-                            (SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }})</h5>
+                            (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }})</h5>
                         <button type="button" class="close" data-dismiss="modal">
                             <span>&times;</span>
                         </button>
@@ -884,7 +884,7 @@
 
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title text-white">Confirm Assessment
-                            (SA-{{ str_pad($display->svc_id, 6, '0', STR_PAD_LEFT) }})</h5>
+                            (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }})</h5>
                         <button type="button" class="close" data-dismiss="modal">
                             <span>&times;</span>
                         </button>
