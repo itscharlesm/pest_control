@@ -71,6 +71,8 @@ class _ClientBookingLocationPageState extends State<ClientBookingLocationPage> {
   }
 
   void _showMessage(String message) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -110,6 +112,8 @@ class _ClientBookingLocationPageState extends State<ClientBookingLocationPage> {
 
       final data = jsonDecode(response.body);
 
+      if (!mounted) return;
+
       if (data['success'] == true) {
         final List addressData = data['data'] ?? [];
 
@@ -140,9 +144,10 @@ class _ClientBookingLocationPageState extends State<ClientBookingLocationPage> {
         );
 
         setState(() {
-          savedAddresses = mappedAddresses;
+          savedAddresses = List<Map<String, dynamic>>.from(mappedAddresses);
 
           if (activeAddress.isNotEmpty) {
+            selectedAddressData = Map<String, dynamic>.from(activeAddress);
             selectedSavedAddressId = activeAddress['id'].toString();
             selectedSavedAddress = activeAddress['address'];
           }
@@ -171,24 +176,23 @@ class _ClientBookingLocationPageState extends State<ClientBookingLocationPage> {
       appBar: const AppTitleHeader(
         title: 'Book Service',
       ),
-      body: Column(
-        children: [
-          const BookingStepIndicator(currentStep: 1),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-              child: Column(
-                children: [
-                  _introCard(),
-                  const SizedBox(height: 18),
-                 if (isLoadingAddresses)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  else
+      body: isLoadingAddresses
+      ? const Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.primaryRed,
+          ),
+        )
+      : Column(
+          children: [
+            const BookingStepIndicator(currentStep: 1),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(20, 18, 20, 24),
+                child: Column(
+                  children: [
+                    _introCard(),
+                    SizedBox(height: 18),
+
                     BookingSavedAddressCard(
                       addresses: savedAddresses,
                       selectedAddressId: selectedSavedAddressId,
@@ -204,14 +208,14 @@ class _ClientBookingLocationPageState extends State<ClientBookingLocationPage> {
                       onAddNewAddress: _openAddAddressSheet,
                     ),
 
-                  const SizedBox(height: 12),
-                ],
+                    SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
-          ),
-          _bottomButton(),
-        ],
-      ),
+            _bottomButton(),
+          ],
+        ),
     );
   }
 
@@ -276,6 +280,7 @@ class _ClientBookingLocationPageState extends State<ClientBookingLocationPage> {
         }),
       );
     } catch (e) {
+      if (!mounted) return;
       _showMessage('Unable to update selected address.');
     }
   }
