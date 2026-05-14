@@ -406,7 +406,7 @@
                                                             Branch
                                                         </th>
                                                         <th style="text-align:center; vertical-align:middle;">
-                                                            First 5KM Cost
+                                                            First 10KM Cost
                                                         </th>
                                                         <th style="text-align:center; vertical-align:middle;">
                                                             Succeeding KM Cost
@@ -471,7 +471,7 @@
 
                                                                             <div class="form-group">
                                                                                 <label>
-                                                                                    First 5KM Cost (₱)
+                                                                                    First 10KM Cost (₱)
                                                                                     <span class="text-danger">*</span>
                                                                                 </label>
                                                                                 <input type="number" step="0.01"
