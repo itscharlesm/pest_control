@@ -197,9 +197,9 @@ class ManagementController extends Controller
             'svcpad_uuid' => generateuuid(),
             'branch_id' => $branch_id,
             'svcpad_cost' => 15000,
-            'svcpad_active' => 1,
             'svcpad_date_created' => Carbon::now(),
-            'svcpad_created_by' => session('usr_id')
+            'svcpad_created_by' => session('usr_id'),
+            'svcpad_active' => 1
         ]);
 
         DB::table('service_package_area_locations')->insert([
@@ -208,7 +208,8 @@ class ManagementController extends Controller
             'svcpal_first_cost' => 100.00,
             'svcpal_succeeding_cost' => 10.00,
             'svcpal_date_created' => Carbon::now(),
-            'svcpal_created_by' => session('usr_id')
+            'svcpal_created_by' => session('usr_id'),
+            'svcpal_active' => 1,
         ]);
 
         logUserActivity('Manage Branches', 'Added new branch ' . $request->branch_name);
@@ -243,12 +244,41 @@ class ManagementController extends Controller
             return redirect()->back();
         }
 
+        // Deactivate branch
         DB::table('branches')
             ->where('branch_id', '=', $branch_id)
             ->update([
                 'branch_date_modified' => Carbon::now(),
                 'branch_modified_by' => session('usr_id'),
                 'branch_active' => 0
+            ]);
+
+        // Deactivate related service package areas
+        DB::table('service_package_areas')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpa_active' => 0
+            ]);
+
+        // Deactivate related termites
+        DB::table('service_package_area_termites')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpat_active' => 0
+            ]);
+
+        // Deactivate related devices
+        DB::table('service_package_area_devices')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpad_active' => 0
+            ]);
+
+        // Deactivate related locations
+        DB::table('service_package_area_locations')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpal_active' => 0
             ]);
 
         logUserActivity('Manage Branches', 'Deleted branch ' . $branch->branch_name);
@@ -268,12 +298,41 @@ class ManagementController extends Controller
             return redirect()->back();
         }
 
+        // Restore branch
         DB::table('branches')
             ->where('branch_id', '=', $branch_id)
             ->update([
                 'branch_date_modified' => Carbon::now(),
                 'branch_modified_by' => session('usr_id'),
                 'branch_active' => 1
+            ]);
+
+        // Restore related service package areas
+        DB::table('service_package_areas')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpa_active' => 1
+            ]);
+
+        // Restore related termites
+        DB::table('service_package_area_termites')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpat_active' => 1
+            ]);
+
+        // Restore related devices
+        DB::table('service_package_area_devices')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpad_active' => 1
+            ]);
+
+        // Restore related locations
+        DB::table('service_package_area_locations')
+            ->where('branch_id', '=', $branch_id)
+            ->update([
+                'svcpal_active' => 1
             ]);
 
         logUserActivity('Manage Branches', 'Restored branch ' . $branch->branch_name);
