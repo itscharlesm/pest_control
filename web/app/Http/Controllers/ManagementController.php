@@ -532,6 +532,12 @@ class ManagementController extends Controller
             $deviceCosts->where('service_package_area_devices.branch_id', $sessionBranchId);
         }
 
+        if (!empty($search)) {
+            $deviceCosts->where(function ($q) use ($search) {
+                $q->where('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
         $deviceCosts = $deviceCosts
             ->select(
                 'service_package_area_devices.svcpad_id',
