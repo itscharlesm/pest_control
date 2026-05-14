@@ -244,12 +244,21 @@ class ManagementController extends Controller
 
     public function branches_update(Request $request, $branch_id)
     {
+        // Validate request
+        $request->validate([
+            'branch_name'      => 'required|string|max:255',
+            'branch_latitude'  => 'required|numeric',
+            'branch_longitude' => 'required|numeric',
+        ]);
+
         DB::table('branches')
             ->where('branch_id', $branch_id)
             ->update([
-                'branch_name' => strtoupper($request->branch_name),
+                'branch_name'          => strtoupper($request->branch_name),
+                'branch_latitude'      => $request->branch_latitude,
+                'branch_longitude'     => $request->branch_longitude,
                 'branch_date_modified' => Carbon::now(),
-                'branch_modified_by' => session('usr_id'),
+                'branch_modified_by'   => session('usr_id'),
             ]);
 
         logUserActivity('Manage Branches', 'Updated branch ' . $request->branch_name);
@@ -474,12 +483,17 @@ class ManagementController extends Controller
 
     public function addresses_update(Request $request, $add_id)
     {
+        // Validate request
+        $request->validate([
+            'add_name' => 'required|string|max:255',
+        ]);
+
         DB::table('addresses')
             ->where('add_id', $add_id)
             ->update([
-                'add_name' => strtoupper($request->add_name),
+                'add_name'          => strtoupper($request->add_name),
                 'add_date_modified' => Carbon::now(),
-                'add_modified_by' => session('usr_id'),
+                'add_modified_by'   => session('usr_id'),
             ]);
 
         logUserActivity('Manage Addresses', 'Updated address ' . $request->add_name);
@@ -681,6 +695,11 @@ class ManagementController extends Controller
 
     public function services_area_cost_update(Request $request, $svcpa_id)
     {
+        // Validate request
+        $request->validate([
+            'svcpa_cost' => 'required|numeric|min:0',
+        ]);
+
         // Get current record
         $service = DB::table('service_package_areas')
             ->where('svcpa_id', $svcpa_id)
@@ -696,9 +715,9 @@ class ManagementController extends Controller
         DB::table('service_package_areas')
             ->where('svcpa_id', $svcpa_id)
             ->update([
-                'svcpa_cost' => $request->svcpa_cost,
+                'svcpa_cost'          => $request->svcpa_cost,
                 'svcpa_date_modified' => Carbon::now(),
-                'svcpa_modified_by' => session('usr_id'),
+                'svcpa_modified_by'   => session('usr_id'),
             ]);
 
         // Log activity
@@ -717,6 +736,11 @@ class ManagementController extends Controller
 
     public function services_area_termites_cost_update(Request $request, $svcpat_id)
     {
+        // Validate request
+        $request->validate([
+            'svcpat_cost' => 'required|numeric|min:0',
+        ]);
+
         // Get current record
         $termite = DB::table('service_package_area_termites')
             ->where('svcpat_id', $svcpat_id)
@@ -732,9 +756,9 @@ class ManagementController extends Controller
         DB::table('service_package_area_termites')
             ->where('svcpat_id', $svcpat_id)
             ->update([
-                'svcpat_cost' => $request->svcpat_cost,
+                'svcpat_cost'          => $request->svcpat_cost,
                 'svcpat_date_modified' => Carbon::now(),
-                'svcpat_modified_by' => session('usr_id'),
+                'svcpat_modified_by'   => session('usr_id'),
             ]);
 
         // Log activity

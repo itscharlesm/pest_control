@@ -127,7 +127,7 @@
                                         <div class="modal fade" id="updateBranchModal-{{ $branch->branch_id }}"
                                             tabindex="-1" role="dialog" aria-labelledby="updateBranchModalLabel"
                                             aria-hidden="true">
-                                            <div class="modal-dialog modal-xs" role="document">
+                                            <div class="modal-dialog modal-md" role="document">
                                                 <form
                                                     action="{{ url('management/branches/update/' . $branch->branch_id) }}"
                                                     method="POST">
@@ -138,7 +138,6 @@
                                                                 id="updateBranchModalLabel-{{ $branch->branch_id }}">
                                                                 <span class="fa fa-edit"></span> Update Branch
                                                             </h5>
-
                                                             <button type="button" class="close text-black"
                                                                 data-dismiss="modal">
                                                                 <span aria-hidden="true">&times;</span>
@@ -154,6 +153,60 @@
                                                                     name="branch_name" value="{{ $branch->branch_name }}"
                                                                     required>
                                                             </div>
+
+                                                            <div class="row">
+                                                                {{-- Latitude --}}
+                                                                <div class="col-md-6 mb-2">
+                                                                    <label>Latitude <span
+                                                                            class="text-danger">*</span></label>
+                                                                    <input type="text"
+                                                                        class="form-control update-branch-latitude"
+                                                                        id="update_branch_latitude_{{ $branch->branch_id }}"
+                                                                        name="branch_latitude"
+                                                                        value="{{ $branch->branch_latitude }}"
+                                                                        placeholder="Latitude" required readonly>
+                                                                </div>
+
+                                                                {{-- Longitude --}}
+                                                                <div class="col-md-6 mb-2">
+                                                                    <label>Longitude <span
+                                                                            class="text-danger">*</span></label>
+                                                                    <input type="text"
+                                                                        class="form-control update-branch-longitude"
+                                                                        id="update_branch_longitude_{{ $branch->branch_id }}"
+                                                                        name="branch_longitude"
+                                                                        value="{{ $branch->branch_longitude }}"
+                                                                        placeholder="Longitude" required readonly>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row mb-2">
+                                                                <div class="col-md-12">
+                                                                    <button type="button"
+                                                                        class="btn btn-info btn-sm update-pin-map-btn"
+                                                                        data-id="{{ $branch->branch_id }}">
+                                                                        <span class="fa fa-map-marker"></span> Pin Map
+                                                                    </button>
+                                                                    <small class="text-muted ml-2">Click the map to change
+                                                                        branch location</small>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- Map Container --}}
+                                                            <div class="row update-map-container"
+                                                                id="updateMapContainer-{{ $branch->branch_id }}"
+                                                                style="display: none;">
+                                                                <div class="col-md-12">
+                                                                    <div id="updateBranchMap-{{ $branch->branch_id }}"
+                                                                        style="width: 100%; height: 350px; border: 1px solid #ccc; border-radius: 4px;">
+                                                                    </div>
+                                                                    <small class="text-muted">
+                                                                        <span class="fa fa-info-circle"></span>
+                                                                        Click anywhere on the map to repin the branch
+                                                                        location. You can also drag the marker.
+                                                                    </small>
+                                                                </div>
+                                                            </div>
                                                         </div>
 
                                                         <div class="modal-footer">
@@ -161,7 +214,6 @@
                                                                 data-dismiss="modal">
                                                                 <span class="fa fa-close"></span> Close
                                                             </button>
-
                                                             <button type="submit" class="btn btn-warning">
                                                                 <span class="fa fa-save"></span> Update
                                                             </button>
@@ -321,101 +373,89 @@
 
     {{-- Branch Map Logic --}}
     <script>
-        let branchMap = null;
-        let branchMarker = null;
-        let mapInitialized = false;
+        const updateMapInstances = {};
 
-        document.getElementById('pinMapBtn').addEventListener('click', function() {
-            const mapContainer = document.getElementById('mapContainer');
+        document.querySelectorAll('.update-pin-map-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const mapContainer = document.getElementById('updateMapContainer-' + id);
 
-            if (mapContainer.style.display === 'none') {
-                mapContainer.style.display = 'block';
+                if (mapContainer.style.display === 'none') {
+                    mapContainer.style.display = 'block';
 
-                if (!mapInitialized) {
-                    initBranchMap();
+                    if (!updateMapInstances[id]) {
+                        initUpdateBranchMap(id);
+                    } else {
+                        setTimeout(() => updateMapInstances[id].map.invalidateSize(), 100);
+                    }
                 } else {
-                    // Leaflet needs a size invalidation when shown after being hidden
-                    setTimeout(() => branchMap.invalidateSize(), 100);
+                    mapContainer.style.display = 'none';
                 }
-            } else {
-                mapContainer.style.display = 'none';
-            }
+            });
         });
 
-        function initBranchMap() {
-            mapInitialized = true;
+        function initUpdateBranchMap(id) {
+            const latInput = document.getElementById('update_branch_latitude_' + id);
+            const lngInput = document.getElementById('update_branch_longitude_' + id);
 
-            const defaultLat = 7.1907;
-            const defaultLng = 125.4553;
+            const existingLat = parseFloat(latInput.value) || 7.1907;
+            const existingLng = parseFloat(lngInput.value) || 125.4553;
 
-            branchMap = L.map('branchMap').setView([defaultLat, defaultLng], 13);
+            const map = L.map('updateBranchMap-' + id).setView([existingLat, existingLng], 15);
 
-            // OpenStreetMap tiles - free, no API key
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 19,
-            }).addTo(branchMap);
+            }).addTo(map);
 
-            // Try to get user's current location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        branchMap.setView([lat, lng], 15);
-                    },
-                    function() {
-                        // Denied - stay on default
-                    }
-                );
-            }
-
-            // Click map to place marker
-            branchMap.on('click', function(e) {
-                placeMarker(e.latlng);
-            });
-        }
-
-        function placeMarker(latlng) {
-            if (branchMarker) {
-                branchMap.removeLayer(branchMarker);
-            }
-
-            branchMarker = L.marker(latlng, {
+            // Auto-pin existing coordinates
+            let marker = L.marker([existingLat, existingLng], {
                 draggable: true
-            }).addTo(branchMap);
-            branchMarker.bindPopup('📍 Branch Location').openPopup();
+            }).addTo(map);
+            marker.bindPopup('📍 Branch Location').openPopup();
 
-            updateCoordinates(latlng);
-
-            branchMarker.on('dragend', function(event) {
-                updateCoordinates(event.target.getLatLng());
+            marker.on('dragend', function(event) {
+                updateUpdateCoordinates(id, event.target.getLatLng());
             });
+
+            map.on('click', function(e) {
+                if (marker) map.removeLayer(marker);
+
+                marker = L.marker(e.latlng, {
+                    draggable: true
+                }).addTo(map);
+                marker.bindPopup('📍 Branch Location').openPopup();
+                updateUpdateCoordinates(id, e.latlng);
+
+                marker.on('dragend', function(event) {
+                    updateUpdateCoordinates(id, event.target.getLatLng());
+                });
+            });
+
+            updateMapInstances[id] = {
+                map,
+                marker
+            };
         }
 
-        function updateCoordinates(latlng) {
-            document.getElementById('add_branch_latitude').value = latlng.lat.toFixed(7);
-            document.getElementById('add_branch_longitude').value = latlng.lng.toFixed(7);
+        function updateUpdateCoordinates(id, latlng) {
+            document.getElementById('update_branch_latitude_' + id).value = latlng.lat.toFixed(7);
+            document.getElementById('update_branch_longitude_' + id).value = latlng.lng.toFixed(7);
         }
 
-        // Reset when modal closes
-        $('#addBranchModal').on('hidden.bs.modal', function() {
-            document.getElementById('add_branch_longitude').value = '';
-            document.getElementById('add_branch_latitude').value = '';
-            document.getElementById('mapContainer').style.display = 'none';
+        // Cleanup on modal close
+        document.querySelectorAll('[id^="updateBranchModal-"]').forEach(function(modal) {
+            $(modal).on('hidden.bs.modal', function() {
+                const id = this.id.replace('updateBranchModal-', '');
+                const mapContainer = document.getElementById('updateMapContainer-' + id);
 
-            if (branchMarker && branchMap) {
-                branchMap.removeLayer(branchMarker);
-                branchMarker = null;
-            }
+                if (mapContainer) mapContainer.style.display = 'none';
 
-            // Full reset so geolocation re-runs on next open
-            if (branchMap) {
-                branchMap.remove();
-                branchMap = null;
-            }
-
-            mapInitialized = false;
+                if (updateMapInstances[id]) {
+                    updateMapInstances[id].map.remove();
+                    delete updateMapInstances[id];
+                }
+            });
         });
     </script>
 @endsection
