@@ -58,10 +58,22 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
       return total;
     }
 
+    void _showMessage(String message) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+
     bool get hasTermitesSelected {
       return selectedServicePackages.any(
         (service) => service['name'].toString().toUpperCase() == 'TERMITES',
       );
+    }
+
+    bool get isPageLoading {
+      return isLoadingPackages || isLoadingAreas || isLoadingTermiteSqm;
     }
 
     @override
@@ -72,8 +84,15 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
       _loadTermiteSqmOptions(2);
 
       descriptionController.addListener(() {
+        if (!mounted) return;
         setState(() {});
       });
+    }
+
+    @override
+    void dispose() {
+      descriptionController.dispose();
+      super.dispose();
     }
 
     @override
@@ -83,12 +102,18 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
         appBar: const AppBackHeader(
           title: 'Book Service',
         ),
-        body: Column(
+        body: isPageLoading
+    ? const Center(
+        child: CircularProgressIndicator(
+          color: AppTheme.primaryRed,
+        ),
+      )
+      : Column(
           children: [
-            BookingStepIndicator(currentStep: 2),
+            const BookingStepIndicator(currentStep: 2),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 child: Column(
                   children: [
                     BookingProblemCard(
@@ -97,13 +122,17 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
                       selectedServicePackages: selectedServicePackages,
                       onToggleService: (service) {
                         setState(() {
-                          final serviceName = service['name'].toString().toUpperCase();
+                          final serviceName =
+                              service['name'].toString().toUpperCase();
 
                           if (serviceName == 'TERMITES') {
-
-                            final alreadySelected = selectedServicePackages.any(
+                            final alreadySelected =
+                                selectedServicePackages.any(
                               (selected) =>
-                                  selected['name'].toString().toUpperCase() == 'TERMITES',
+                                  selected['name']
+                                      .toString()
+                                      .toUpperCase() ==
+                                  'TERMITES',
                             );
 
                             if (alreadySelected) {
@@ -116,7 +145,6 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
                             selectedServicePackages.clear();
                             selectedAreas.clear();
                             selectedTermiteSqm = null;
-
                             selectedServicePackages.add(service);
                             return;
                           }
@@ -124,7 +152,9 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
                           selectedTermiteSqm = null;
 
                           selectedServicePackages.removeWhere(
-                            (selected) => selected['name'].toString().toUpperCase() == 'TERMITES',
+                            (selected) =>
+                                selected['name'].toString().toUpperCase() ==
+                                'TERMITES',
                           );
 
                           final isSelected = selectedServicePackages.any(
@@ -187,6 +217,7 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
                           });
                         },
                       ),
+
                     const SizedBox(height: 20),
                     _descriptionCard(),
                     const SizedBox(height: 20),
@@ -481,6 +512,8 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
           },
         );
 
+        if (!mounted) return;
+
         final data = jsonDecode(response.body);
 
         if (data['success'] == true) {
@@ -502,11 +535,7 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
           });
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to load service packages.'),
-          ),
-        );
+        _showMessage('Unable to load service packages.');
       } finally {
         if (mounted) {
           setState(() {
@@ -529,6 +558,8 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
           },
         );
 
+        if (!mounted) return;
+
         final data = jsonDecode(response.body);
 
         if (data['success'] == true) {
@@ -545,9 +576,7 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
           });
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to load service areas.')),
-        );
+        _showMessage('Unable to load service areas.');
       } finally {
         if (mounted) {
           setState(() {
@@ -570,6 +599,8 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
           },
         );
 
+        if (!mounted) return;
+
         final data = jsonDecode(response.body);
 
         if (data['success'] == true) {
@@ -580,17 +611,13 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
               return {
                 'id': item['svcpat_id'],
                 'sqm_details': item['svcpat_sqm_details'],
-                'cost': item['svcpat_costs'],
+                'cost': item['svcpat_cost'],
               };
             }).toList();
           });
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to load termite treatment sizes.'),
-          ),
-        );
+        _showMessage('Unable to load termite treatment sizes.');
       } finally {
         if (mounted) {
           setState(() {
@@ -602,22 +629,18 @@ import 'package:mobile_app/features/bookings/widgets/booking_termite_sqm_card.da
 
     Future<void> _pickImages() async {
       if (selectedImages.length >= 10) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Maximum of 10 photos only.'),
-          ),
-        );
+        _showMessage('Maximum of 10 photos only.');
         return;
       }
 
       final List<XFile> images = await _picker.pickMultiImage();
 
+      if (!mounted) return;
+
       if (images.isNotEmpty) {
         setState(() {
           final remaining = 10 - selectedImages.length;
-
-          selectedImages.addAll(
-            images.take(remaining),
+          selectedImages.addAll(images.take(remaining),
           );
         });
       }
