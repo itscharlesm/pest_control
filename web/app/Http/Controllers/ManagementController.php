@@ -22,6 +22,8 @@ class ManagementController extends Controller
         $query->select(
             'branches.branch_id',
             'branches.branch_name',
+            'branches.branch_latitude',
+            'branches.branch_longitude',
             'branches.branch_date_created',
             'branches.branch_date_modified',
             'branches.branch_active',
@@ -38,6 +40,8 @@ class ManagementController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('branches.branch_name', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_latitude', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_longitude', 'LIKE', "%$search%")
                     ->orWhere('creator.usr_first_name', 'LIKE', "%$search%")
                     ->orWhere('creator.usr_last_name', 'LIKE', "%$search%")
                     ->orWhere('modifier.usr_first_name', 'LIKE', "%$search%")

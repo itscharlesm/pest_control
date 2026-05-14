@@ -63,6 +63,8 @@
                                     <tr>
                                         <th style="vertical-align: middle; text-align: center">No</th>
                                         <th style="vertical-align: middle; text-align: center">Branch</th>
+                                        <th style="vertical-align: middle; text-align: center">Latitude</th>
+                                        <th style="vertical-align: middle; text-align: center">Longitude</th>
                                         <th style="vertical-align: middle; text-align: center">Created By</th>
                                         <th style="vertical-align: middle; text-align: center">Modified By</th>
                                         <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
@@ -76,6 +78,12 @@
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $branch->branch_name }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $branch->branch_latitude }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $branch->branch_longitude }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 @if (!empty($branch->created_first_name))
@@ -236,18 +244,18 @@
                         </div>
 
                         <div class="row">
-                            {{-- Longitude --}}
-                            <div class="col-md-6 mb-2">
-                                <label for="add_branch_longitude">Longitude <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="add_branch_longitude"
-                                    name="branch_longitude" placeholder="Longitude" required readonly>
-                            </div>
-
                             {{-- Latitude --}}
                             <div class="col-md-6 mb-2">
                                 <label for="add_branch_latitude">Latitude <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="add_branch_latitude"
                                     name="branch_latitude" placeholder="Latitude" required readonly>
+                            </div>
+
+                            {{-- Longitude --}}
+                            <div class="col-md-6 mb-2">
+                                <label for="add_branch_longitude">Longitude <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="add_branch_longitude"
+                                    name="branch_longitude" placeholder="Longitude" required readonly>
                             </div>
                         </div>
 
