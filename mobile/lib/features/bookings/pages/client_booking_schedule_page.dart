@@ -58,10 +58,16 @@ class _ClientBookingSchedulePageState extends State<ClientBookingSchedulePage> {
   Future<void> _pickDate() async {
     final now = DateTime.now();
 
+    final tomorrow = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+    );
+
     final date = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? now,
-      firstDate: now,
+      initialDate: selectedDate ?? tomorrow,
+      firstDate: tomorrow,
       lastDate: DateTime(now.year + 1),
     );
 
