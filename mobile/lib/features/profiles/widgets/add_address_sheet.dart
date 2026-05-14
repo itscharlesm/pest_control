@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_app/app/theme.dart';
 import 'package:mobile_app/config/api_config.dart';
+import 'package:mobile_app/features/profiles/widgets/address_map_dialog.dart';
 
 class AddAddressSheet extends StatefulWidget {
   final String email;
@@ -68,6 +69,13 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
         selectedBarangayId != null &&
         streetController.text.trim().isNotEmpty &&
         !unavailableAddressTypeIds.contains(selectedAddressTypeId);
+  }
+
+  void _openAddressMapDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => const AddressMapDialog(),
+    );
   }
 
   @override
@@ -387,6 +395,40 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
                         hint: 'Complete street, house no., or building',
                       ),
                       onChanged: (_) => setState(() {}),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Address Information',
+                            style: TextStyle(
+                              color: AppTheme.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: _openAddressMapDialog,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryRed.withOpacity(0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.map_outlined,
+                              color: AppTheme.primaryRed,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 22),
