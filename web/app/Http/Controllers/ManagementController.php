@@ -117,6 +117,23 @@ class ManagementController extends Controller
                         'branch_active' => 1
                     ]);
 
+                // RESTORE RELATED RECORDS (add this block)
+                DB::table('service_package_areas')
+                    ->where('branch_id', $existingBranch->branch_id)
+                    ->update(['svcpa_active' => 1]);
+
+                DB::table('service_package_area_termites')
+                    ->where('branch_id', $existingBranch->branch_id)
+                    ->update(['svcpat_active' => 1]);
+
+                DB::table('service_package_area_devices')
+                    ->where('branch_id', $existingBranch->branch_id)
+                    ->update(['svcpad_active' => 1]);
+
+                DB::table('service_package_area_locations')
+                    ->where('branch_id', $existingBranch->branch_id)
+                    ->update(['svcpal_active' => 1]);
+
                 logUserActivity('Manage Branches', 'Reactivated branch ' . $request->branch_name);
 
                 session()->flash('successMessage', 'Existing branch has been reactivated.');
