@@ -185,7 +185,7 @@
                                                                     <button type="button"
                                                                         class="btn btn-info btn-sm update-pin-map-btn"
                                                                         data-id="{{ $branch->branch_id }}">
-                                                                        <span class="fa fa-map-marker"></span> Pin Map
+                                                                        <span class="fa fa-map-marker-alt"></span> Pin Map
                                                                     </button>
                                                                     <small class="text-muted ml-2">Click the map to change
                                                                         branch location</small>
@@ -314,7 +314,7 @@
                         <div class="row mb-2">
                             <div class="col-md-12">
                                 <button type="button" class="btn btn-info btn-sm" id="pinMapBtn">
-                                    <span class="fa fa-map-marker"></span> Pin Map
+                                    <span class="fa fa-map-marker-alt"></span> Pin Map
                                 </button>
                                 <small class="text-muted ml-2">Click the map to set branch location</small>
                             </div>
