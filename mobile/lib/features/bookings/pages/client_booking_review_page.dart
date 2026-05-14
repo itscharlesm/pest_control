@@ -168,9 +168,6 @@ class _ClientBookingReviewPageState extends State<ClientBookingReviewPage> {
       final responseBody =
           await response.stream.bytesToString();
 
-      debugPrint('SUBMIT STATUS: ${response.statusCode}');
-      debugPrint('SUBMIT BODY: $responseBody');
-
       final data = jsonDecode(responseBody);
 
       if (response.statusCode == 200 &&
