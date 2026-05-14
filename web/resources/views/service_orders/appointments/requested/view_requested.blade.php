@@ -424,15 +424,8 @@
                                                     <td style="vertical-align: middle; text-align: center">
                                                         {{ $area->svcpat_sqm_details }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
-                                                        ₱{{ number_format($area->svcpat_costs, 2) }}</td>
+                                                        ₱{{ number_format($area->svcpat_cost, 2) }}</td>
                                                     <td style="vertical-align: middle; text-align: center">
-                                                        {{-- @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
-                                                            <p>STANDARD TREATMENT: sqm × cost</p>
-                                                        @elseif ($display->svc_type_treatment == 'HYBRID TREATMENT')
-                                                            <p>HYBRID TREATMENT: sqm × cost + device</p>
-                                                        @else
-                                                            <p>{{ $display->svc_type_treatment }}: sqm × cost</p>
-                                                        @endif --}}
                                                         <p>STANDARD TREATMENT: sqm × cost</p>
                                                         <p>HYBRID TREATMENT: sqm × cost + device</p>
                                                     </td>
@@ -750,7 +743,7 @@
                                     <label>SQM DETAILS <span class="text-danger">*</span></label>
                                     <select class="form-control" name="svcpat_id" id="svcpat_id_select" required>
                                         @foreach ($termiteAreaOptions as $opt)
-                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_costs }}"
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_cost }}"
                                                 {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
                                                 {{ $opt->svcpat_sqm_details }}
                                             </option>
@@ -809,13 +802,13 @@
                         </div>
 
                         <div class="row">
-                            {{-- Service Price --}}
+                            {{-- Location Price --}}
                             <div class="{{ $display->svc_is_termite ? 'col-md-6' : 'col-md-4' }} mb-3">
-                                <label for="svc_service_price">
-                                    Service Price <span class="text-danger">*</span>
+                                <label for="svc_location_price">
+                                    Location Price <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" step="0.01" class="form-control" name="svc_service_price"
-                                    placeholder="Service Price" required>
+                                <input type="number" step="0.01" class="form-control" name="svc_location_price"
+                                    placeholder="Location Price" required>
                             </div>
 
                             {{-- Service Order Price (non-termite only) --}}
@@ -841,7 +834,7 @@
                             {{-- Appointment Date --}}
                             <div class="col-md-4 mb-3">
                                 <label>Approve Appointment Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="svca_date_approved"
+                                <input type="date" class="form-control" name="svca_approved_date"
                                     value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
                                     required>
                             </div>
@@ -1047,7 +1040,7 @@
                                     <label>SQM DETAILS <span class="text-danger">*</span></label>
                                     <select class="form-control" name="svcpat_id" id="confirmSvcpatSelect" required>
                                         @foreach ($termiteAreaOptions as $opt)
-                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_costs }}"
+                                            <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_cost }}"
                                                 {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
                                                 {{ $opt->svcpat_sqm_details }}
                                             </option>
@@ -1111,12 +1104,12 @@
                         </div>
 
                         <div class="row">
-                            {{-- Service Price --}}
+                            {{-- Location Price --}}
                             <div class="{{ $isTermiteConfirm ? 'col-md-6' : 'col-md-4' }} mb-3">
-                                <label>Service Price <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" class="form-control" name="svc_service_price"
-                                    id="confirmServicePrice" value="{{ $display->svc_service_price }}"
-                                    placeholder="Service Price" required>
+                                <label>Location Price <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="svc_location_price"
+                                    id="confirmlocationPrice" value="{{ $display->svc_location_price }}"
+                                    placeholder="Location Price" required>
                             </div>
 
                             @if (!$isTermiteConfirm)
@@ -1142,8 +1135,8 @@
                             {{-- Approved Date --}}
                             <div class="col-md-4 mb-3">
                                 <label>Approve Appointment Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="svca_date_approved"
-                                    value="{{ \Carbon\Carbon::parse($display->svca_client_date)->format('Y-m-d') }}"
+                                <input type="date" class="form-control" name="svca_approved_date"
+                                    value="{{ $display->svca_approved_date }}"
                                     required>
                             </div>
 
@@ -1151,7 +1144,7 @@
                             <div class="col-md-4 mb-3">
                                 <label>Approve Time From <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_from"
-                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->format('H:i') }}"
+                                    value="{{ $display->svca_approved_time_from }}"
                                     required>
                             </div>
 
@@ -1159,7 +1152,7 @@
                             <div class="col-md-4 mb-3">
                                 <label>Approve Time To <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control" name="svca_approved_time_to"
-                                    value="{{ \Carbon\Carbon::parse($display->svca_client_time)->addHours(2)->format('H:i') }}"
+                                    value="{{ $display->svca_approved_time_to }}"
                                     required>
                             </div>
                         </div>
@@ -1252,7 +1245,7 @@
 
             modals.forEach(modal => {
 
-                const servicePriceInput = modal.querySelector('[name="svc_service_price"]');
+                const locationPriceInput = modal.querySelector('[name="svc_location_price"]');
                 const initialPriceInput = modal.querySelector('[name="svc_initial_price"]');
                 const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
 
@@ -1261,30 +1254,30 @@
                 const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
 
                 // Prevent errors if fields do not exist
-                if (!servicePriceInput || !initialPriceInput || !finalPriceInput) {
+                if (!locationPriceInput || !initialPriceInput || !finalPriceInput) {
                     return;
                 }
 
                 // FINAL PRICE COMPUTATION
                 function updateFinalPrice() {
 
-                    let servicePrice = parseFloat(servicePriceInput.value) || 0;
+                    let locationPrice = parseFloat(locationPriceInput.value) || 0;
                     let initialPrice = parseFloat(initialPriceInput.value) || 0;
 
-                    let finalPrice = servicePrice + initialPrice;
+                    let finalPrice = locationPrice + initialPrice;
 
-                    if (servicePrice === 0) {
+                    if (locationPrice === 0) {
                         finalPrice = initialPrice;
                     }
 
                     if (initialPrice === 0) {
-                        finalPrice = servicePrice;
+                        finalPrice = locationPrice;
                     }
 
                     finalPriceInput.value = finalPrice.toFixed(2);
                 }
 
-                servicePriceInput.addEventListener('input', updateFinalPrice);
+                locationPriceInput.addEventListener('input', updateFinalPrice);
                 initialPriceInput.addEventListener('input', updateFinalPrice);
 
                 // Run on load
@@ -1369,17 +1362,17 @@
                     // Updated final price function that factors in device cost for hybrid
                     function updateFinalPriceWithDevice() {
 
-                        let servicePrice = parseFloat(servicePriceInput.value) || 0;
+                        let locationPrice = parseFloat(locationPriceInput.value) || 0;
                         let initialPrice = parseFloat(initialPriceInput.value) || 0;
 
                         let base = 0;
 
-                        if (servicePrice === 0) {
+                        if (locationPrice === 0) {
                             base = initialPrice;
                         } else if (initialPrice === 0) {
-                            base = servicePrice;
+                            base = locationPrice;
                         } else {
-                            base = servicePrice + initialPrice;
+                            base = locationPrice + initialPrice;
                         }
 
                         let deviceTotal = 0;
@@ -1393,9 +1386,9 @@
                     }
 
                     // Re-bind service/initial price listeners to use the device-aware function
-                    servicePriceInput.removeEventListener('input', updateFinalPrice);
+                    locationPriceInput.removeEventListener('input', updateFinalPrice);
                     initialPriceInput.removeEventListener('input', updateFinalPrice);
-                    servicePriceInput.addEventListener('input', updateFinalPriceWithDevice);
+                    locationPriceInput.addEventListener('input', updateFinalPriceWithDevice);
                     initialPriceInput.addEventListener('input', updateFinalPriceWithDevice);
 
                     // Device count change also updates final price
@@ -1472,7 +1465,7 @@
                 const deviceCountCol = modal.querySelector('#termiteDeviceCountCol');
                 const deviceCostHint = deviceCountCol?.querySelector('.device-cost-hint');
                 const treatmentCol = treatmentSelect?.closest('.col-md-6');
-                const servicePriceInput = modal.querySelector('[name="svc_service_price"]');
+                const locationPriceInput = modal.querySelector('[name="svc_location_price"]');
                 const finalPriceInput = modal.querySelector('[name="svc_final_price"]');
                 const sqmInput = modal.querySelector('[name="svc_sqm_initial"]');
 
@@ -1505,13 +1498,13 @@
                 }
 
                 // COMPUTATION RULES:
-                // 1–50 sqm tier  → svcpat_cost as-is (fixed, no multiplication) + service price
-                // 51+  sqm tier  → svcpat_cost × sqm_meters + service price
+                // 1–50 sqm tier  → svcpat_cost as-is (fixed, no multiplication) + location price
+                // 51+  sqm tier  → svcpat_cost × sqm_meters + location price
                 // HYBRID adds    → + (device_count × svcpad_cost) on top of either
                 function updateTermiteFinalPrice() {
                     const svcpatCost = getSelectedSvcpatCost();
                     const sqmMeters = parseFloat(sqmInput?.value) || 0;
-                    const servicePrice = parseFloat(servicePriceInput?.value) || 0;
+                    const locationPrice = parseFloat(locationPriceInput?.value) || 0;
                     const deviceCount = parseInt(deviceCountInput?.value) || 0;
                     const isHybrid = treatmentSelect?.value === 'HYBRID TREATMENT';
 
@@ -1526,9 +1519,9 @@
                         svcpatCost :
                         svcpatCost * sqmMeters;
 
-                    // STANDARD: sqmTotal + svc_service_price
-                    // HYBRID:   sqmTotal + svc_service_price + (device_count × svcpad_cost)
-                    let finalPrice = sqmTotal + servicePrice;
+                    // STANDARD: sqmTotal + svc_location_price
+                    // HYBRID:   sqmTotal + svc_location_price + (device_count × svcpad_cost)
+                    let finalPrice = sqmTotal + locationPrice;
 
                     if (isHybrid) {
                         finalPrice += deviceCount * deviceCostPerUnit;
@@ -1580,7 +1573,7 @@
                 if (sqmInput) sqmInput.addEventListener('input', updateTermiteFinalPrice);
                 if (treatmentSelect) treatmentSelect.addEventListener('change', toggleTermiteDeviceCount);
                 if (deviceCountInput) deviceCountInput.addEventListener('input', updateTermiteFinalPrice);
-                if (servicePriceInput) servicePriceInput.addEventListener('input', updateTermiteFinalPrice);
+                if (locationPriceInput) locationPriceInput.addEventListener('input', updateTermiteFinalPrice);
 
                 // Run on load — toggle first so visibility is correct, then price
                 toggleTermiteDeviceCount();
@@ -1598,7 +1591,7 @@
                 const modal = document.getElementById('confirmAssessmentAppointmentModal');
                 if (!modal) return;
 
-                const servicePriceInput = modal.querySelector('#confirmServicePrice');
+                const locationPriceInput = modal.querySelector('#confirmlocationPrice');
                 const initialPriceInput = modal.querySelector('#confirmInitialPrice'); // null for termite
                 const finalPriceInput = modal.querySelector('#confirmFinalPrice');
 
@@ -1635,7 +1628,7 @@
                     function updateTermiteFinalPrice() {
                         const svcpatCost = getSelectedSvcpatCost();
                         const sqmMeters = parseFloat(sqmInput?.value) || 0;
-                        const servicePrice = parseFloat(servicePriceInput?.value) || 0;
+                        const locationPrice = parseFloat(locationPriceInput?.value) || 0;
                         const deviceCount = parseInt(deviceCountInput?.value) || 0;
                         const isHybrid = treatmentSelect?.value === 'HYBRID TREATMENT';
 
@@ -1644,7 +1637,7 @@
                         }
 
                         const sqmTotal = isFixedPriceTier() ? svcpatCost : svcpatCost * sqmMeters;
-                        let finalPrice = sqmTotal + servicePrice;
+                        let finalPrice = sqmTotal + locationPrice;
 
                         if (isHybrid) {
                             finalPrice += deviceCount * deviceCostPerUnit;
@@ -1674,7 +1667,7 @@
                     sqmInput?.addEventListener('input', updateTermiteFinalPrice);
                     treatmentSelect?.addEventListener('change', toggleTermiteDeviceCount);
                     deviceCountInput?.addEventListener('input', updateTermiteFinalPrice);
-                    servicePriceInput?.addEventListener('input', updateTermiteFinalPrice);
+                    locationPriceInput?.addEventListener('input', updateTermiteFinalPrice);
 
                     // Init
                     toggleTermiteDeviceCount();
@@ -1684,12 +1677,12 @@
 
                 // NON-TERMITE PATH
                 function updateNonTermiteFinalPrice() {
-                    const servicePrice = parseFloat(servicePriceInput?.value) || 0;
+                    const locationPrice = parseFloat(locationPriceInput?.value) || 0;
                     const initialPrice = parseFloat(initialPriceInput?.value) || 0;
 
-                    let finalPrice = (servicePrice === 0) ? initialPrice :
-                        (initialPrice === 0) ? servicePrice :
-                        servicePrice + initialPrice;
+                    let finalPrice = (locationPrice === 0) ? initialPrice :
+                        (initialPrice === 0) ? locationPrice :
+                        locationPrice + initialPrice;
 
                     if (finalPriceInput) finalPriceInput.value = finalPrice.toFixed(2);
                 }
@@ -1713,7 +1706,7 @@
                     updateNonTermiteFinalPrice();
                 }
 
-                servicePriceInput?.addEventListener('input', updateNonTermiteFinalPrice);
+                locationPriceInput?.addEventListener('input', updateNonTermiteFinalPrice);
                 initialPriceInput?.addEventListener('input', updateNonTermiteFinalPrice);
                 packageSelect?.addEventListener('change', togglePackageSqm);
 

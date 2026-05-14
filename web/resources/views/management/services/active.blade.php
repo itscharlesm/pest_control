@@ -232,7 +232,7 @@
                                                         {{ $termite->svcpat_sqm_details }}
                                                     </td>
                                                     <td style="vertical-align:middle; text-align:center">
-                                                        ₱ {{ number_format($termite->svcpat_costs, 2) }}
+                                                        ₱ {{ number_format($termite->svcpat_cost, 2) }}
                                                     </td>
                                                     <td style="vertical-align:middle; text-align:center">
                                                         {{ $termite->branch_name }}
@@ -275,8 +275,8 @@
                                                                         <label>Cost (₱) <span
                                                                                 class="text-danger">*</span></label>
                                                                         <input type="number" step="0.01"
-                                                                            class="form-control" name="svcpat_costs"
-                                                                            value="{{ $termite->svcpat_costs }}" required>
+                                                                            class="form-control" name="svcpat_cost"
+                                                                            value="{{ $termite->svcpat_cost }}" required>
                                                                     </div>
                                                                     <div class="form-group">
                                                                         <label>Branch</label>

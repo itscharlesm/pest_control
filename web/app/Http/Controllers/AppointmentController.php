@@ -80,7 +80,7 @@ class AppointmentController extends Controller
                 'services.svc_status',
                 'services.svc_infestation',
                 'services.svc_initial_price',
-                'services.svc_service_price',
+                'services.svc_location_price',
                 'services.svc_final_price',
                 'services.svc_balance',
                 'services.svc_payment_status',
@@ -92,6 +92,9 @@ class AppointmentController extends Controller
                 'branches.branch_name',
                 'service_appointments.svca_client_date',
                 'service_appointments.svca_client_time',
+                'service_appointments.svca_approved_date',
+                'service_appointments.svca_approved_time_from',
+                'service_appointments.svca_approved_time_to',
                 'user_addresses.uadd_street',
                 'user_addresses.uadd_barangay',
                 'user_addresses.uadd_city',
@@ -160,7 +163,7 @@ class AppointmentController extends Controller
                 'service_orders.svco_id',
                 'service_package_area_termites.svcpat_id',
                 'service_package_area_termites.svcpat_sqm_details',
-                'service_package_area_termites.svcpat_costs'
+                'service_package_area_termites.svcpat_cost'
             )
             ->get();
 
@@ -174,7 +177,7 @@ class AppointmentController extends Controller
         $termiteAreaOptions = DB::table('service_package_area_termites')
             ->where('branch_id', $display->branch_id)
             ->where('svcpat_active', 1)
-            ->select('svcpat_id', 'svcpat_sqm_details', 'svcpat_costs')
+            ->select('svcpat_id', 'svcpat_sqm_details', 'svcpat_cost')
             ->get();
 
         // Client Appointment Images
@@ -421,8 +424,9 @@ class AppointmentController extends Controller
         $request->validate([
             'svc_id' => 'required',
             'svc_infestation' => 'required',
-            'svc_service_price' => 'required|numeric',
+            'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
+            'svca_approved_date' => 'required',
             'svca_approved_time_from' => 'required',
             'svca_approved_time_to' => 'required',
         ]);
@@ -430,7 +434,7 @@ class AppointmentController extends Controller
         $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
-        $servicePrice = $request->svc_service_price;
+        $servicePrice = $request->svc_location_price;
         $finalPrice = $request->svc_final_price;
 
         // Fetch existing service record
@@ -466,7 +470,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $sqmInitial,
                     'svc_status' => 'CONFIRM ASSESSMENT',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
@@ -498,7 +502,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
                     'svc_status' => 'CONFIRM ASSESSMENT',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_initial_price' => $request->svc_initial_price ?? $service->svc_initial_price,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
@@ -511,9 +515,11 @@ class AppointmentController extends Controller
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
-                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_date' => $request->svca_approved_date,
                 'svca_approved_time_from' => $request->svca_approved_time_from,
                 'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_approved' => Carbon::now(),
+                'svca_approved_by' => session('usr_id'),
                 'svca_date_modified' => Carbon::now(),
                 'svca_modified_by' => session('usr_id'),
             ]);
@@ -531,8 +537,9 @@ class AppointmentController extends Controller
         $request->validate([
             'svc_id' => 'required',
             'svc_infestation' => 'required',
-            'svc_service_price' => 'required|numeric',
+            'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
+            'svca_approved_date' => 'required',
             'svca_approved_time_from' => 'required',
             'svca_approved_time_to' => 'required',
         ]);
@@ -540,7 +547,7 @@ class AppointmentController extends Controller
         $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
-        $servicePrice = $request->svc_service_price;
+        $servicePrice = $request->svc_location_price;
         $finalPrice = $request->svc_final_price;
 
         // Fetch existing service record
@@ -576,7 +583,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $sqmInitial,
                     'svc_status' => 'ASSESSED',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
@@ -608,7 +615,7 @@ class AppointmentController extends Controller
                     'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
                     'svc_status' => 'ASSESSED',
                     'svc_infestation' => $request->svc_infestation,
-                    'svc_service_price' => $servicePrice,
+                    'svc_location_price' => $servicePrice,
                     'svc_initial_price' => $request->svc_initial_price ?? $service->svc_initial_price,
                     'svc_final_price' => $finalPrice,
                     'svc_balance' => $finalPrice,
@@ -621,9 +628,11 @@ class AppointmentController extends Controller
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
-                'svca_date_approved' => $request->svca_date_approved,
+                'svca_approved_date' => $request->svca_approved_date,
                 'svca_approved_time_from' => $request->svca_approved_time_from,
                 'svca_approved_time_to' => $request->svca_approved_time_to,
+                'svca_date_approved' => Carbon::now(),
+                'svca_approved_by' => session('usr_id'),
                 'svca_date_modified' => Carbon::now(),
                 'svca_modified_by' => session('usr_id'),
             ]);
@@ -632,7 +641,7 @@ class AppointmentController extends Controller
 
         logUserActivity(
             'Manage Appointments',
-            'Assessed appointment ' . $serviceOrder
+            'Confirmed Assessment ' . $serviceOrder
         );
 
         session()->flash('successMessage', 'Appointment successfully assessed.');
@@ -668,7 +677,7 @@ class AppointmentController extends Controller
                 'services.svc_infestation',
                 'services.svc_initial_price',
                 'services.svc_device_price',
-                'services.svc_service_price',
+                'services.svc_location_price',
                 'services.svc_final_price',
                 'services.svc_balance',
                 'services.svc_payment_status',
@@ -751,7 +760,7 @@ class AppointmentController extends Controller
                 'service_orders.svco_id',
                 'service_package_area_termites.svcpat_id',
                 'service_package_area_termites.svcpat_sqm_details',
-                'service_package_area_termites.svcpat_costs'
+                'service_package_area_termites.svcpat_cost'
             )
             ->get();
 

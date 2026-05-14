@@ -169,11 +169,11 @@ class ManagementController extends Controller
         DB::table('service_package_areas')->insert($servicePackageAreas);
 
         $termites = [
-            ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_costs' => 10000.00],
-            ['svcpat_sqm_details' => '51sqm - 100sqm', 'svcpat_costs' => 184.00],
-            ['svcpat_sqm_details' => '101sqm - 500sqm', 'svcpat_costs' => 150.00],
-            ['svcpat_sqm_details' => '501sqm - 1000sqm', 'svcpat_costs' => 120.00],
-            ['svcpat_sqm_details' => '1001sqm - 999999sqm', 'svcpat_costs' => 100.00],
+            ['svcpat_sqm_details' => '1sqm - 50sqm', 'svcpat_cost' => 10000.00],
+            ['svcpat_sqm_details' => '51sqm - 100sqm', 'svcpat_cost' => 184.00],
+            ['svcpat_sqm_details' => '101sqm - 500sqm', 'svcpat_cost' => 150.00],
+            ['svcpat_sqm_details' => '501sqm - 1000sqm', 'svcpat_cost' => 120.00],
+            ['svcpat_sqm_details' => '1001sqm - 999999sqm', 'svcpat_cost' => 100.00],
         ];
 
         $servicePackageAreaTermites = [];
@@ -183,7 +183,7 @@ class ManagementController extends Controller
                 'svcpat_uuid' => generateuuid(),
                 'branch_id' => $branch_id,
                 'svcpat_sqm_details' => $termite['svcpat_sqm_details'],
-                'svcpat_costs' => $termite['svcpat_costs'],
+                'svcpat_cost' => $termite['svcpat_cost'],
                 'svcpat_date_created' => Carbon::now(),
                 'svcpat_created_by' => session('usr_id'),
                 'svcpat_active' => 1
@@ -191,6 +191,7 @@ class ManagementController extends Controller
         }
 
         DB::table('service_package_area_devices')->insert([
+            'svcpad_uuid' => generateuuid(),
             'branch_id' => $branch_id,
             'svcpad_cost' => 15000,
             'svcpad_active' => 1
@@ -502,7 +503,7 @@ class ManagementController extends Controller
                 'service_package_area_termites.branch_id',
                 'branches.branch_name',
                 'service_package_area_termites.svcpat_sqm_details',
-                'service_package_area_termites.svcpat_costs',
+                'service_package_area_termites.svcpat_cost',
                 'service_package_area_termites.svcpat_date_created'
             )
             ->orderBy('branches.branch_name')
@@ -643,14 +644,14 @@ class ManagementController extends Controller
         // Normalize values for consistent logging
         $formatCost = fn($value) => number_format((float) $value, 2, '.', '');
 
-        $oldCost = $termite ? $formatCost($termite->svcpat_costs) : '0.00';
-        $newCost = $formatCost($request->svcpat_costs);
+        $oldCost = $termite ? $formatCost($termite->svcpat_cost) : '0.00';
+        $newCost = $formatCost($request->svcpat_cost);
 
         // Update record
         DB::table('service_package_area_termites')
             ->where('svcpat_id', $svcpat_id)
             ->update([
-                'svcpat_costs' => $request->svcpat_costs,
+                'svcpat_cost' => $request->svcpat_cost,
                 'svcpat_date_modified' => Carbon::now(),
                 'svcpat_modified_by' => session('usr_id'),
             ]);
@@ -726,12 +727,12 @@ class ManagementController extends Controller
         ]);
 
         // Get current record
-        $device = DB::table('service_package_area_devices as spad')
-            ->leftJoin('branches as b', 'spad.branch_id', '=', 'b.branch_id')
-            ->where('spad.svcpad_id', $svcpad_id)
+        $device = DB::table('service_package_area_devices')
+            ->leftJoin('branches', 'service_package_area_devices.branch_id', '=', 'branches.branch_id')
+            ->where('service_package_area_devices.svcpad_id', $svcpad_id)
             ->select(
-                'spad.*',
-                'b.branch_name'
+                'service_package_area_devices.*',
+                'branches.branch_name'
             )
             ->first();
 
