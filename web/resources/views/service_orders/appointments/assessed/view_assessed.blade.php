@@ -108,6 +108,7 @@
                                         <td style="font-weight: bold;">ADDRESS TYPE</td>
                                         <td>{{ $display->add_name }}</td>
                                     </tr>
+
                                     <tr>
                                         <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
                                     </tr>
@@ -120,24 +121,38 @@
                                         <td>{{ $display->svc_payment_status }}</td>
                                     </tr>
                                     <tr>
-                                        <td style="font-weight: bold;">INITIAL PRICE</td>
-                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
-
-                                        <td style="font-weight: bold;">FINAL PRICE</td>
-                                        <td>₱{{ number_format($display->svc_balance, 2) }}</td>
-
-                                        <td style="font-weight: bold;">LOCATION PRICE</td>
-                                        <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
+                                        <td style="font-weight: bold;">PROPERTY TYPE</td>
+                                        <td>{{ $display->svc_property_type }}</td>
+                                        <td style="font-weight: bold;">INFESTATION</td>
+                                        <td>{{ $display->svc_infestation }}</td>
+                                        <td style="font-weight: bold;">DISTANCE</td>
+                                        <td>{{ $display->svc_km_distance }} KM</td>
                                     </tr>
-
                                     <tr>
                                         <td style="font-weight: bold;">IS TERMITE</td>
                                         <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
                                         <td style="font-weight: bold;">IS PACKAGE</td>
-                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                        <td style="font-weight: bold;">INFESTATION</td>
-                                        <td>{{ $display->svc_infestation }}</td>
+                                        <td colspan="3">{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
                                     </tr>
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">PRICING</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">INITIAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                        <td style="font-weight: bold;">LOCATION PRICE</td>
+                                        <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
+                                        <td style="font-weight: bold;">FIXED PRICE</td>
+                                        <td>₱{{ number_format($display->svc_fixed_price, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">FINAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_final_price, 2) }}</td>
+                                        <td style="font-weight: bold;">BALANCE</td>
+                                        <td colspan="3">₱{{ number_format($display->svc_balance, 2) }}</td>
+                                    </tr>
+
                                     @if ($display->svc_is_termite)
                                         <tr>
                                             <th colspan="6" class="text-center table-light">TERMITE CASE</th>
@@ -157,6 +172,17 @@
                                             <td colspan="3">{{ $display->svc_device_count ?? 'N/A' }}</td>
                                         </tr>
                                     @endif
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">CHEMICAL</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">CHEMICAL QUANTITY</td>
+                                        <td>{{ $display->svc_chemical_quantity }}</td>
+                                        <td style="font-weight: bold;">CHEMICAL METRIC</td>
+                                        <td colspan="3">{{ $display->svc_chemical_metric }}</td>
+                                    </tr>
+
                                     <tr>
                                         <th colspan="6" class="text-center table-light">SCHEDULE</th>
                                     </tr>
@@ -177,6 +203,7 @@
                                         <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_to)->format('h:i A') }}
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION</th>
                                     </tr>
@@ -185,6 +212,18 @@
                                             {{ $display->svc_problem_description }}
                                         </td>
                                     </tr>
+
+                                    @if (!empty($display->svc_assessment_recommendation))
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">ASSESSMENT RECOMMENDATION
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="6" style="text-align: justify">
+                                                {{ $display->svc_assessment_recommendation }}
+                                            </td>
+                                        </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -210,7 +249,8 @@
                                     </label>
                                     @if ($appointmentImages->count() > 0)
                                         <label class="dropdown-item">
-                                            <input type="checkbox" class="print-toggle mr-1" data-target="sectionC"> Client
+                                            <input type="checkbox" class="print-toggle mr-1" data-target="sectionC">
+                                            Client
                                             Appointment Images
                                         </label>
                                     @endif

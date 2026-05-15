@@ -21,7 +21,7 @@
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-10">
                         <div class="wrap d-md-flex">
-                            <div class="img" style="background-image: url({{ asset('images/logos/logo_black.jpg') }});">
+                            <div class="img" style="background-image: url({{ asset('images/logos/logo_red.png') }});">
                             </div>
                             <div class="login-wrap p-4 p-md-4">
                                 <div class="d-flex justify-content-center">

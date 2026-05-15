@@ -72,6 +72,7 @@ class AppointmentController extends Controller
                 'services.svc_id',
                 'services.svc_sa_number',
                 'services.svc_km_distance',
+                'services.svc_property_type',
                 'services.svc_is_package',
                 'services.svcpat_id',
                 'services.svc_is_termite',
@@ -104,6 +105,7 @@ class AppointmentController extends Controller
                 'service_appointments.svca_approved_date',
                 'service_appointments.svca_approved_time_from',
                 'service_appointments.svca_approved_time_to',
+                'service_appointments.svca_date_approved',
                 'user_addresses.uadd_street',
                 'user_addresses.uadd_barangay',
                 'user_addresses.uadd_city',
@@ -183,6 +185,12 @@ class AppointmentController extends Controller
             ->select('svcpad_id', 'svcpad_cost')
             ->first();
 
+        $locationRate = DB::table('service_package_area_locations')
+            ->where('branch_id', $display->branch_id)
+            ->where('svcpal_active', 1)
+            ->select('svcpal_first_cost', 'svcpal_succeeding_cost')
+            ->first();
+
         $termiteAreaOptions = DB::table('service_package_area_termites')
             ->where('branch_id', $display->branch_id)
             ->where('svcpat_active', 1)
@@ -197,7 +205,7 @@ class AppointmentController extends Controller
             ->select('service_appointment_images.*')
             ->get();
 
-        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'deviceCost', 'termiteAreaOptions', 'appointmentImages'));
+        return view('service_orders.appointments.requested.view_requested', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'deviceCost', 'locationRate', 'termiteAreaOptions', 'appointmentImages'));
     }
 
     public function requested_appointments_view_add_pest(Request $request)
@@ -432,6 +440,7 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'svc_id' => 'required',
+            'svc_sa_number' => 'required',
             'svc_infestation' => 'required',
             'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
@@ -441,6 +450,19 @@ class AppointmentController extends Controller
         ]);
 
         $svc_id = $request->svc_id;
+
+        if (
+            DB::table('services')
+                ->where('svc_sa_number', $request->svc_sa_number)
+                ->where('svc_id', '!=', $svc_id)
+                ->exists()
+        ) {
+
+            session()->flash('errorMessage', 'SA Number already exists.');
+            return redirect()->back();
+        }
+
+        $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
         $servicePrice = $request->svc_location_price;
@@ -448,6 +470,17 @@ class AppointmentController extends Controller
 
         // Fetch existing service record
         $service = DB::table('services')->where('svc_id', $svc_id)->first();
+
+        // Shared fields across both paths
+        $sharedFields = [
+            'svc_sa_number' => $request->svc_sa_number,
+            'svc_property_type' => $request->svc_property_type,
+            'svc_km_distance' => $request->svc_km_distance,
+            'svc_fixed_price' => $request->svc_fixed_price,
+            'svc_chemical_quantity' => $request->svc_chemical_quantity,
+            'svc_chemical_metric' => $request->svc_chemical_metric,
+            'svc_assessment_recommendation' => $request->svc_assessment_recommendation,
+        ];
 
         if ($isTermite == 1) {
             // TERMITE PATH
@@ -468,7 +501,7 @@ class AppointmentController extends Controller
 
             DB::table('services')
                 ->where('svc_id', $svc_id)
-                ->update([
+                ->update(array_merge($sharedFields, [
                     'svc_is_termite' => 1,
                     'svcpat_id' => $request->svcpat_id,
                     'svc_type_treatment' => $treatmentType,
@@ -484,7 +517,7 @@ class AppointmentController extends Controller
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
                     'svc_modified_by' => session('usr_id'),
-                ]);
+                ]));
 
             DB::table('service_orders')
                 ->where('svc_id', $svc_id)
@@ -505,7 +538,7 @@ class AppointmentController extends Controller
 
             DB::table('services')
                 ->where('svc_id', $svc_id)
-                ->update([
+                ->update(array_merge($sharedFields, [
                     'svc_is_package' => $isPackage,
                     'svc_sqm_initial' => $sqmInitial,
                     'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
@@ -517,10 +550,10 @@ class AppointmentController extends Controller
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
                     'svc_modified_by' => session('usr_id'),
-                ]);
+                ]));
         }
 
-        // APPOINTMENT (shared) 
+        // APPOINTMENT (shared)
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
@@ -545,6 +578,7 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'svc_id' => 'required',
+            'svc_sa_number' => 'required',
             'svc_infestation' => 'required',
             'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
@@ -554,22 +588,43 @@ class AppointmentController extends Controller
         ]);
 
         $svc_id = $request->svc_id;
+
+        if (
+            DB::table('services')
+                ->where('svc_sa_number', $request->svc_sa_number)
+                ->where('svc_id', '!=', $svc_id)
+                ->exists()
+        ) {
+
+            session()->flash('errorMessage', 'SA Number already exists.');
+            return redirect()->back();
+        }
+
+        $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
         $isPackage = $request->svc_is_package;
         $servicePrice = $request->svc_location_price;
         $finalPrice = $request->svc_final_price;
 
-        // Fetch existing service record
         $service = DB::table('services')->where('svc_id', $svc_id)->first();
 
+        // ← NEW: shared fields (mirrors assess method)
+        $sharedFields = [
+            'svc_sa_number' => $request->svc_sa_number,
+            'svc_property_type' => $request->svc_property_type,
+            'svc_km_distance' => $request->svc_km_distance,
+            'svc_fixed_price' => $request->svc_fixed_price,
+            'svc_chemical_quantity' => $request->svc_chemical_quantity,
+            'svc_chemical_metric' => $request->svc_chemical_metric,
+            'svc_assessment_recommendation' => $request->svc_assessment_recommendation,
+        ];
+
         if ($isTermite == 1) {
-            // TERMITE PATH
             $treatmentType = $request->svc_type_treatment;
             $withDevice = ($treatmentType === 'HYBRID TREATMENT') ? 1 : 0;
             $deviceCount = $withDevice ? (int) $request->svc_device_count : null;
             $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
 
-            // Recompute device price server-side (mirrors JS: count × unit cost)
             $deviceCostRow = DB::table('service_package_area_devices')
                 ->where('branch_id', $service->branch_id)
                 ->where('svcpad_active', 1)
@@ -581,7 +636,7 @@ class AppointmentController extends Controller
 
             DB::table('services')
                 ->where('svc_id', $svc_id)
-                ->update([
+                ->update(array_merge($sharedFields, [   // ← merged
                     'svc_is_termite' => 1,
                     'svcpat_id' => $request->svcpat_id,
                     'svc_type_treatment' => $treatmentType,
@@ -597,7 +652,7 @@ class AppointmentController extends Controller
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
                     'svc_modified_by' => session('usr_id'),
-                ]);
+                ]));
 
             DB::table('service_orders')
                 ->where('svc_id', $svc_id)
@@ -608,7 +663,6 @@ class AppointmentController extends Controller
                 ]);
 
         } else {
-            // NON-TERMITE PATH
             $sqmInitial = $service->svc_sqm_initial;
             if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
                 $sqmInitial = null;
@@ -618,7 +672,7 @@ class AppointmentController extends Controller
 
             DB::table('services')
                 ->where('svc_id', $svc_id)
-                ->update([
+                ->update(array_merge($sharedFields, [   // ← merged
                     'svc_is_package' => $isPackage,
                     'svc_sqm_initial' => $sqmInitial,
                     'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
@@ -630,10 +684,9 @@ class AppointmentController extends Controller
                     'svc_balance' => $finalPrice,
                     'svc_date_modified' => Carbon::now(),
                     'svc_modified_by' => session('usr_id'),
-                ]);
+                ]));
         }
 
-        // APPOINTMENT (shared) 
         DB::table('service_appointments')
             ->where('svc_id', $svc_id)
             ->update([
@@ -648,10 +701,7 @@ class AppointmentController extends Controller
 
         $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
 
-        logUserActivity(
-            'Manage Appointments',
-            'Confirmed Assessment ' . $serviceOrder
-        );
+        logUserActivity('Manage Appointments', 'Confirmed Assessment ' . $serviceOrder);
 
         session()->flash('successMessage', 'Appointment successfully assessed.');
         return redirect()->action(
@@ -675,6 +725,7 @@ class AppointmentController extends Controller
                 'services.svc_id',
                 'services.svc_sa_number',
                 'services.svc_km_distance',
+                'services.svc_property_type',
                 'services.svc_is_package',
                 'services.svcpat_id',
                 'services.svc_is_termite',
@@ -707,6 +758,7 @@ class AppointmentController extends Controller
                 'service_appointments.svca_approved_date',
                 'service_appointments.svca_approved_time_from',
                 'service_appointments.svca_approved_time_to',
+                'service_appointments.svca_date_approved',
                 'user_addresses.uadd_street',
                 'user_addresses.uadd_barangay',
                 'user_addresses.uadd_city',
