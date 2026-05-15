@@ -1,7 +1,7 @@
 <aside class="main-sidebar sidebar-dark-red elevation-4">
     {{-- Brand Logo --}}
     <a href="#" class="brand-link d-flex align-items-center">
-        <img src="{{ asset('images/logos/logo.jpg') }}" alt="Mendoza Cafe logo" class="brand-image"
+        <img src="{{ asset('images/logos/logo_red.png') }}" alt="Mendoza Cafe logo" class="brand-image"
             style="width:35px; height:35px; object-fit:cover; margin-right:10px;">
 
         <span class="brand-text font-weight-light" style="line-height:1.2;">
