@@ -440,6 +440,7 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'svc_id' => 'required',
+            'svc_sa_number' => 'required',
             'svc_infestation' => 'required',
             'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
@@ -447,6 +448,19 @@ class AppointmentController extends Controller
             'svca_approved_time_from' => 'required',
             'svca_approved_time_to' => 'required',
         ]);
+
+        $svc_id = $request->svc_id;
+
+        if (
+            DB::table('services')
+                ->where('svc_sa_number', $request->svc_sa_number)
+                ->where('svc_id', '!=', $svc_id)
+                ->exists()
+        ) {
+
+            session()->flash('errorMessage', 'SA Number already exists.');
+            return redirect()->back();
+        }
 
         $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
@@ -564,6 +578,7 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'svc_id' => 'required',
+            'svc_sa_number' => 'required',
             'svc_infestation' => 'required',
             'svc_location_price' => 'required|numeric',
             'svc_final_price' => 'required|numeric',
@@ -571,6 +586,19 @@ class AppointmentController extends Controller
             'svca_approved_time_from' => 'required',
             'svca_approved_time_to' => 'required',
         ]);
+
+        $svc_id = $request->svc_id;
+
+        if (
+            DB::table('services')
+                ->where('svc_sa_number', $request->svc_sa_number)
+                ->where('svc_id', '!=', $svc_id)
+                ->exists()
+        ) {
+
+            session()->flash('errorMessage', 'SA Number already exists.');
+            return redirect()->back();
+        }
 
         $svc_id = $request->svc_id;
         $isTermite = $request->svc_is_termite;
