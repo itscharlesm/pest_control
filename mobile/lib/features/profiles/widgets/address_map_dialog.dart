@@ -137,9 +137,7 @@ class _AddressMapDialogState extends State<AddressMapDialog> {
             Expanded(
               child: ClipRRect(
                 key: mapKey,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.zero,
                 child: isLoadingLocation
                     ? const Center(
                         child: CircularProgressIndicator(),
@@ -216,7 +214,7 @@ class _AddressMapDialogState extends State<AddressMapDialog> {
                                       duration: const Duration(milliseconds: 220),
                                       curve: Curves.easeOut,
                                       bottom: isMovingMap ? 1 : 6,
-                                      left: isMovingMap ? 53 : 46,
+                                      left: isMovingMap ? 55 : 46,
                                       child: AnimatedContainer(
                                         duration: const Duration(milliseconds: 220),
                                         curve: Curves.easeOut,
@@ -236,11 +234,11 @@ class _AddressMapDialogState extends State<AddressMapDialog> {
                                     AnimatedPositioned(
                                       duration: const Duration(milliseconds: 220),
                                       curve: Curves.easeOut,
-                                      top: isMovingMap ? -5.5 : 38,
+                                      top: isMovingMap ? 25 : 38,
                                       child: AnimatedScale(
                                         duration: const Duration(milliseconds: 220),
                                         curve: Curves.easeOut,
-                                        scale: isMovingMap ? 1.08 : 1.0,
+                                        scale: isMovingMap ? 1.03 : 1.0,
                                         child: Image.asset(
                                           'assets/images/img_map_pin.png',
                                           width: 70,
@@ -251,6 +249,69 @@ class _AddressMapDialogState extends State<AddressMapDialog> {
                                   ],
                                 ),
                               ),
+                            ),
+                          ),
+
+                          Positioned(
+                            right: 12,
+                            top: 12,
+                            child: Column(
+                              children: [
+                                _mapControlButton(
+                                  icon: Icons.my_location_rounded,
+                                  onTap: () async {
+                                    if (mapboxMap == null || currentPosition == null) return;
+
+                                    await mapboxMap!.flyTo(
+                                      CameraOptions(
+                                        center: Point(
+                                          coordinates: Position(
+                                            currentPosition!.longitude,
+                                            currentPosition!.latitude,
+                                          ),
+                                        ),
+                                        zoom: 15,
+                                      ),
+                                      MapAnimationOptions(duration: 700),
+                                    );
+
+                                    await Future.delayed(const Duration(milliseconds: 750));
+                                    await _updatePinCoordinates();
+                                  },
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                _mapControlButton(
+                                  icon: Icons.add_rounded,
+                                  onTap: () async {
+                                    if (mapboxMap == null) return;
+
+                                    final camera = await mapboxMap!.getCameraState();
+
+                                    await mapboxMap!.easeTo(
+                                      CameraOptions(zoom: camera.zoom + 1),
+                                      MapAnimationOptions(duration: 250),
+                                    );
+                                  },
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                _mapControlButton(
+                                  icon: Icons.remove_rounded,
+                                  onTap: () async {
+                                    if (mapboxMap == null) return;
+
+                                    final camera = await mapboxMap!.getCameraState();
+
+                                    await mapboxMap!.easeTo(
+                                      CameraOptions(zoom: camera.zoom - 1),
+                                      MapAnimationOptions(duration: 250),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -269,16 +330,6 @@ class _AddressMapDialogState extends State<AddressMapDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    selectedLatitude == null
-                        ? 'Move the map to place the pin on your exact address.'
-                        : 'Selected Location:\nLatitude: $selectedLatitude\nLongitude: $selectedLongitude',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.black,
-                      height: 1.4,
-                    ),
-                  ),
 
                   const SizedBox(height: 12),
 
@@ -305,6 +356,31 @@ class _AddressMapDialogState extends State<AddressMapDialog> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _mapControlButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: AppTheme.white,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 3,
+      shadowColor: Colors.black.withOpacity(0.12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Icon(
+            icon,
+            color: AppTheme.black,
+            size: 21,
+          ),
         ),
       ),
     );

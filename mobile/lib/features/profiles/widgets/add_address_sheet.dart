@@ -24,6 +24,9 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
   bool isLoadingUsedTypes = true;
   bool isSaving = false;
 
+  double? selectedLatitude;
+  double? selectedLongitude;
+
   List<int> unavailableAddressTypeIds = [];
   int selectedAddressTypeId = 1;
 
@@ -68,14 +71,24 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
         selectedMunicipalityId != null &&
         selectedBarangayId != null &&
         streetController.text.trim().isNotEmpty &&
+        selectedLatitude != null &&
+        selectedLongitude != null &&
         !unavailableAddressTypeIds.contains(selectedAddressTypeId);
   }
 
-  void _openAddressMapDialog() {
-    showDialog(
+  Future<void> _openAddressMapDialog() async {
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => const AddressMapDialog(),
     );
+
+    if (result == null) return;
+
+    setState(() {
+      selectedLatitude = result['latitude'];
+      selectedLongitude = result['longitude'];
+    });
   }
 
   @override
@@ -133,7 +146,7 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
 
   Future<void> _saveAddress() async {
     if (!_isFormComplete) {
-      _showMessage('Please complete all address fields.');
+      _showMessage('Please complete all address fields and pin your location on the map.');
       return;
     }
 
@@ -154,6 +167,8 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
           'uadd_city': selectedMunicipalityName,
           'uadd_province': selectedProvinceName,
           'uadd_region': selectedRegionName,
+          'uadd_latitude': selectedLatitude,
+          'uadd_longitude': selectedLongitude,
         }),
       );
 
@@ -397,40 +412,92 @@ class _AddAddressSheetState extends State<AddAddressSheet> {
                       onChanged: (_) => setState(() {}),
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 14),
 
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Address Information',
-                            style: TextStyle(
-                              color: AppTheme.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    _fieldLabel('Map Location'),
+
+                    InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: isSaving || allTypesUsed ? null : _openAddressMapDialog,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(
+                          color: selectedLatitude != null && selectedLongitude != null
+                                ? Colors.green.withOpacity(0.05)
+                                : AppTheme.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                          color: selectedLatitude != null && selectedLongitude != null
+                                ? Colors.green.withOpacity(0.35)
+                                : AppTheme.borderGray,
                           ),
                         ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: selectedLatitude != null && selectedLongitude != null
+                                    ? Colors.green.withOpacity(0.10)
+                                    : AppTheme.primaryRed.withOpacity(0.10),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                selectedLatitude != null && selectedLongitude != null
+                                    ? Icons.check_circle_rounded
+                                    : Icons.location_on_outlined,
+                                color: selectedLatitude != null && selectedLongitude != null
+                                  ? Colors.green
+                                  : AppTheme.primaryRed,
+                                size: 21,
+                              ),
+                            ),
 
-                        InkWell(
-                          borderRadius: BorderRadius.circular(20),
-                          onTap: _openAddressMapDialog,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryRed.withOpacity(0.08),
-                              shape: BoxShape.circle,
+                            const SizedBox(width: 12),
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    selectedLatitude != null && selectedLongitude != null
+                                        ? 'Location pinned'
+                                        : 'Pin exact location on map',
+                                    style: const TextStyle(
+                                      color: AppTheme.black,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    selectedLatitude != null && selectedLongitude != null
+                                        ? 'Tap to adjust the pinned location.'
+                                        : 'Required to accurately identify and serve your location.',
+                                    style: const TextStyle(
+                                      color: AppTheme.gray,
+                                      fontSize: 11.5,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.map_outlined,
-                              color: AppTheme.primaryRed,
-                              size: 20,
+
+                            const SizedBox(width: 8),
+
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppTheme.gray,
+                              size: 22,
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-
+                    
                     const SizedBox(height: 22),
 
                     SizedBox(
