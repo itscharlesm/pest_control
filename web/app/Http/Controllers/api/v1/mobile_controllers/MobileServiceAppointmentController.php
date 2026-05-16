@@ -100,6 +100,34 @@ class MobileServiceAppointmentController extends Controller
 
             $finalDistance = $drivingDistance ?? $nearestDistance;
 
+            $locationRate = DB::table('service_package_area_locations')
+                ->where('branch_id', $nearestBranch->branch_id)
+                ->where('svcpal_active', 1)
+                ->first();
+
+            if (!$locationRate) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No location pricing found for this branch.',
+                ], 400);
+            }
+
+            $baseKm = 10;
+            $baseCost = (float) $locationRate->svcpal_first_cost;
+            $succeedingCost = (float) $locationRate->svcpal_succeeding_cost;
+            $distanceKm = (int) $finalDistance;
+
+            if ($distanceKm <= $baseKm) {
+                $deliveryFee = $baseCost;
+            } else {
+                $excessKm = $distanceKm - $baseKm;
+                $deliveryFee = $baseCost + ($excessKm * $succeedingCost);
+            }
+
+            $totalInitialPrice = (float) $initialPrice + $deliveryFee;
+
             $serviceId = DB::table('services')->insertGetId([
                 'svc_uuid' => Str::uuid(),
                 'branch_id' => $nearestBranch->branch_id,
@@ -115,10 +143,10 @@ class MobileServiceAppointmentController extends Controller
                 'svc_problem_description' => strtoupper($request->problem_description),
                 'svc_status' => 'REQUESTED',
                 'svc_infestation' => null,
-                'svc_initial_price' => $initialPrice,
+                'svc_initial_price' => $totalInitialPrice,
                 'svc_km_distance' => $finalDistance,
                 'svc_final_price' => null,
-                'svc_balance' => $initialPrice,
+                'svc_balance' => $totalInitialPrice,
                 'svc_payment_status' => 'NO PAYMENT',
                 'svc_attachment' => null,
                 'svc_frequency_type' => null,
