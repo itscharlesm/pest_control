@@ -18,6 +18,8 @@ class MobileAddressController extends Controller
             'uadd_city' => 'required|string',
             'uadd_province' => 'nullable|string',
             'uadd_region' => 'nullable|string',
+            'uadd_longitude' => 'nullable|numeric',
+            'uadd_latitude' => 'nullable|numeric',
         ]);
 
         $user = DB::table('users')
@@ -44,6 +46,8 @@ class MobileAddressController extends Controller
             'uadd_city' => $request->uadd_city,
             'uadd_province' => $request->uadd_province,
             'uadd_region' => $request->uadd_region,
+            'uadd_longitude' => $request->uadd_longitude,
+            'uadd_latitude' => $request->uadd_latitude,
             'uadd_date_created' => now(),
             'uadd_created_by' => $user->usr_id,
             'uadd_active' => $hasExistingAddress ? 0 : 1,
