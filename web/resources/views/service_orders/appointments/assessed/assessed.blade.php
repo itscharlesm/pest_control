@@ -82,7 +82,7 @@
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                @if ($appointment->svc_is_package== 1)
+                                                @if ($appointment->svc_is_package == 1)
                                                     YES
                                                 @else
                                                     NO

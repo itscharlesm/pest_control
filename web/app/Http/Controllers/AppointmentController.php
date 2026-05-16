@@ -760,7 +760,6 @@ class AppointmentController extends Controller
 
         return view('service_orders.appointments.assessed.assessed', compact('appointments', 'search'));
     }
-
     public function assessed_appointments_view($svc_id)
     {
         $display = DB::table('services')
@@ -888,7 +887,20 @@ class AppointmentController extends Controller
             ->select('service_appointment_images.*')
             ->get();
 
-        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'appointmentImages'));
+        // Technicians
+        $technicians = DB::table('users')
+            ->where('utyp_id', 2)
+            ->where('usr_active', 1)
+            ->where('branch_id', $display->branch_id)
+            ->orderBy('usr_last_name', 'asc')
+            ->select(
+                'usr_id',
+                'usr_first_name',
+                'usr_last_name'
+            )
+            ->get();
+
+        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
     }
     // END ASSESSED APPOINTMENTS
 
