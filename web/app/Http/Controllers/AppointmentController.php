@@ -828,18 +828,6 @@ class AppointmentController extends Controller
             )
             ->get();
 
-        // Add Pest Type
-        $existingPests = DB::table('service_order_pests')
-            ->where('svc_id', $svc_id)
-            ->where('svcop_active', 1)
-            ->pluck('svcp_id')
-            ->toArray();
-
-        $servicePackages = DB::table('service_packages')
-            ->where('svcp_id', '!=', 8)
-            ->whereNotIn('svcp_id', $existingPests)
-            ->get();
-
         // Service Orders with Areas (non-termite: svcpat_id IS NULL)
         $serviceAreas = DB::table('service_orders')
             ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
@@ -852,17 +840,6 @@ class AppointmentController extends Controller
                 'service_package_areas.svcpa_area',
                 'service_package_areas.svcpa_cost'
             )
-            ->get();
-
-        // Add Service Area
-        $existingAreas = DB::table('service_orders')
-            ->where('svc_id', $svc_id)
-            ->where('svco_active', 1)
-            ->pluck('svcpa_id')
-            ->toArray();
-
-        $servicePackageAreas = DB::table('service_package_areas')
-            ->whereNotIn('svcpa_id', $existingAreas)
             ->get();
 
         // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
@@ -900,7 +877,7 @@ class AppointmentController extends Controller
             )
             ->get();
 
-        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
+        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
     }
     // END ASSESSED APPOINTMENTS
 

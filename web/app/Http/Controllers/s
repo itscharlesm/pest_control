@@ -1,731 +1,119 @@
-list of assessed
-public function assessed_appointments(Request $request)
-    {
-        $search = $request->search ?? '';
-        $sessionBranchId = session('branch_id');
-
-        $query = DB::table('services')
-            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
-            ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
-            ->where('services.svc_active', 1)
-            ->where('services.svc_status', 'ASSESSED');
-
-        // Branch filter (same logic as users_active)
-        if ($sessionBranchId != 1) {
-            $query->where('services.branch_id', $sessionBranchId);
-        }
-
-        $query->select(
+public function assessed_appointments_view($svc_id)
+{
+    $display = DB::table('services')
+        ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+        ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+        ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
+        ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+        ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+        ->where('services.svc_id', $svc_id)
+        ->select(
             'services.svc_id',
             'services.svc_sa_number',
-            'services.svc_is_termite',
+            'services.svc_km_distance',
+            'services.svc_property_type',
             'services.svc_is_package',
+            'services.svcpat_id',
+            'services.svc_is_termite',
+            'services.svc_type_treatment',
+            'services.svc_sqm_initial',
+            'services.svc_sqm_final',
+            'services.svc_with_device',
+            'services.svc_device_count',
+            'services.svc_problem_description',
             'services.svc_status',
+            'services.svc_infestation',
+            'services.svc_initial_price',
+            'services.svc_location_price',
+            'services.svc_device_price',
+            'services.svc_fixed_price',
+            'services.svc_final_price',
+            'services.svc_balance',
             'services.svc_payment_status',
-            'services.svc_date_created',
+            'services.svc_assessment_recommendation',
+            'services.svc_chemical_quantity',
+            'services.svc_chemical_metric',
             'users.usr_first_name',
             'users.usr_last_name',
             'users.usr_email',
             'users.usr_mobile',
-            'branches.branch_name'
-        );
+            'branches.branch_id',
+            'branches.branch_name',
+            'service_appointments.svca_client_date',
+            'service_appointments.svca_client_time',
+            'service_appointments.svca_approved_date',
+            'service_appointments.svca_approved_time_from',
+            'service_appointments.svca_approved_time_to',
+            'service_appointments.svca_date_approved',
+            'user_addresses.uadd_street',
+            'user_addresses.uadd_barangay',
+            'user_addresses.uadd_city',
+            'user_addresses.uadd_province',
+            'user_addresses.uadd_region',
+            'addresses.add_name'
+        )
+        ->first();
 
-        // Search
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('users.usr_first_name', 'LIKE', "%$search%")
-                    ->orWhere('users.usr_last_name', 'LIKE', "%$search%")
-                    ->orWhere('users.usr_email', 'LIKE', "%$search%")
-                    ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
-                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
-            });
-        }
+    // Pest Types for this service
+    $pestTypes = DB::table('service_order_pests')
+        ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+        ->where('service_order_pests.svc_id', $svc_id)
+        ->where('service_order_pests.svcop_active', 1)
+        ->select(
+            'service_order_pests.svcop_id',
+            'service_packages.svcp_id',
+            'service_packages.svcp_pest_type'
+        )
+        ->get();
 
-        $query->orderBy('services.svc_date_created', 'asc');
+    // Service Orders with Areas (non-termite: svcpat_id IS NULL)
+    $serviceAreas = DB::table('service_orders')
+        ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+        ->where('service_orders.svc_id', $svc_id)
+        ->whereNull('service_orders.svcpat_id')
+        ->where('service_orders.svco_active', 1)
+        ->select(
+            'service_orders.svco_id',
+            'service_package_areas.svcpa_id',
+            'service_package_areas.svcpa_area',
+            'service_package_areas.svcpa_cost'
+        )
+        ->get();
 
-        $appointments = $query->paginate(50);
+    // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
+    $termiteAreas = DB::table('service_orders')
+        ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
+        ->where('service_orders.svc_id', $svc_id)
+        ->whereNotNull('service_orders.svcpat_id')
+        ->where('service_orders.svco_active', 1)
+        ->select(
+            'service_orders.svco_id',
+            'service_package_area_termites.svcpat_id',
+            'service_package_area_termites.svcpat_sqm_details',
+            'service_package_area_termites.svcpat_cost'
+        )
+        ->get();
 
-        return view('service_orders.appointments.assessed.assessed', compact('appointments', 'search'));
-    }
+    // Client Appointment Images
+    $appointmentImages = DB::table('service_appointment_images')
+        ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
+        ->where('service_appointments.svc_id', $svc_id)
+        ->where('service_appointment_images.svcap_active', 1)
+        ->select('service_appointment_images.*')
+        ->get();
 
-view assess:
-public function assessed_appointments_view($svc_id)
-    {
-        $display = DB::table('services')
-            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
-            ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
-            ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
-            ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
-            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
-            ->where('services.svc_id', $svc_id)
-            ->select(
-                'services.svc_id',
-                'services.svc_sa_number',
-                'services.svc_km_distance',
-                'services.svc_property_type',
-                'services.svc_is_package',
-                'services.svcpat_id',
-                'services.svc_is_termite',
-                'services.svc_type_treatment',
-                'services.svc_sqm_initial',
-                'services.svc_sqm_final',
-                'services.svc_with_device',
-                'services.svc_device_count',
-                'services.svc_problem_description',
-                'services.svc_status',
-                'services.svc_infestation',
-                'services.svc_initial_price',
-                'services.svc_location_price',
-                'services.svc_device_price',
-                'services.svc_fixed_price',
-                'services.svc_final_price',
-                'services.svc_balance',
-                'services.svc_payment_status',
-                'services.svc_assessment_recommendation',
-                'services.svc_chemical_quantity',
-                'services.svc_chemical_metric',
-                'users.usr_first_name',
-                'users.usr_last_name',
-                'users.usr_email',
-                'users.usr_mobile',
-                'branches.branch_id',
-                'branches.branch_name',
-                'service_appointments.svca_client_date',
-                'service_appointments.svca_client_time',
-                'service_appointments.svca_approved_date',
-                'service_appointments.svca_approved_time_from',
-                'service_appointments.svca_approved_time_to',
-                'service_appointments.svca_date_approved',
-                'user_addresses.uadd_street',
-                'user_addresses.uadd_barangay',
-                'user_addresses.uadd_city',
-                'user_addresses.uadd_province',
-                'user_addresses.uadd_region',
-                'addresses.add_name'
-            )
-            ->first();
+    // Technicians
+    $technicians = DB::table('users')
+        ->where('utyp_id', 2)
+        ->where('usr_active', 1)
+        ->where('branch_id', $display->branch_id)
+        ->orderBy('usr_last_name', 'asc')
+        ->select(
+            'usr_id',
+            'usr_first_name',
+            'usr_last_name'
+        )
+        ->get();
 
-        // Pest Types for this service
-        $pestTypes = DB::table('service_order_pests')
-            ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
-            ->where('service_order_pests.svc_id', $svc_id)
-            ->where('service_order_pests.svcop_active', 1)
-            ->select(
-                'service_order_pests.svcop_id',
-                'service_packages.svcp_id',
-                'service_packages.svcp_pest_type'
-            )
-            ->get();
-
-        // Add Pest Type
-        $existingPests = DB::table('service_order_pests')
-            ->where('svc_id', $svc_id)
-            ->where('svcop_active', 1)
-            ->pluck('svcp_id')
-            ->toArray();
-
-        $servicePackages = DB::table('service_packages')
-            ->where('svcp_id', '!=', 8)
-            ->whereNotIn('svcp_id', $existingPests)
-            ->get();
-
-        // Service Orders with Areas (non-termite: svcpat_id IS NULL)
-        $serviceAreas = DB::table('service_orders')
-            ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
-            ->where('service_orders.svc_id', $svc_id)
-            ->whereNull('service_orders.svcpat_id')
-            ->where('service_orders.svco_active', 1)
-            ->select(
-                'service_orders.svco_id',
-                'service_package_areas.svcpa_id',
-                'service_package_areas.svcpa_area',
-                'service_package_areas.svcpa_cost'
-            )
-            ->get();
-
-        // Add Service Area
-        $existingAreas = DB::table('service_orders')
-            ->where('svc_id', $svc_id)
-            ->where('svco_active', 1)
-            ->pluck('svcpa_id')
-            ->toArray();
-
-        $servicePackageAreas = DB::table('service_package_areas')
-            ->whereNotIn('svcpa_id', $existingAreas)
-            ->get();
-
-        // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
-        $termiteAreas = DB::table('service_orders')
-            ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
-            ->where('service_orders.svc_id', $svc_id)
-            ->whereNotNull('service_orders.svcpat_id')
-            ->where('service_orders.svco_active', 1)
-            ->select(
-                'service_orders.svco_id',
-                'service_package_area_termites.svcpat_id',
-                'service_package_area_termites.svcpat_sqm_details',
-                'service_package_area_termites.svcpat_cost'
-            )
-            ->get();
-
-        // Client Appointment Images
-        $appointmentImages = DB::table('service_appointment_images')
-            ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
-            ->where('service_appointments.svc_id', $svc_id)
-            ->where('service_appointment_images.svcap_active', 1)
-            ->select('service_appointment_images.*')
-            ->get();
-
-        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'appointmentImages'));
-    }
-
-    <style>
-    @media print {
-        body {
-            zoom: 100%;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-
-        .print-only {
-            display: block !important;
-        }
-
-        .print-hide {
-            display: none !important;
-        }
-    }
-
-    .table-responsive {
-        overflow: visible !important;
-    }
-
-    #sectionB {
-        overflow: visible !important;
-    }
-
-    .content-wrapper {
-        overflow-x: hidden;
-    }
-</style>
-
-@extends('layouts.themes.main')
-
-@section('content')
-    {{-- Content Header --}}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Assessed Appointment</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item">
-                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
-                        </li>
-                        <li class="breadcrumb-item">Appointment</li>
-                        <li class="breadcrumb-item">Assessed</li>
-                        <li class="breadcrumb-item active">View</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Main Content --}}
-    <section class="content">
-        @include('layouts.partials.onclick')
-        @include('layouts.partials.alerts')
-        @include('layouts.partials.modal_style')
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-body overflow-auto">
-                    <div class="text-center mb-2">
-                        <h5 style="margin: 0; font-weight: bold;">GO FORWARD PEST CONTROL</h5>
-                        <p style="margin: 0;">{{ $display->branch_name }}</p>
-                    </div>
-
-                    <div class="mb-4 position-relative text-center">
-                        <strong style="color: red;">SERVICE ORDER</strong>
-
-                        <strong style="position: absolute; right: 0; top: 0;">
-                            SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }}
-                        </strong>
-                    </div>
-                    <div class="row">
-
-                        {{-- Appointment Information Display --}}
-                        <div class="table-responsive overflow-auto" id="sectionA">
-                            <table class="table table-bordered text-left align-middle">
-                                <tbody>
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">CLIENT NAME</td>
-                                        <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
-                                        <td style="font-weight: bold;">EMAIL</td>
-                                        <td>{{ $display->usr_email }}</td>
-                                        <td style="font-weight: bold;">MOBILE</td>
-                                        <td>{{ $display->usr_mobile }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">ADDRESS</td>
-                                        <td colspan="3">
-                                            {{ implode(
-                                                ', ',
-                                                array_filter([
-                                                    $display->uadd_street,
-                                                    $display->uadd_barangay,
-                                                    $display->uadd_city,
-                                                    $display->uadd_province,
-                                                    $display->uadd_region,
-                                                ]),
-                                            ) }}
-                                        </td>
-                                        <td style="font-weight: bold;">ADDRESS TYPE</td>
-                                        <td>{{ $display->add_name }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">BRANCH</td>
-                                        <td>{{ $display->branch_name }}</td>
-                                        <td style="font-weight: bold;">STATUS</td>
-                                        <td>{{ $display->svc_status }}</td>
-                                        <td style="font-weight: bold;">PAYMENT STATUS</td>
-                                        <td>{{ $display->svc_payment_status }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">PROPERTY TYPE</td>
-                                        <td>{{ $display->svc_property_type }}</td>
-                                        <td style="font-weight: bold;">INFESTATION</td>
-                                        <td>{{ $display->svc_infestation }}</td>
-                                        <td style="font-weight: bold;">DISTANCE</td>
-                                        <td>{{ $display->svc_km_distance }} KM</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">IS TERMITE</td>
-                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
-                                        <td style="font-weight: bold;">IS PACKAGE</td>
-                                        <td colspan="3">{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">PRICING</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">INITIAL PRICE</td>
-                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
-                                        <td style="font-weight: bold;">LOCATION PRICE</td>
-                                        <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
-                                        <td style="font-weight: bold;">FIXED PRICE</td>
-                                        <td>₱{{ number_format($display->svc_fixed_price, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">FINAL PRICE</td>
-                                        <td>₱{{ number_format($display->svc_final_price, 2) }}</td>
-                                        <td style="font-weight: bold;">BALANCE</td>
-                                        <td colspan="3">₱{{ number_format($display->svc_balance, 2) }}</td>
-                                    </tr>
-
-                                    @if ($display->svc_is_termite)
-                                        <tr>
-                                            <th colspan="6" class="text-center table-light">TERMITE CASE</th>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
-                                            <td>{{ $display->svc_type_treatment }}</td>
-                                            <td style="font-weight: bold;">INITIAL SQM</td>
-                                            <td>{{ $display->svc_sqm_initial }}</td>
-                                            <td style="font-weight: bold;">FINAL SQM</td>
-                                            <td>{{ $display->svc_sqm_final }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight: bold;">WITH DEVICE</td>
-                                            <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-                                            <td style="font-weight: bold;">DEVICE COUNT</td>
-                                            <td colspan="3">{{ $display->svc_device_count ?? 'N/A' }}</td>
-                                        </tr>
-                                    @endif
-
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">CHEMICAL</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">CHEMICAL QUANTITY</td>
-                                        <td>{{ $display->svc_chemical_quantity }}</td>
-                                        <td style="font-weight: bold;">CHEMICAL METRIC</td>
-                                        <td colspan="3">{{ $display->svc_chemical_metric }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">SCHEDULE</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">CLIENT DATE</td>
-                                        <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
-                                        <td style="font-weight: bold;">CLIENT TIME</td>
-                                        <td colspan="3">
-                                            {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight: bold;">DATE APPROVED</td>
-                                        <td>{{ \Carbon\Carbon::parse($display->svca_date_approved)->format('m/d/Y') }}</td>
-                                        <td style="font-weight: bold;">TIME FROM</td>
-                                        <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_from)->format('h:i A') }}
-                                        </td>
-                                        <td style="font-weight: bold;">TIME TO</td>
-                                        <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_to)->format('h:i A') }}
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION</th>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="6" style="text-align: justify">
-                                            {{ $display->svc_problem_description }}
-                                        </td>
-                                    </tr>
-
-                                    @if (!empty($display->svc_assessment_recommendation))
-                                        <tr>
-                                            <th colspan="6" class="text-center table-light">ASSESSMENT RECOMMENDATION
-                                            </th>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="6" style="text-align: justify">
-                                                {{ $display->svc_assessment_recommendation }}
-                                            </td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="d-flex justify-content-end flex-wrap mb-3 no-print">
-                            <button type="button" class="btn btn-primary mr-2 mb-2" onclick="printDefault()">
-                                <span class="fa fa-print"></span> Print
-                            </button>
-
-                            <div class="btn-group mr-2 mb-2">
-                                <button type="button" class="btn btn-success mr-2 mb-2" data-toggle="modal"
-                                    data-target="#assignTechnicianModal">
-                                    <span class="fa fa-user"></span> Assign Technician
-                                </button>
-                                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
-                                    aria-haspopup="true" aria-expanded="false">
-                                    <span class="fa fa-print"></span> Print Options
-                                </button>
-                                <div class="dropdown-menu p-3" style="min-width: 200px;">
-                                    <label class="dropdown-item">
-                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionA">
-                                        Appointment
-                                        Information
-                                    </label>
-                                    <label class="dropdown-item">
-                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionB"> Service
-                                        Orders
-                                    </label>
-                                    @if ($appointmentImages->count() > 0)
-                                        <label class="dropdown-item">
-                                            <input type="checkbox" class="print-toggle mr-1" data-target="sectionC">
-                                            Client
-                                            Appointment Images
-                                        </label>
-                                    @endif
-                                    <div class="dropdown-item text-center">
-                                        <button class="btn btn-primary btn-sm mt-2" onclick="handlePrint()">Confirm &
-                                            Print</button>
-                                    </div>
-                                    <div class="dropdown-item">
-                                        <p id="warning" style="color:red; display:none;" class="mt-1">Select at least
-                                            one
-                                            section.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <a class="btn btn-danger mr-2 mb-2" href="">
-                                <span class="fa fa-user-shield"></span> Override
-                            </a>
-                        </div>
-
-                        {{-- Service Order Display --}}
-                        <div class="table-responsive" id="sectionB">
-                            <hr class="no-print">
-                            @if ($display->svc_is_termite == 0)
-                                {{-- NON-TERMITE: Two columns - Pest Type & Service Order --}}
-                                <div class="row">
-                                    {{-- PEST TYPE TABLE --}}
-                                    <div class="col-md-6">
-                                        <table class="table table-bordered text-center mb-2">
-                                            <thead>
-                                                <tr style="background-color: #f5f5f5;">
-                                                    <th colspan="3"><strong>PEST TYPE</strong></th>
-                                                </tr>
-                                                <tr style="background-color: #f5f5f5;">
-                                                    <th style="width: 50px;">No.</th>
-                                                    <th>Pest</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($pestTypes as $index => $type)
-                                                    <tr>
-                                                        <td style="vertical-align: middle; text-align: center">
-                                                            {{ $index + 1 }}</td>
-                                                        <td style="vertical-align: middle; text-align: center">
-                                                            {{ $type->svcp_pest_type }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {{-- SERVICE ORDER TABLE (non-termite areas) --}}
-                                    <div class="col-md-6">
-                                        <table class="table table-bordered text-center mb-2">
-                                            <thead>
-                                                <tr style="background-color: #f5f5f5;">
-                                                    <th colspan="4"><strong>SERVICE ORDER</strong></th>
-                                                </tr>
-                                                <tr style="background-color: #f5f5f5;">
-                                                    <th style="width: 50px;">No.</th>
-                                                    <th>Service</th>
-                                                    <th>Cost</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($serviceAreas as $index => $area)
-                                                    <tr>
-                                                        <td style="vertical-align: middle; text-align: center">
-                                                            {{ $index + 1 }}</td>
-                                                        <td style="vertical-align: middle; text-align: center">
-                                                            {{ $area->svcpa_area }}</td>
-                                                        <td style="vertical-align: middle; text-align: center">
-                                                            ₱{{ number_format($area->svcpa_cost, 2) }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            @elseif ($display->svc_is_termite == 1)
-                                {{-- TERMITE: Full width - Termite Details --}}
-                                <div class="col-md-12">
-                                    <table class="table table-bordered text-center mb-2">
-                                        <thead>
-                                            <tr style="background-color: #f5f5f5;">
-                                                <th colspan="5"><strong>TERMITE DETAILS</strong></th>
-                                            </tr>
-                                            <tr style="background-color: #f5f5f5;">
-                                                <th style="width: 50px;">No.</th>
-                                                <th>SQM Details</th>
-                                                <th>Cost</th>
-                                                <th>Computation</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($termiteAreas as $index => $area)
-                                                <tr>
-                                                    <td style="vertical-align: middle; text-align: center">
-                                                        {{ $index + 1 }}</td>
-                                                    <td style="vertical-align: middle; text-align: center">
-                                                        {{ $area->svcpat_sqm_details }}</td>
-                                                    <td style="vertical-align: middle; text-align: center">
-                                                        ₱{{ number_format($area->svcpat_cost, 2) }}</td>
-                                                    <td style="vertical-align: middle; text-align: center">
-                                                        @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
-                                                            <p>STANDARD TREATMENT: sqm × cost</p>
-                                                        @elseif ($display->svc_type_treatment == 'HYBRID TREATMENT')
-                                                            <p>HYBRID TREATMENT: sqm × cost + device</p>
-                                                        @else
-                                                            <p>{{ $display->svc_type_treatment }}: sqm × cost</p>
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="text-center text-muted">No termite areas
-                                                        added.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- Client Appointment Images --}}
-                        @if ($appointmentImages->count() > 0)
-                            <div class="table-responsive" id="sectionC">
-                                <table class="table table-bordered text-center mb-2">
-                                    <thead>
-                                        <tr style="background-color: #f5f5f5;">
-                                            <th colspan="5">
-                                                <strong>CLIENT APPOINTMENT IMAGES</strong>
-                                            </th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        @foreach ($appointmentImages->chunk(5) as $chunk)
-                                            <tr>
-                                                @foreach ($chunk as $img)
-                                                    <td style="width:20%; padding:10px; vertical-align:middle;">
-                                                        <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
-                                                            target="_blank"
-                                                            style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden;">
-
-                                                            <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
-                                                                alt="Appointment Image"
-                                                                style="width:100%; height:100%; object-fit:cover; display:block;">
-                                                        </a>
-                                                    </td>
-                                                @endforeach
-
-                                                {{-- Fill empty cells if less than 5 images --}}
-                                                @for ($i = $chunk->count(); $i < 5; $i++)
-                                                    <td style="vertical-align: middle;"></td>
-                                                @endfor
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- Assign Technician Modal --}}
-    <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
-        aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md" role="document">
-            <form action="{{ url('management/branches/add') }}" method="POST">
-                @csrf
-
-                <div class="modal-content">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title text-white" id="assignTechnicianModalLabel">
-                            <span class="fa fa-plus text-white"></span> Assign Technician
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-
-                    <div class="modal-body">
-                        {{-- Service ID --}}
-                        <input type="hidden" name="svc_id" value="{{ $appointment->svc_id ?? '' }}">
-
-                        <div class="row">
-                            {{-- Branch Name --}}
-                            <div class="col-md-12 mb-3">
-                                <label>Assign Technician <span class="text-danger">*</span></label>
-                                <select class="select2" data-placeholder="Assign Technician" style="width:100%;"
-                                    name="svcas_assigned_to" required>
-
-                                    @foreach ($technicians as $technician)
-                                        <option value="{{ $technician->usr_id }}">
-                                            {{ $technician->usr_last_name }},
-                                            {{ $technician->usr_first_name }}
-                                        </option>
-                                    @endforeach
-
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <span class="fa fa-close"></span> Close
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save Branch
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        function printDefault() {
-            window.print();
-        }
-
-        function handlePrint() {
-            console.log("Print button clicked!");
-
-            const checkboxes = document.querySelectorAll('.print-toggle');
-            const warning = document.getElementById('warning');
-            let anyChecked = false;
-
-            // Reset all sections (show all initially) - Check if the section exists
-            const sectionIds = [
-                'sectionA', 'sectionB', 'sectionC'
-            ];
-
-            sectionIds.forEach(sectionId => {
-                const section = document.getElementById(sectionId);
-                if (section) {
-                    section.classList.remove('print-hide');
-                }
-            });
-
-            // Hide unselected sections
-            checkboxes.forEach(checkbox => {
-                const targetId = checkbox.dataset.target;
-                const targetDiv = document.getElementById(targetId);
-
-                // Only modify the target if it exists
-                if (targetDiv) {
-                    if (checkbox.checked) {
-                        anyChecked = true;
-                        targetDiv.classList.remove('print-hide');
-                    } else {
-                        targetDiv.classList.add('print-hide');
-                    }
-                } else {
-                    console.error(`Element with ID ${targetId} not found!`);
-                }
-            });
-
-            if (!anyChecked) {
-                warning.style.display = 'block';
-                return;
-            }
-
-            warning.style.display = 'none';
-
-            // Delay the print to ensure sections are properly hidden/shown
-            setTimeout(() => {
-                console.log("Triggering print dialog...");
-                window.print();
-            }, 500); // Allow time for the layout to update
-
-            // Restore view after printing
-            setTimeout(() => {
-                sectionIds.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        section.classList.remove('print-hide');
-                    }
-                });
-            }, 1000);
-        }
-    </script>
-@endsection
-
-in my select2 but not multiple assign technician can you fetch users table with utyp_id = 2 users_active = 1 and also users.branch_id = services.branch_id
+    return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
+}
