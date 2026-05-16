@@ -37,4 +37,7 @@ return [
         'redirect' => '/auth/google/callback',
     ],
 
+    'mapbox' => [
+        'token' => env('MAPBOX_ACCESS_TOKEN'),
+    ],
 ];

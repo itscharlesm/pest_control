@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Http\Controllers\api\v1\mobile_controllers\MobileMapboxDistanceController;
 
 class MobileServiceAppointmentController extends Controller
 {
@@ -90,6 +91,15 @@ class MobileServiceAppointmentController extends Controller
                 ], 400);
             }
 
+            $drivingDistance = MobileMapboxDistanceController::getDrivingDistanceKm(
+                $nearestBranch->branch_longitude,
+                $nearestBranch->branch_latitude,
+                $address->uadd_longitude,
+                $address->uadd_latitude
+            );
+
+            $finalDistance = $drivingDistance ?? $nearestDistance;
+
             $serviceId = DB::table('services')->insertGetId([
                 'svc_uuid' => Str::uuid(),
                 'branch_id' => $nearestBranch->branch_id,
@@ -106,7 +116,7 @@ class MobileServiceAppointmentController extends Controller
                 'svc_status' => 'REQUESTED',
                 'svc_infestation' => null,
                 'svc_initial_price' => $initialPrice,
-                'svc_km_distance' => $nearestDistance,
+                'svc_km_distance' => $finalDistance,
                 'svc_final_price' => null,
                 'svc_balance' => $initialPrice,
                 'svc_payment_status' => 'NO PAYMENT',
@@ -292,6 +302,6 @@ class MobileServiceAppointmentController extends Controller
             cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
         ));
 
-        return round($earthRadius * $angle, 2);
+        return round($earthRadius * $angle);
     }
 }
