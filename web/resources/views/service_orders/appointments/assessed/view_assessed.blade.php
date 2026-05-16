@@ -229,10 +229,13 @@
                         </div>
 
                         <div class="d-flex justify-content-end flex-wrap mb-3 no-print">
+                            <button type="button" class="btn btn-success mr-2 mb-2" data-toggle="modal"
+                                data-target="#assignTechnicianModal">
+                                <span class="fa fa-user"></span> Assign Technician
+                            </button>
                             <button type="button" class="btn btn-primary mr-2 mb-2" onclick="printDefault()">
                                 <span class="fa fa-print"></span> Print
                             </button>
-
                             <div class="btn-group mr-2 mb-2">
                                 <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
                                     aria-haspopup="true" aria-expanded="false">
@@ -240,7 +243,8 @@
                                 </button>
                                 <div class="dropdown-menu p-3" style="min-width: 200px;">
                                     <label class="dropdown-item">
-                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionA"> Appointment
+                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionA">
+                                        Appointment
                                         Information
                                     </label>
                                     <label class="dropdown-item">
@@ -420,6 +424,56 @@
             </div>
         </div>
     </section>
+
+    {{-- Assign Technician Modal --}}
+    <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
+        aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <form action="{{ url('management/branches/add') }}" method="POST">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white" id="assignTechnicianModalLabel">
+                            <span class="fa fa-plus text-white"></span> Assign Technician
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        {{-- Service ID --}}
+                        <input type="hidden" name="svc_id" value="{{ $appointment->svc_id ?? '' }}">
+
+                        <div class="row">
+                            {{-- Branch Name --}}
+                            <div class="col-md-12 mb-3">
+                                <label>Assign Technician <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svcas_assigned_to" required>
+                                    @foreach ($technicians as $technician)
+                                        <option value="{{ $technician->usr_id }}">
+                                            {{ $technician->usr_last_name }},
+                                            {{ $technician->usr_first_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save Branch
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         function printDefault() {

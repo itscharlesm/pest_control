@@ -137,7 +137,8 @@
                             </li>
 
                             <li class="nav-item">
-                                <a href="" class="nav-link">
+                                <a href="{{ action('App\Http\Controllers\AppointmentController@assessed_appointments') }}" 
+                                    class="nav-link {{ request()->is('service/orders/appointments/assessed*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     <p>ASSESSED</p>
                                 </a>

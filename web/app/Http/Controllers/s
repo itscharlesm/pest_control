@@ -1,494 +1,119 @@
-{{-- Confirm Assessment Modal --}}
-<div class="modal fade" id="confirmAssessmentAppointmentModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <form method="POST"
-                action="{{ action('App\Http\Controllers\AppointmentController@requested_appointments_view_assess_confirmation') }}">
-                @csrf
+public function assessed_appointments_view($svc_id)
+{
+    $display = DB::table('services')
+        ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+        ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+        ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
+        ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+        ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+        ->where('services.svc_id', $svc_id)
+        ->select(
+            'services.svc_id',
+            'services.svc_sa_number',
+            'services.svc_km_distance',
+            'services.svc_property_type',
+            'services.svc_is_package',
+            'services.svcpat_id',
+            'services.svc_is_termite',
+            'services.svc_type_treatment',
+            'services.svc_sqm_initial',
+            'services.svc_sqm_final',
+            'services.svc_with_device',
+            'services.svc_device_count',
+            'services.svc_problem_description',
+            'services.svc_status',
+            'services.svc_infestation',
+            'services.svc_initial_price',
+            'services.svc_location_price',
+            'services.svc_device_price',
+            'services.svc_fixed_price',
+            'services.svc_final_price',
+            'services.svc_balance',
+            'services.svc_payment_status',
+            'services.svc_assessment_recommendation',
+            'services.svc_chemical_quantity',
+            'services.svc_chemical_metric',
+            'users.usr_first_name',
+            'users.usr_last_name',
+            'users.usr_email',
+            'users.usr_mobile',
+            'branches.branch_id',
+            'branches.branch_name',
+            'service_appointments.svca_client_date',
+            'service_appointments.svca_client_time',
+            'service_appointments.svca_approved_date',
+            'service_appointments.svca_approved_time_from',
+            'service_appointments.svca_approved_time_to',
+            'service_appointments.svca_date_approved',
+            'user_addresses.uadd_street',
+            'user_addresses.uadd_barangay',
+            'user_addresses.uadd_city',
+            'user_addresses.uadd_province',
+            'user_addresses.uadd_region',
+            'addresses.add_name'
+        )
+        ->first();
 
-                <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
+    // Pest Types for this service
+    $pestTypes = DB::table('service_order_pests')
+        ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+        ->where('service_order_pests.svc_id', $svc_id)
+        ->where('service_order_pests.svcop_active', 1)
+        ->select(
+            'service_order_pests.svcop_id',
+            'service_packages.svcp_id',
+            'service_packages.svcp_pest_type'
+        )
+        ->get();
 
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title text-white">Confirm Assessment
-                        (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }})</h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
-                    </button>
-                </div>
+    // Service Orders with Areas (non-termite: svcpat_id IS NULL)
+    $serviceAreas = DB::table('service_orders')
+        ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+        ->where('service_orders.svc_id', $svc_id)
+        ->whereNull('service_orders.svcpat_id')
+        ->where('service_orders.svco_active', 1)
+        ->select(
+            'service_orders.svco_id',
+            'service_package_areas.svcpa_id',
+            'service_package_areas.svcpa_area',
+            'service_package_areas.svcpa_cost'
+        )
+        ->get();
 
-                <div class="modal-body">
-                    {{-- Read-only info table (same as assess) --}}
-                    <div class="row overflow-auto">
-                        <div class="table-responsive">
-                            <table class="table table-bordered text-left align-middle">
-                                <tbody>
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight:bold;">CLIENT NAME</td>
-                                        <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
-                                        <td style="font-weight:bold;">EMAIL</td>
-                                        <td>{{ $display->usr_email }}</td>
-                                        <td style="font-weight:bold;">MOBILE</td>
-                                        <td>{{ $display->usr_mobile }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight:bold;">ADDRESS</td>
-                                        <td colspan="3">
-                                            {{ implode(
-                                                ', ',
-                                                array_filter([
-                                                    $display->uadd_street,
-                                                    $display->uadd_barangay,
-                                                    $display->uadd_city,
-                                                    $display->uadd_province,
-                                                    $display->uadd_region,
-                                                ]),
-                                            ) }}
-                                        </td>
-                                        <td style="font-weight:bold;">ADDRESS TYPE</td>
-                                        <td>{{ $display->add_name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight:bold;">BRANCH</td>
-                                        <td>{{ $display->branch_name }}</td>
-                                        <td style="font-weight:bold;">STATUS</td>
-                                        <td>{{ $display->svc_status }}</td>
-                                        <td style="font-weight:bold;">PAYMENT STATUS</td>
-                                        <td>{{ $display->svc_payment_status }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight:bold;">INITIAL PRICE</td>
-                                        <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
-                                        <td style="font-weight:bold;">BALANCE</td>
-                                        <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight:bold;">IS TERMITE</td>
-                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
-                                        <td style="font-weight:bold;">IS PACKAGE</td>
-                                        <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                        <td colspan="2"></td>
-                                    </tr>
+    // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
+    $termiteAreas = DB::table('service_orders')
+        ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
+        ->where('service_orders.svc_id', $svc_id)
+        ->whereNotNull('service_orders.svcpat_id')
+        ->where('service_orders.svco_active', 1)
+        ->select(
+            'service_orders.svco_id',
+            'service_package_area_termites.svcpat_id',
+            'service_package_area_termites.svcpat_sqm_details',
+            'service_package_area_termites.svcpat_cost'
+        )
+        ->get();
 
-                                    @if ($display->svc_is_termite)
-                                        <tr>
-                                            <th colspan="6" class="text-center table-light">TERMITE CASE</th>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight:bold;">INITIAL SQM</td>
-                                            <td>{{ $display->svc_sqm_initial }}</td>
-                                            <td style="font-weight:bold;">WITH DEVICE</td>
-                                            <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-                                            <td style="font-weight:bold;">DEVICE COUNT</td>
-                                            <td>{{ $display->svc_device_count ?? 'N/A' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="font-weight:bold;">TREATMENT TYPE</td>
-                                            <td colspan="5">{{ $display->svc_type_treatment }}</td>
-                                        </tr>
-                                    @endif
+    // Client Appointment Images
+    $appointmentImages = DB::table('service_appointment_images')
+        ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
+        ->where('service_appointments.svc_id', $svc_id)
+        ->where('service_appointment_images.svcap_active', 1)
+        ->select('service_appointment_images.*')
+        ->get();
 
-                                    <tr>
-                                        <th colspan="6" class="text-center table-light">SCHEDULE</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="font-weight:bold;">CLIENT DATE REQUESTED</td>
-                                        <td colspan="2">
-                                            {{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}
-                                        </td>
-                                        <td style="font-weight:bold;">CLIENT TIME REQUESTED</td>
-                                        <td colspan="2">
-                                            {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}
-                                        </td>
-                                    </tr>
+    // Technicians
+    $technicians = DB::table('users')
+        ->where('utyp_id', 2)
+        ->where('usr_active', 1)
+        ->where('branch_id', $display->branch_id)
+        ->orderBy('usr_last_name', 'asc')
+        ->select(
+            'usr_id',
+            'usr_first_name',
+            'usr_last_name'
+        )
+        ->get();
 
-                                    @if (!empty($display->svc_problem_description))
-                                        <tr>
-                                            <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION
-                                            </th>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="6" style="text-align:justify">
-                                                {{ $display->svc_problem_description }}
-                                            </td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="row">
-                        {{-- SA Number --}}
-                        <div class="col-md-6 mb-3">
-                            <label for="svc_sa_number">
-                                SA Number (SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }})
-                                <span class="text-muted">(Ignore starting 0 digits)</span>
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input type="number" class="form-control" name="svc_sa_number"
-                                value="{{ $display->svc_sa_number }}" required>
-                        </div>
-
-                        {{-- Property Type --}}
-                        <div class="col-md-6 mb-3">
-                            <label>Property Type <span class="text-danger">*</span></label>
-                            <select class="form-control" name="svc_property_type" required>
-                                <option value="PERSONAL"
-                                    {{ $display->svc_property_type === 'PERSONAL' ? 'selected' : '' }}>
-                                    PERSONAL</option>
-                                <option value="COMMERCIAL"
-                                    {{ $display->svc_property_type === 'COMMERCIAL' ? 'selected' : '' }}>
-                                    COMMERCIAL</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    @php
-                        $isTermiteConfirm = $display->svc_is_termite == 1;
-                        $sqmColConfirm = $isTermiteConfirm ? 'col-md-6' : 'col-md-4';
-                        $selectColConfirm = $isTermiteConfirm ? 'col-md-6' : 'col-md-12';
-                    @endphp
-
-                    <div class="row">
-                        {{-- Is Termite / Package --}}
-                        <div class="{{ $selectColConfirm }} mb-3" id="confirmPackageCol">
-                            @if ($isTermiteConfirm)
-                                <label>Is Termite <span class="text-muted">(Not Editable)</span></label>
-                                <select class="form-control" disabled>
-                                    <option value="1" selected>YES</option>
-                                </select>
-                                <input type="hidden" name="svc_is_termite" value="1">
-                            @else
-                                <label>Is Package? <span class="text-danger">*</span></label>
-                                <select class="form-control" name="svc_is_package" id="confirmPackageSelect"
-                                    required>
-                                    <option value="1" {{ $display->svc_is_package == 1 ? 'selected' : '' }}>YES
-                                    </option>
-                                    <option value="0" {{ $display->svc_is_package == 0 ? 'selected' : '' }}>NO
-                                    </option>
-                                </select>
-                            @endif
-                        </div>
-
-                        {{-- SQM --}}
-                        <div class="{{ $sqmColConfirm }} mb-3" id="confirmSqmCol">
-                            <label>SQM Meters <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" name="svc_sqm_initial"
-                                id="confirmSqmInput" value="{{ $display->svc_sqm_initial }}">
-                        </div>
-                    </div>
-
-                    {{-- TERMITE ONLY --}}
-                    @if ($isTermiteConfirm)
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>SQM DETAILS <span class="text-danger">*</span></label>
-                                <select class="form-control" name="svcpat_id" id="confirmSvcpatSelect" required>
-                                    @foreach ($termiteAreaOptions as $opt)
-                                        <option value="{{ $opt->svcpat_id }}" data-cost="{{ $opt->svcpat_cost }}"
-                                            {{ $display->svcpat_id == $opt->svcpat_id ? 'selected' : '' }}>
-                                            {{ $opt->svcpat_sqm_details }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label>SQM Cost <span class="text-muted">(Not Editable)</span></label>
-                                <input type="number" step="0.01" class="form-control"
-                                    id="confirmSvcpatCostDisplay" placeholder="SQM Cost" readonly>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            {{-- Treatment Type --}}
-                            <div class="col-md-6 mb-3" id="confirmTreatmentCol">
-                                <label for="confirmTreatmentSelect">
-                                    Treatment Type <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-control" name="svc_type_treatment" id="confirmTreatmentSelect"
-                                    required>
-                                    <option value="STANDARD TREATMENT"
-                                        {{ $display->svc_type_treatment === 'STANDARD TREATMENT' ? 'selected' : '' }}>
-                                        STANDARD TREATMENT</option>
-                                    <option value="HYBRID TREATMENT"
-                                        {{ $display->svc_type_treatment === 'HYBRID TREATMENT' ? 'selected' : '' }}>
-                                        HYBRID TREATMENT</option>
-                                </select>
-                            </div>
-
-                            {{-- Device Count --}}
-                            <div class="col-md-6 mb-3" id="confirmDeviceCountCol" style="display:none;">
-                                <label for="confirmDeviceCountInput">
-                                    Device Count <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" class="form-control" name="svc_device_count"
-                                    id="confirmDeviceCountInput" placeholder="Device Count"
-                                    value="{{ $display->svc_device_count }}"
-                                    data-device-cost="{{ $deviceCost->svcpad_cost ?? 0 }}">
-                                <small class="text-muted" id="confirmDeviceCostHint" style="display:none;">
-                                    {{ $display->branch_name }} device price:
-                                    ₱{{ number_format($deviceCost->svcpad_cost ?? 0, 2) }} / unit
-                                </small>
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="row">
-                        {{-- Infestation --}}
-                        <div class="col-md-6 mb-3">
-                            <label>Infestation <span class="text-danger">*</span></label>
-                            <select class="form-control" name="svc_infestation" required>
-                                <option value="LOW" {{ $display->svc_infestation === 'LOW' ? 'selected' : '' }}>
-                                    LOW</option>
-                                <option value="MID" {{ $display->svc_infestation === 'MID' ? 'selected' : '' }}>
-                                    MID</option>
-                                <option value="HIGH" {{ $display->svc_infestation === 'HIGH' ? 'selected' : '' }}>
-                                    HIGH</option>
-                            </select>
-                        </div>
-
-                        {{-- Distance --}}
-                        <div class="col-md-6 mb-3">
-                            <label>Distance (KM) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="svc_km_distance"
-                                id="confirmKmDistanceInput" value="{{ $display->svc_km_distance }}" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        {{-- Location Price --}}
-                        <div class="{{ $isTermiteConfirm ? 'col-md-4' : 'col-md-3' }} mb-3">
-                            <label>Location Price <span class="text-muted">(Not Editable)</span></label>
-                            <input type="number" step="0.01" class="form-control" name="svc_location_price"
-                                id="confirmLocationPrice" value="{{ $display->svc_location_price }}"
-                                data-first-cost="{{ $locationRate->svcpal_first_cost ?? 0 }}"
-                                data-succeeding-cost="{{ $locationRate->svcpal_succeeding_cost ?? 0 }}" readonly>
-                            @if ($locationRate)
-                                <small class="text-muted">
-                                    {{ $display->branch_name }}: First 10 KM =
-                                    ₱{{ number_format($locationRate->svcpal_first_cost, 2) }} /
-                                    Succeeding KM = ₱{{ number_format($locationRate->svcpal_succeeding_cost, 2) }}
-                                </small>
-                            @endif
-                        </div>
-
-                        {{-- Service Order Price (non-termite only) --}}
-                        @if (!$isTermiteConfirm)
-                            <div class="col-md-3 mb-3">
-                                <label>Service Order Price <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" class="form-control" name="svc_initial_price"
-                                    id="confirmInitialPrice" value="{{ $display->svc_initial_price }}" required>
-                            </div>
-                        @endif
-
-                        {{-- Fixed Price --}}
-                        <div class="{{ $isTermiteConfirm ? 'col-md-4' : 'col-md-3' }} mb-3">
-                            <label>Fixed Price <span class="text-muted">(Not Editable)</span></label>
-                            <input type="number" step="0.01" class="form-control" id="confirmFixedPrice"
-                                name="svc_fixed_price" value="{{ $display->svc_fixed_price }}" readonly>
-                        </div>
-
-                        {{-- Final Price --}}
-                        <div class="{{ $isTermiteConfirm ? 'col-md-4' : 'col-md-3' }} mb-3">
-                            <label>Final Price <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" name="svc_final_price"
-                                id="confirmFinalPrice" value="{{ $display->svc_final_price }}">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        {{-- Approved Date --}}
-                        <div class="col-md-4 mb-3">
-                            <label>Approve Appointment Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="svca_approved_date"
-                                value="{{ $display->svca_approved_date }}" required>
-                        </div>
-
-                        {{-- Time From --}}
-                        <div class="col-md-4 mb-3">
-                            <label>Approve Time From <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" name="svca_approved_time_from"
-                                value="{{ $display->svca_approved_time_from }}" required>
-                        </div>
-
-                        {{-- Time To --}}
-                        <div class="col-md-4 mb-3">
-                            <label>Approve Time To <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" name="svca_approved_time_to"
-                                value="{{ $display->svca_approved_time_to }}" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        {{-- Chemical Quantity --}}
-                        <div class="col-md-6 mb-3">
-                            <label>Chemical Quantity <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" name="svc_chemical_quantity"
-                                value="{{ $display->svc_chemical_quantity }}" required>
-                        </div>
-
-                        {{-- Chemical Metric --}}
-                        <div class="col-md-6 mb-3">
-                            <label>Chemical Metric <span class="text-danger">*</span></label>
-                            <select class="form-control" name="svc_chemical_metric" required>
-                                <option value="PIECES"
-                                    {{ $display->svc_chemical_metric === 'PIECES' ? 'selected' : '' }}>PIECES</option>
-                                <option value="MILLILITERS"
-                                    {{ $display->svc_chemical_metric === 'MILLILITERS' ? 'selected' : '' }}>
-                                    MILLILITERS</option>
-                                <option value="LITERS"
-                                    {{ $display->svc_chemical_metric === 'LITERS' ? 'selected' : '' }}>LITERS</option>
-                                <option value="MILLIGRAMS"
-                                    {{ $display->svc_chemical_metric === 'MILLIGRAMS' ? 'selected' : '' }}>MILLIGRAMS
-                                </option>
-                                <option value="GRAMS"
-                                    {{ $display->svc_chemical_metric === 'GRAMS' ? 'selected' : '' }}>GRAMS</option>
-                                <option value="KILOGRAMS"
-                                    {{ $display->svc_chemical_metric === 'KILOGRAMS' ? 'selected' : '' }}>KILOGRAMS
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label>Assessment Recommendation <span class="text-muted">(Optional)</span></label>
-                            <textarea class="form-control" name="svc_assessment_recommendation" rows="3" maxlength="500">{{ $display->svc_assessment_recommendation }}</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <span class="fa fa-close"></span> Close
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        <span class="fa fa-check"></span> Confirm Assessment
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-ASSESSED VIEW:
-<div class="table-responsive overflow-auto" id="sectionA">
-    <table class="table table-bordered text-left align-middle">
-        <tbody>
-            <tr>
-                <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">CLIENT NAME</td>
-                <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
-                <td style="font-weight: bold;">EMAIL</td>
-                <td>{{ $display->usr_email }}</td>
-                <td style="font-weight: bold;">MOBILE</td>
-                <td>{{ $display->usr_mobile }}</td>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">ADDRESS</td>
-                <td colspan="3">
-                    {{ implode(
-                        ', ',
-                        array_filter([
-                            $display->uadd_street,
-                            $display->uadd_barangay,
-                            $display->uadd_city,
-                            $display->uadd_province,
-                            $display->uadd_region,
-                        ]),
-                    ) }}
-                </td>
-                <td style="font-weight: bold;">ADDRESS TYPE</td>
-                <td>{{ $display->add_name }}</td>
-            </tr>
-            <tr>
-                <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">BRANCH</td>
-                <td>{{ $display->branch_name }}</td>
-                <td style="font-weight: bold;">STATUS</td>
-                <td>{{ $display->svc_status }}</td>
-                <td style="font-weight: bold;">PAYMENT STATUS</td>
-                <td>{{ $display->svc_payment_status }}</td>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">INITIAL PRICE</td>
-                <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
-
-                <td style="font-weight: bold;">FINAL PRICE</td>
-                <td>₱{{ number_format($display->svc_balance, 2) }}</td>
-
-                <td style="font-weight: bold;">LOCATION PRICE</td>
-                <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
-            </tr>
-
-            <tr>
-                <td style="font-weight: bold;">IS TERMITE</td>
-                <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
-                <td style="font-weight: bold;">IS PACKAGE</td>
-                <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                <td style="font-weight: bold;">INFESTATION</td>
-                <td>{{ $display->svc_infestation }}</td>
-            </tr>
-            @if ($display->svc_is_termite)
-                <tr>
-                    <th colspan="6" class="text-center table-light">TERMITE CASE</th>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold;">TREATMENT TYPE</td>
-                    <td>{{ $display->svc_type_treatment }}</td>
-                    <td style="font-weight: bold;">INITIAL SQM</td>
-                    <td>{{ $display->svc_sqm_initial }}</td>
-                    <td style="font-weight: bold;">FINAL SQM</td>
-                    <td>{{ $display->svc_sqm_final }}</td>
-                </tr>
-                <tr>
-                    <td style="font-weight: bold;">WITH DEVICE</td>
-                    <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
-                    <td style="font-weight: bold;">DEVICE COUNT</td>
-                    <td colspan="3">{{ $display->svc_device_count ?? 'N/A' }}</td>
-                </tr>
-            @endif
-            <tr>
-                <th colspan="6" class="text-center table-light">SCHEDULE</th>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">CLIENT DATE</td>
-                <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
-                <td style="font-weight: bold;">CLIENT TIME</td>
-                <td colspan="3">
-                    {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">DATE APPROVED</td>
-                <td>{{ \Carbon\Carbon::parse($display->svca_date_approved)->format('m/d/Y') }}</td>
-                <td style="font-weight: bold;">TIME FROM</td>
-                <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_from)->format('h:i A') }}
-                </td>
-                <td style="font-weight: bold;">TIME TO</td>
-                <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_to)->format('h:i A') }}
-                </td>
-            </tr>
-            <tr>
-                <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION</th>
-            </tr>
-            <tr>
-                <td colspan="6" style="text-align: justify">
-                    {{ $display->svc_problem_description }}
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
+}

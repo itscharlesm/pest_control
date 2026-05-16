@@ -712,6 +712,58 @@ class AppointmentController extends Controller
     // END REQUESTED APPOINTMENTS
 
     // START ASSESSED APPOINTMENTS
+    public function assessed_appointments(Request $request)
+    {
+        $search = $request->search ?? '';
+        $sessionBranchId = session('branch_id');
+
+        $query = DB::table('services')
+            ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+            ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('service_appointments', 'service_appointments.svc_id', '=', 'services.svc_id')
+            ->where('services.svc_active', 1)
+            ->where('services.svc_status', 'ASSESSED');
+
+        // Branch filter
+        if ($sessionBranchId != 1) {
+            $query->where('services.branch_id', $sessionBranchId);
+        }
+
+        $query->select(
+            'services.svc_id',
+            'services.svc_sa_number',
+            'services.svc_is_termite',
+            'services.svc_is_package',
+            'services.svc_status',
+            'services.svc_payment_status',
+            'services.svc_date_created',
+            'users.usr_first_name',
+            'users.usr_last_name',
+            'users.usr_email',
+            'users.usr_mobile',
+            'branches.branch_name',
+            'service_appointments.svca_approved_date',
+            'service_appointments.svca_approved_time_from',
+            'service_appointments.svca_approved_time_to'
+        );
+
+        // Search
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_email', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $query->orderBy('services.svc_date_created', 'asc');
+
+        $appointments = $query->paginate(50);
+
+        return view('service_orders.appointments.assessed.assessed', compact('appointments', 'search'));
+    }
     public function assessed_appointments_view($svc_id)
     {
         $display = DB::table('services')
@@ -780,18 +832,6 @@ class AppointmentController extends Controller
             )
             ->get();
 
-        // Add Pest Type
-        $existingPests = DB::table('service_order_pests')
-            ->where('svc_id', $svc_id)
-            ->where('svcop_active', 1)
-            ->pluck('svcp_id')
-            ->toArray();
-
-        $servicePackages = DB::table('service_packages')
-            ->where('svcp_id', '!=', 8)
-            ->whereNotIn('svcp_id', $existingPests)
-            ->get();
-
         // Service Orders with Areas (non-termite: svcpat_id IS NULL)
         $serviceAreas = DB::table('service_orders')
             ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
@@ -804,17 +844,6 @@ class AppointmentController extends Controller
                 'service_package_areas.svcpa_area',
                 'service_package_areas.svcpa_cost'
             )
-            ->get();
-
-        // Add Service Area
-        $existingAreas = DB::table('service_orders')
-            ->where('svc_id', $svc_id)
-            ->where('svco_active', 1)
-            ->pluck('svcpa_id')
-            ->toArray();
-
-        $servicePackageAreas = DB::table('service_package_areas')
-            ->whereNotIn('svcpa_id', $existingAreas)
             ->get();
 
         // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
@@ -839,7 +868,20 @@ class AppointmentController extends Controller
             ->select('service_appointment_images.*')
             ->get();
 
-        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'servicePackages', 'serviceAreas', 'servicePackageAreas', 'termiteAreas', 'appointmentImages'));
+        // Technicians
+        $technicians = DB::table('users')
+            ->where('utyp_id', 2)
+            ->where('usr_active', 1)
+            ->where('branch_id', $display->branch_id)
+            ->orderBy('usr_last_name', 'asc')
+            ->select(
+                'usr_id',
+                'usr_first_name',
+                'usr_last_name'
+            )
+            ->get();
+
+        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
     }
     // END ASSESSED APPOINTMENTS
 

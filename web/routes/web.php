@@ -98,6 +98,7 @@ Route::post('service/orders/appointments/requested/delete/service_order/{svcpa_i
 Route::post('service/orders/appointments/requested/assess', [AppointmentController::class, 'requested_appointments_view_assess']);
 Route::post('service/orders/appointments/requested/assess/confirmation', [AppointmentController::class, 'requested_appointments_view_assess_confirmation']);
 // - Assesed Appointments
+Route::get('service/orders/appointments/assessed', [AppointmentController::class, 'assessed_appointments']);
 Route::get('service/orders/appointments/assessed/{svc_id}', [AppointmentController::class, 'assessed_appointments_view']);
 // - Scheduled Appointments
 // - Ongoing Appointments
