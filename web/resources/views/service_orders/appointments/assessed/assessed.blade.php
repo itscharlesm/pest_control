@@ -54,7 +54,8 @@
                                         <th class="text-center">Is Termite</th>
                                         <th class="text-center">Is Package</th>
                                         <th class="text-center">Payment Status</th>
-                                        <th class="text-center">Date Requested</th>
+                                        <th class="text-center">Approved Date</th>
+                                        <th class="text-center">Approved Time</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Action</th>
                                     </tr>
@@ -92,7 +93,12 @@
                                                 {{ $appointment->svc_payment_status }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                {{ \Carbon\Carbon::parse($appointment->svc_date_created)->format('m/d/Y | h:i A') }}
+                                                {{ \Carbon\Carbon::parse($appointment->svca_approved_date)->format('m/d/Y | h:i A') }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ \Carbon\Carbon::parse($appointment->svca_approved_time_from)->format('h:iA') }}
+                                                -
+                                                {{ \Carbon\Carbon::parse($appointment->svca_approved_time_to)->format('h:iA') }}
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
                                                 {{ $appointment->svc_status }}

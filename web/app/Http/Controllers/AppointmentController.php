@@ -720,10 +720,11 @@ class AppointmentController extends Controller
         $query = DB::table('services')
             ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
             ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('service_appointments', 'service_appointments.svc_id', '=', 'services.svc_id')
             ->where('services.svc_active', 1)
             ->where('services.svc_status', 'ASSESSED');
 
-        // Branch filter (same logic as users_active)
+        // Branch filter
         if ($sessionBranchId != 1) {
             $query->where('services.branch_id', $sessionBranchId);
         }
@@ -740,7 +741,10 @@ class AppointmentController extends Controller
             'users.usr_last_name',
             'users.usr_email',
             'users.usr_mobile',
-            'branches.branch_name'
+            'branches.branch_name',
+            'service_appointments.svca_approved_date',
+            'service_appointments.svca_approved_time_from',
+            'service_appointments.svca_approved_time_to'
         );
 
         // Search
