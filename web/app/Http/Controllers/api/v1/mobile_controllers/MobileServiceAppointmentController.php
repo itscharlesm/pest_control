@@ -45,10 +45,54 @@ class MobileServiceAppointmentController extends Controller
             $initialPrice = $request->filled('initial_price')
                 ? $request->initial_price
                 : 0;
+            $address = DB::table('user_addresses')
+                ->where('uadd_id', $request->uadd_id)
+                ->where('usr_id', $user->usr_id)
+                ->first();
+
+            if (!$address || !$address->uadd_latitude || !$address->uadd_longitude) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected address has no pinned map location.',
+                ], 400);
+            }
+
+            $nearestBranch = null;
+            $nearestDistance = null;
+
+            $branches = DB::table('branches')
+                ->whereNotNull('branch_latitude')
+                ->whereNotNull('branch_longitude')
+                ->get();
+
+            foreach ($branches as $branch) {
+                $distance = $this->calculateDistanceKm(
+                    $address->uadd_latitude,
+                    $address->uadd_longitude,
+                    $branch->branch_latitude,
+                    $branch->branch_longitude
+                );
+
+                if ($nearestDistance === null || $distance < $nearestDistance) {
+                    $nearestDistance = $distance;
+                    $nearestBranch = $branch;
+                }
+            }
+
+            if (!$nearestBranch) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No available branch found for this location.',
+                ], 400);
+            }
 
             $serviceId = DB::table('services')->insertGetId([
                 'svc_uuid' => Str::uuid(),
-                'branch_id' => $user->branch_id,
+                'branch_id' => $nearestBranch->branch_id,
                 'usr_id' => $user->usr_id,
                 'svc_is_package' => count($servicePackages) > 1 ? 1 : 0,
                 'svcpat_id' => $isTermite ? $termiteSqmId : null,
@@ -62,14 +106,13 @@ class MobileServiceAppointmentController extends Controller
                 'svc_status' => 'REQUESTED',
                 'svc_infestation' => null,
                 'svc_initial_price' => $initialPrice,
-                // 'svc_location_price' => null,
+                'svc_km_distance' => $nearestDistance,
                 'svc_final_price' => null,
                 'svc_balance' => $initialPrice,
                 'svc_payment_status' => 'NO PAYMENT',
                 'svc_attachment' => null,
                 'svc_frequency_type' => null,
                 'svc_frequency' => null,
-                // 'svc_recommendation' => null,
                 'svc_date_created' => now(),
                 'svc_created_by' => $user->usr_id,
                 'svc_date_modified' => null,
@@ -225,5 +268,30 @@ class MobileServiceAppointmentController extends Controller
             'success' => true,
             'data' => $data,
         ]);
+    }
+
+    private function calculateDistanceKm($lat1, $lon1, $lat2, $lon2)
+    {
+        $lat1 = (float) $lat1;
+        $lon1 = (float) $lon1;
+        $lat2 = (float) $lat2;
+        $lon2 = (float) $lon2;
+
+        $earthRadius = 6371;
+
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(
+            pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
+        ));
+
+        return round($earthRadius * $angle, 2);
     }
 }
