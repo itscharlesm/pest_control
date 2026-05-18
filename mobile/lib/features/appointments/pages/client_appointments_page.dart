@@ -29,7 +29,9 @@ class _ClientAppointmentsPageState extends State<ClientAppointmentsPage> {
   final List<String> filters = [
     'All',
     'Requested',
-    'Approved',
+    'Assessed',
+    'Scheduled',
+    'Ongoing',
     'Completed',
   ];
 
