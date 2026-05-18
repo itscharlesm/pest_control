@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_app/app/theme.dart';
 import '../../home/pages/client_home_page.dart';
 import '../../home/pages/technician_home_page.dart';
-
+import 'welcome_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -151,7 +151,12 @@ class _LoginPageState extends State<LoginPage> {
                 // Back button
                 IconButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WelcomePage(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.arrow_back_ios_new),
                 ),
