@@ -9,6 +9,87 @@ use DB;
 
 class AppointmentController extends Controller
 {
+    // START BOOK APPOINTMENTS
+    public function clients(Request $request)
+    {
+        $search = $request->search ?? '';
+
+        $sessionBranchId = session('branch_id');
+
+        // Base query
+        $query = DB::table('users')
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->where('users.utyp_id', '=', '3')
+            ->where('users.usr_active', '=', '1');
+
+        // Branch filter (unless super admin)
+        if ($sessionBranchId != 1) {
+            $query->where('users.branch_id', $sessionBranchId);
+        }
+
+        $query->select(
+            'users.usr_id',
+            'users.usr_uuid',
+            'branches.branch_name',
+            'users.usr_last_name',
+            'users.usr_first_name',
+            'users.usr_middle_name',
+            'users.usr_email',
+            'users.usr_mobile',
+            'users.usr_birth_date',
+            'users.usr_active',
+        )
+            ->groupBy(
+                'users.usr_id',
+                'users.usr_uuid',
+                'branches.branch_name',
+                'users.usr_last_name',
+                'users.usr_first_name',
+                'users.usr_middle_name',
+                'users.usr_email',
+                'users.usr_mobile',
+                'users.usr_birth_date',
+                'users.usr_active'
+            )
+            ->orderBy('users.usr_last_name')
+            ->orderBy('users.usr_first_name');
+
+        // Search filter
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.usr_last_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_first_name', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_email', 'LIKE', "%$search%")
+                    ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
+                    ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+            });
+        }
+
+        $clients = $query->paginate(500);
+
+        // Get all addresses for listed clients
+        $clientIds = collect($clients->items())->pluck('usr_id');
+
+        $addresses = DB::table('user_addresses')
+            ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+            ->whereIn('user_addresses.usr_id', $clientIds)
+            ->where('user_addresses.uadd_active', 1)
+            ->select(
+                'user_addresses.*',
+                'addresses.add_name'
+            )
+            ->get()
+            ->groupBy('usr_id');
+
+        $branches = DB::table('branches')
+            ->select('branch_id', 'branch_name')
+            ->where('branch_active', 1)
+            ->get();
+
+        return view('service_orders.appointments.book', compact('clients', 'search', 'branches', 'addresses'));
+    }
+    // END BOOK APPOINTMENTS
+
     // START REQUESTED APPOINTMENTS
     public function requested_appointments(Request $request)
     {

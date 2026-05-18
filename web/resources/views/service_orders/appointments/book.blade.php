@@ -1,0 +1,130 @@
+@extends('layouts.themes.main')
+
+@section('content')
+    {{-- Content Header --}}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Book Appointment</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item">
+                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
+                        </li>
+                        <li class="breadcrumb-item">Appointments</li>
+                        <li class="breadcrumb-item active">Book Appointment</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <section class="content">
+        @include('layouts.partials.onclick')
+        @include('layouts.partials.alerts')
+        @include('layouts.partials.modal_style')
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-body overflow-auto">
+                    <div class="row">
+                        <!-- Table Column -->
+                        <div class="col-lg-12 col-md-7">
+                            <form method="GET" action="{{ url('service/orders/appointments/clients') }}" class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" name="search" id="searchInput" class="form-control"
+                                        placeholder="Search clients..." value="{{ request('search') }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="fa fa-search"></span> Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <table id="profilingTable" class="table table-hover table-bordered table-sm responsive">
+                                <thead>
+                                    <tr>
+                                        <th style="vertical-align: middle; text-align: center">Name</th>
+                                        <th style="vertical-align: middle; text-align: center">Branch</th>
+                                        <th style="vertical-align: middle; text-align: center">Address(es)</th>
+                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($clients as $client)
+                                        <tr>
+                                            <td style="vertical-align: middle; text-align: left">
+                                                {{ $client->usr_last_name }}, {{ $client->usr_first_name }}
+                                                {{ $client->usr_middle_name }}
+                                                <br />
+                                                <small>{{ $client->usr_email }}</small>
+                                                <br />
+                                                <small>0{{ $client->usr_mobile }}</small>
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $client->branch_name }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: left">
+                                                @if (isset($addresses[$client->usr_id]) && count($addresses[$client->usr_id]) > 0)
+                                                    <ul style="padding-left: 18px; margin-bottom: 0;">
+                                                        @foreach ($addresses[$client->usr_id] as $address)
+                                                            <li>
+                                                                {{ $address->uadd_street }},
+                                                                {{ $address->uadd_barangay }},
+                                                                {{ $address->uadd_city }},
+                                                                {{ $address->uadd_province }},
+                                                                {{ $address->uadd_region }}
+
+                                                                @if (!empty($address->uadd_longitude) && !empty($address->uadd_latitude))
+                                                                    ({{ $address->uadd_longitude }},
+                                                                    {{ $address->uadd_latitude }})
+                                                                @endif
+
+                                                                - {{ $address->add_name }}
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <small class="text-muted">No active address</small>
+                                                @endif
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                <a class="btn btn-success btn-sm mb-1" href="javascript:void(0)"
+                                                    data-toggle="modal"
+                                                    data-target="#bookAppointmentModal-{{ $client->usr_id }}">
+                                                    <span class="fa fa-calendar"></span>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Dynamic Search While Typing --}}
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            let value = this.value.toLowerCase();
+
+            // Select all tables with ID containing "Table"
+            let tables = document.querySelectorAll('table[id*="Table"]');
+
+            tables.forEach(function(table) {
+                let rows = table.querySelectorAll("tbody tr");
+
+                rows.forEach(function(row) {
+                    let text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(value) ? "" : "none";
+                });
+            });
+        });
+    </script>
+@endsection
