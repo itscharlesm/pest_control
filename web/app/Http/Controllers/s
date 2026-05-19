@@ -1,114 +1,4 @@
-@extends('layouts.themes.main')
-
-@section('content')
-    {{-- Content Header --}}
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Book Appointment</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item">
-                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
-                        </li>
-                        <li class="breadcrumb-item">Appointments</li>
-                        <li class="breadcrumb-item active">Book Appointment</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Main Content --}}
-    <section class="content">
-        @include('layouts.partials.onclick')
-        @include('layouts.partials.alerts')
-        @include('layouts.partials.modal_style')
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-body overflow-auto">
-                    <div class="row">
-                        <!-- Table Column -->
-                        <div class="col-lg-12 col-md-7">
-                            <form method="GET" action="{{ url('service/orders/appointments/clients') }}" class="mb-3">
-                                <div class="input-group">
-                                    <input type="text" name="search" id="searchInput" class="form-control"
-                                        placeholder="Search clients..." value="{{ request('search') }}">
-                                    <div class="input-group-append">
-                                        <button type="submit" class="btn btn-primary">
-                                            <span class="fa fa-search"></span> Search
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-
-                            <table id="profilingTable" class="table table-hover table-bordered table-sm responsive">
-                                <thead>
-                                    <tr>
-                                        <th style="vertical-align: middle; text-align: center">Name</th>
-                                        <th style="vertical-align: middle; text-align: center">Branch</th>
-                                        <th style="vertical-align: middle; text-align: center">Address(es)</th>
-                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($clients as $client)
-                                        <tr>
-                                            <td style="vertical-align: middle; text-align: left">
-                                                {{ $client->usr_last_name }}, {{ $client->usr_first_name }}
-                                                {{ $client->usr_middle_name }}
-                                                <br />
-                                                <small>{{ $client->usr_email }}</small>
-                                                <br />
-                                                <small>0{{ $client->usr_mobile }}</small>
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                {{ $client->branch_name }}
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: left">
-                                                @if (isset($addresses[$client->usr_id]) && count($addresses[$client->usr_id]) > 0)
-                                                    <ul style="padding-left: 18px; margin-bottom: 0;">
-                                                        @foreach ($addresses[$client->usr_id] as $address)
-                                                            <li>
-                                                                {{ $address->uadd_street }},
-                                                                {{ $address->uadd_barangay }},
-                                                                {{ $address->uadd_city }},
-                                                                {{ $address->uadd_province }},
-                                                                {{ $address->uadd_region }}
-
-                                                                @if (!empty($address->uadd_longitude) && !empty($address->uadd_latitude))
-                                                                    ({{ $address->uadd_longitude }},
-                                                                    {{ $address->uadd_latitude }})
-                                                                @endif
-
-                                                                - {{ $address->add_name }}
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
-                                                @else
-                                                    <small class="text-muted">No active address</small>
-                                                @endif
-                                            </td>
-                                            <td style="vertical-align: middle; text-align: center">
-                                                <a class="btn btn-success btn-sm mb-1" href="javascript:void(0)"
-                                                    data-toggle="modal"
-                                                    data-target="#bookAppointmentModal-{{ $client->usr_id }}">
-                                                    <span class="fa fa-calendar"></span>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
+web book appointment
     @foreach ($clients as $client)
         {{-- Book Appointment Modal --}}
         <div class="modal fade" id="bookAppointmentModal-{{ $client->usr_id }}" tabindex="-1" role="dialog"
@@ -267,25 +157,6 @@
         </div>
     @endforeach
 
-    {{-- Dynamic Search While Typing --}}
-    <script>
-        document.getElementById("searchInput").addEventListener("keyup", function() {
-            let value = this.value.toLowerCase();
-
-            // Select all tables with ID containing "Table"
-            let tables = document.querySelectorAll('table[id*="Table"]');
-
-            tables.forEach(function(table) {
-                let rows = table.querySelectorAll("tbody tr");
-
-                rows.forEach(function(row) {
-                    let text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(value) ? "" : "none";
-                });
-            });
-        });
-    </script>
-
     <script>
         (function() {
             const TERMITE_ID = 8;
@@ -411,17 +282,52 @@ public function clients_book(Request $request)
             ->value('svcpa_cost') ?? 0;
     }
 
+    // Distance & Location Price Calculation
+    $address = DB::table('user_addresses')->where('uadd_id', $request->uadd_id)->first();
+    $branch = DB::table('branches')->where('branch_id', $request->branch_id)->first();
+    $locationFee = DB::table('service_package_area_locations')->where('branch_id', $request->branch_id)->first();
+
+    $kmDistance = 0;
+    $locationPrice = 0;
+
+    if ($address && $branch && $locationFee) {
+        // Haversine formula
+        $lat1 = deg2rad($branch->branch_latitude);
+        $lon1 = deg2rad($branch->branch_longitude);
+        $lat2 = deg2rad($address->uadd_latitude);
+        $lon2 = deg2rad($address->uadd_longitude);
+
+        $dlat = $lat2 - $lat1;
+        $dlon = $lon2 - $lon1;
+
+        $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
+        $km = 6371 * 2 * asin(sqrt($a));
+
+        // Round: .1–.4 round down, .5–.9 round up
+        $kmDistance = (fmod($km, 1) >= 0.5) ? ceil($km) : floor($km);
+
+        // Price: first 10km = flat rate, beyond = flat + extra km * succeeding cost
+        if ($kmDistance <= 10) {
+            $locationPrice = $locationFee->svcpal_first_cost;
+        } else {
+            $locationPrice = $locationFee->svcpal_first_cost
+                + (($kmDistance - 10) * $locationFee->svcpal_succeeding_cost);
+        }
+    }
+
     $svcId = DB::table('services')->insertGetId([
         'svc_uuid' => generateuuid(),
         'branch_id' => $request->branch_id,
         'usr_id' => $request->usr_id,
+        'svc_km_distance' => $kmDistance,
         'svc_is_package' => 0,
         'svcpat_id' => $svcpatId,
         'svc_is_termite' => $isTermite,
         'svc_problem_description' => $request->svc_problem_description,
         'svc_status' => 'REQUESTED',
         'svc_initial_price' => $initialPrice,
-        'svc_balance' => $initialPrice,
+        'svc_location_price' => $locationPrice,
+        'svc_balance' => $initialPrice + $locationPrice,
         'svc_payment_status' => 'NO PAYMENT',
         'svc_date_created' => Carbon::now(),
         'svc_created_by' => session('usr_id'),
@@ -470,32 +376,282 @@ public function clients_book(Request $request)
     return redirect()->back();
 }
 
-branches table:
-branch_id
-branch_longitude
-branch_latitude
+mobile logic:
+public function store(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'uadd_id' => 'required',
+        'client_date' => 'required|date',
+        'client_time' => 'required',
+        'initial_price' => 'nullable|numeric',
+        'service_packages' => 'required',
+        'service_areas' => 'nullable',
+        'is_termite' => 'nullable|in:0,1',
+        'termite_sqm_id' => 'nullable|integer',
+        'images.*' => 'mimes:jpeg,jpg,png,webp|max:8192',
+    ]);
 
-service_package_area_locations
-branch_id
-svcpal_first_cost
-svcpal_succeeding_cost
+    DB::beginTransaction();
 
-service_appointments
-uadd_id
+    try {
+        $user = DB::table('users')
+            ->where('usr_email', $request->email)
+            ->first();
 
-user_addresses
-uadd_id
-uadd_longitude
-uadd_latitude
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
 
-so i want to add in the services table in saving
-svc_km_distance
-svc_location_price
+        $servicePackages = json_decode($request->service_packages, true) ?? [];
+        $serviceAreas = json_decode($request->service_areas, true) ?? [];
+        $isTermite = $request->is_termite == 1;
+        $termiteSqmId = $request->termite_sqm_id;
+        $initialPrice = $request->filled('initial_price')
+            ? $request->initial_price
+            : 0;
+        $address = DB::table('user_addresses')
+            ->where('uadd_id', $request->uadd_id)
+            ->where('usr_id', $user->usr_id)
+            ->first();
 
-so the logic here is for the svc_km_distance, we calculate how far service_appointments.uadd_id, in user_addresses there is uadd_longitude and uadd_latitude and in branches there is branch_longitude and branch_latitude
+        if (!$address || !$address->uadd_latitude || !$address->uadd_longitude) {
+            DB::rollBack();
 
-so we compute the km, but example it is 9km so svc_location_price will be svcpal_first_cost since the rule of svcpal_first_cost is = 10km or less than but example svc_km_distance is 13 so it is svcpal_first_cost + 3(svcpal_succeeding_cost)
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected address has no pinned map location.',
+            ], 400);
+        }
 
-in svc_km_distance, there is decimal so we round up or round down if it is .1-.4, it is round down if .5-.9 it is round up
+        $nearestBranch = null;
+        $nearestDistance = null;
 
-i want to add these both svc_km_distance and svc_location_price in easiest way
+        $branches = DB::table('branches')
+            ->whereNotNull('branch_latitude')
+            ->whereNotNull('branch_longitude')
+            ->get();
+
+        foreach ($branches as $branch) {
+            $distance = $this->calculateDistanceKm(
+                $address->uadd_latitude,
+                $address->uadd_longitude,
+                $branch->branch_latitude,
+                $branch->branch_longitude
+            );
+
+            if ($nearestDistance === null || $distance < $nearestDistance) {
+                $nearestDistance = $distance;
+                $nearestBranch = $branch;
+            }
+        }
+
+        if (!$nearestBranch) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No available branch found for this location.',
+            ], 400);
+        }
+
+        $drivingDistance = MobileMapboxDistanceController::getDrivingDistanceKm(
+            $nearestBranch->branch_longitude,
+            $nearestBranch->branch_latitude,
+            $address->uadd_longitude,
+            $address->uadd_latitude
+        );
+
+        $finalDistance = $drivingDistance ?? $nearestDistance;
+
+        $locationRate = DB::table('service_package_area_locations')
+            ->where('branch_id', $nearestBranch->branch_id)
+            ->where('svcpal_active', 1)
+            ->first();
+
+        if (!$locationRate) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No location pricing found for this branch.',
+            ], 400);
+        }
+
+        $baseKm = 10;
+        $baseCost = (float) $locationRate->svcpal_first_cost;
+        $succeedingCost = (float) $locationRate->svcpal_succeeding_cost;
+        $distanceKm = (int) $finalDistance;
+
+        if ($distanceKm <= $baseKm) {
+            $deliveryFee = $baseCost;
+        } else {
+            $excessKm = $distanceKm - $baseKm;
+            $deliveryFee = $baseCost + ($excessKm * $succeedingCost);
+        }
+
+        $totalInitialPrice = (float) $initialPrice + $deliveryFee;
+
+        $serviceId = DB::table('services')->insertGetId([
+            'svc_uuid' => Str::uuid(),
+            'branch_id' => $nearestBranch->branch_id,
+            'usr_id' => $user->usr_id,
+            'svc_is_package' => count($servicePackages) > 1 ? 1 : 0,
+            'svcpat_id' => $isTermite ? $termiteSqmId : null,
+            'svc_is_termite' => $isTermite ? 1 : 0,
+            'svc_type_treatment' => null,
+            'svc_sqm_initial' => null,
+            'svc_sqm_final' => null,
+            'svc_with_device' => null,
+            'svc_device_count' => null,
+            'svc_problem_description' => strtoupper($request->problem_description),
+            'svc_status' => 'REQUESTED',
+            'svc_infestation' => null,
+            'svc_initial_price' => $totalInitialPrice,
+            'svc_km_distance' => $finalDistance,
+            'svc_final_price' => null,
+            'svc_balance' => $totalInitialPrice,
+            'svc_payment_status' => 'NO PAYMENT',
+            'svc_attachment' => null,
+            'svc_frequency_type' => null,
+            'svc_frequency' => null,
+            'svc_date_created' => now(),
+            'svc_created_by' => $user->usr_id,
+            'svc_date_modified' => null,
+            'svc_modified_by' => null,
+            'svc_active' => 1,
+        ]);
+
+        DB::table('services')
+        ->where('svc_id', $serviceId)
+        ->update([
+            'svc_sa_number' => $serviceId,
+        ]);
+
+        foreach ($servicePackages as $package) {
+            DB::table('service_order_pests')->insert([
+                'svcop_uuid' => Str::uuid(),
+                'svc_id' => $serviceId,
+                'svcp_id' => $package['id'],
+                'svcop_date_created' => now(),
+                'svcop_created_by' => $user->usr_id,
+                'svcop_date_modified' => null,
+                'svcop_modified_by' => null,
+                'svcop_active' => 1,
+            ]);
+        }
+
+        if ($isTermite && $termiteSqmId) {
+            DB::table('service_orders')->insert([
+                'svco_uuid' => Str::uuid(),
+                'svc_id' => $serviceId,
+                'svcpa_id' => null,
+                'svcpat_id' => $termiteSqmId,
+                'svco_date_created' => now(),
+                'svco_created_by' => $user->usr_id,
+                'svco_date_modified' => null,
+                'svco_modified_by' => null,
+                'svco_active' => 1,
+            ]);
+        } else {
+            foreach ($serviceAreas as $area) {
+                DB::table('service_orders')->insert([
+                    'svco_uuid' => Str::uuid(),
+                    'svc_id' => $serviceId,
+                    'svcpa_id' => $area['id'],
+                    'svcpat_id' => null,
+                    'svco_date_created' => now(),
+                    'svco_created_by' => $user->usr_id,
+                    'svco_date_modified' => null,
+                    'svco_modified_by' => null,
+                    'svco_active' => 1,
+                ]);
+            }
+        }
+
+        $appointmentId = DB::table('service_appointments')->insertGetId([
+            'svca_uuid' => Str::uuid(),
+            'svc_id' => $serviceId,
+            'uadd_id' => $request->uadd_id,
+            'svca_client_date' => $request->client_date,
+            'svca_client_time' => $request->client_time,
+            'svca_status' => 'REQUESTED',
+            'svca_approved_date' => null,
+            'svca_approved_time_from' => null,
+            'svca_approved_time_to' => null,
+            'svca_date_approved' => null,
+            'svca_approved_by' => null,
+            'svca_date_created' => now(),
+            'svca_created_by' => $user->usr_id,
+            'svca_date_modified' => null,
+            'svca_modified_by' => null,
+            'svca_active' => 1,
+        ]);
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $fileName = uniqid() . '_' . $image->getClientOriginalName();
+                $folderPath = public_path('images/client_images');
+
+                if (!file_exists($folderPath)) {
+                    mkdir($folderPath, 0755, true);
+                }
+
+                $path = $folderPath . '/' . $fileName;
+                $ext = strtolower($image->getClientOriginalExtension());
+
+                if (in_array($ext, ['jpg', 'jpeg'])) {
+                    $source = imagecreatefromjpeg($image->getPathname());
+                    imagejpeg($source, $path, 75);
+                    imagedestroy($source);
+                } elseif ($ext === 'png') {
+                    $source = imagecreatefrompng($image->getPathname());
+
+                    if ($source && imageistruecolor($source) === false) {
+                        imagepalettetotruecolor($source);
+                    }
+
+                    if ($source) {
+                        imagepng($source, $path, 7);
+                        imagedestroy($source);
+                    }
+                } elseif ($ext === 'webp') {
+                    $source = imagecreatefromwebp($image->getPathname());
+                    imagewebp($source, $path, 75);
+                    imagedestroy($source);
+                }
+
+                DB::table('service_appointment_images')->insert([
+                    'svcap_uuid' => Str::uuid(),
+                    'svca_id' => $appointmentId,
+                    'svcap_image' => $fileName,
+                    'svcap_date_created' => now(),
+                    'svcap_created_by' => $user->usr_id,
+                    'svcap_date_modified' => null,
+                    'svcap_modified_by' => null,
+                    'svcap_active' => 1,
+                ]);
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Service appointment request submitted successfully.',
+            'svc_id' => $serviceId,
+            'svca_id' => $appointmentId,
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Unable to submit service appointment.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use DB;
+use App\Http\Controllers\api\v1\mobile_controllers\MobileMapboxDistanceController;
 
 class AppointmentController extends Controller
 {
@@ -131,7 +132,7 @@ class AppointmentController extends Controller
                 ->value('svcpa_cost') ?? 0;
         }
 
-        // Distance & Location Price Calculation
+        // --- Distance & Location Price Calculation ---
         $address = DB::table('user_addresses')->where('uadd_id', $request->uadd_id)->first();
         $branch = DB::table('branches')->where('branch_id', $request->branch_id)->first();
         $locationFee = DB::table('service_package_area_locations')->where('branch_id', $request->branch_id)->first();
@@ -140,7 +141,8 @@ class AppointmentController extends Controller
         $locationPrice = 0;
 
         if ($address && $branch && $locationFee) {
-            // Haversine formula
+
+            // Haversine (straight-line fallback)
             $lat1 = deg2rad($branch->branch_latitude);
             $lon1 = deg2rad($branch->branch_longitude);
             $lat2 = deg2rad($address->uadd_latitude);
@@ -150,10 +152,24 @@ class AppointmentController extends Controller
             $dlon = $lon2 - $lon1;
 
             $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
-            $km = 6371 * 2 * asin(sqrt($a));
+            $haversineKm = 6371 * 2 * asin(sqrt($a));
+
+            // Try Mapbox driving distance first, fall back to Haversine if it fails
+            try {
+                $mapboxKm = MobileMapboxDistanceController::getDrivingDistanceKm(
+                    $branch->branch_longitude,
+                    $branch->branch_latitude,
+                    $address->uadd_longitude,
+                    $address->uadd_latitude
+                );
+
+                $rawKm = ($mapboxKm !== null && $mapboxKm > 0) ? $mapboxKm : $haversineKm;
+            } catch (\Exception $e) {
+                $rawKm = $haversineKm;
+            }
 
             // Round: .1–.4 round down, .5–.9 round up
-            $kmDistance = (fmod($km, 1) >= 0.5) ? ceil($km) : floor($km);
+            $kmDistance = (fmod($rawKm, 1) >= 0.5) ? ceil($rawKm) : floor($rawKm);
 
             // Price: first 10km = flat rate, beyond = flat + extra km * succeeding cost
             if ($kmDistance <= 10) {
@@ -163,6 +179,7 @@ class AppointmentController extends Controller
                     + (($kmDistance - 10) * $locationFee->svcpal_succeeding_cost);
             }
         }
+        // --- End Distance Calculation ---
 
         $svcId = DB::table('services')->insertGetId([
             'svc_uuid' => generateuuid(),
