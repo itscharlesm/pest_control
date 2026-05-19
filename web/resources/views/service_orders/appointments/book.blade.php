@@ -107,11 +107,13 @@
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">
                                                     <form method="POST"
-                                                        action="{{ action('App\Http\Controllers\ProfilingController@clients_delete', [$client->usr_id]) }}">
+                                                        action="{{ url('service/orders/appointments/clients/book') }}">
                                                         @csrf
                                                         <div class="modal-header bg-success text-white">
                                                             <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                Book Appointment for {{ $client->usr_last_name }}, {{ $client->usr_first_name }} {{ $client->usr_middle_name }}
+                                                                Book Appointment for {{ $client->usr_last_name }},
+                                                                {{ $client->usr_first_name }}
+                                                                {{ $client->usr_middle_name }}
                                                             </h5>
                                                             <button type="button" class="close" data-dismiss="modal"
                                                                 aria-label="Close">
@@ -119,6 +121,10 @@
                                                             </button>
                                                         </div>
                                                         <div class="modal-body">
+
+                                                            <input type="hidden" name="usr_id"
+                                                                value="{{ $client->usr_id }}">
+
                                                             {{-- ADDRESS --}}
                                                             <div class="form-group">
                                                                 <label>Address: <span class="text-danger">*</span></label>
@@ -225,7 +231,7 @@
                                                             <div class="form-group">
                                                                 <label><strong>Problem Description <span
                                                                             class="text-muted">(Optional)</span></strong></label>
-                                                                <textarea class="form-control" name="svc_problem_details" rows="3" placeholder="Describe the problem..."></textarea>
+                                                                <textarea class="form-control" name="svc_problem_description" rows="3" placeholder="Describe the problem..."></textarea>
                                                             </div>
 
                                                             <hr>

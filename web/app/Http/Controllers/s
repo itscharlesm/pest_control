@@ -1,3 +1,6 @@
+view:
+Route::get('service/orders/appointments/clients', [AppointmentController::class, 'clients']);
+
 @extends('layouts.themes.main')
 
 @section('content')
@@ -111,7 +114,7 @@
                                                         @csrf
                                                         <div class="modal-header bg-success text-white">
                                                             <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                Book Appointment
+                                                                Book Appointment for {{ $client->usr_last_name }}, {{ $client->usr_first_name }} {{ $client->usr_middle_name }}
                                                             </h5>
                                                             <button type="button" class="close" data-dismiss="modal"
                                                                 aria-label="Close">
@@ -119,12 +122,10 @@
                                                             </button>
                                                         </div>
                                                         <div class="modal-body">
-
-                                                            {{-- ===================== LOCATION ===================== --}}
+                                                            {{-- ADDRESS --}}
                                                             <div class="form-group">
-                                                                <label><strong>Address</strong></label>
+                                                                <label>Address: <span class="text-danger">*</span></label>
                                                                 <select class="form-control" name="uadd_id" required>
-                                                                    <option value="">— Select Address —</option>
                                                                     @if (isset($addresses[$client->usr_id]) && count($addresses[$client->usr_id]) > 0)
                                                                         @foreach ($addresses[$client->usr_id] as $address)
                                                                             <option value="{{ $address->uadd_id }}">
@@ -142,9 +143,10 @@
                                                                 </select>
                                                             </div>
 
-                                                            {{-- ===================== ASSIGN BRANCH ===================== --}}
+                                                            {{-- ASSIGN BRANCH --}}
                                                             <div class="form-group">
-                                                                <label><strong>Assign Branch</strong></label>
+                                                                <label>Assign Branch: <span
+                                                                        class="text-danger">*</span></label>
                                                                 <select class="form-control book-branch-select"
                                                                     name="branch_id" data-client="{{ $client->usr_id }}"
                                                                     required>
@@ -161,9 +163,10 @@
 
                                                             <hr>
 
-                                                            {{-- ===================== PROBLEM TYPE ===================== --}}
+                                                            {{-- PROBLEM TYPE --}}
                                                             <div class="form-group">
-                                                                <label><strong>Problem Type</strong></label>
+                                                                <label>Problem Type <span
+                                                                        class="text-danger">*</span></label>
                                                                 <select class="form-control book-pest-select" name="svcp_id"
                                                                     data-client="{{ $client->usr_id }}" required>
                                                                     <option value="">— Select Problem Type —</option>
@@ -178,7 +181,7 @@
                                                             {{-- Location (area) — shown when svcp_id != 9 --}}
                                                             <div class="form-group book-area-group-{{ $client->usr_id }}"
                                                                 style="display:none;">
-                                                                <label><strong>Location</strong></label>
+                                                                <label>Location <span class="text-danger">*</span></label>
                                                                 <select class="form-control book-area-select"
                                                                     name="svcpa_id" data-client="{{ $client->usr_id }}">
                                                                     <option value="">— Select Branch First —</option>
@@ -202,7 +205,8 @@
                                                             {{-- Termite Treatment Size — shown when svcp_id == 9 --}}
                                                             <div class="form-group book-termite-group-{{ $client->usr_id }}"
                                                                 style="display:none;">
-                                                                <label><strong>Termite Treatment Size</strong></label>
+                                                                <label>Termite Treatment Size <span
+                                                                        class="text-danger">*</span></label>
                                                                 <select class="form-control book-termite-select"
                                                                     name="svcpat_id" data-client="{{ $client->usr_id }}">
                                                                     <option value="">— Select Branch First —</option>
@@ -224,14 +228,15 @@
                                                             <div class="form-group">
                                                                 <label><strong>Problem Description <span
                                                                             class="text-muted">(Optional)</span></strong></label>
-                                                                <textarea class="form-control" name="svc_problem_details" rows="3" placeholder="Describe the problem..."></textarea>
+                                                                <textarea class="form-control" name="svc_problem_description" rows="3" placeholder="Describe the problem..."></textarea>
                                                             </div>
 
                                                             <hr>
 
-                                                            {{-- ===================== SCHEDULE ===================== --}}
+                                                            {{-- SCHEDULE --}}
                                                             <div class="form-group">
-                                                                <label><strong>Preferred Date</strong></label>
+                                                                <label>Preferred Date <span
+                                                                        class="text-danger">*</span></label>
                                                                 <input type="date" class="form-control"
                                                                     name="svca_client_date"
                                                                     value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}"
@@ -240,7 +245,8 @@
                                                             </div>
 
                                                             <div class="form-group">
-                                                                <label><strong>Time Window</strong></label>
+                                                                <label>Time Window <span
+                                                                        class="text-danger">*</span></label>
                                                                 <select class="form-control" name="svca_client_time"
                                                                     required>
                                                                     <option value="">— Select Time Window —</option>
@@ -252,7 +258,6 @@
                                                                     </option>
                                                                 </select>
                                                             </div>
-
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary"
@@ -298,7 +303,7 @@
 
     <script>
         (function() {
-            const TERMITE_ID = 9;
+            const TERMITE_ID = 8;
 
             function filterOptionsByBranch(select, branchId) {
                 const options = select.querySelectorAll('option[data-branch]');
@@ -485,3 +490,185 @@ public function clients(Request $request)
 
     return view('service_orders.appointments.book', compact('clients', 'search', 'branches', 'addresses', 'servicePackages', 'servicePackageAreas', 'termiteAreas'));
 }
+
+sample save:
+public function requested_appointments_view_assess(Request $request)
+{
+    $request->validate([
+        'svc_id' => 'required',
+        'svc_sa_number' => 'required',
+        'svc_infestation' => 'required',
+        'svc_location_price' => 'required|numeric',
+        'svc_final_price' => 'required|numeric',
+        'svca_approved_date' => 'required',
+        'svca_approved_time_from' => 'required',
+        'svca_approved_time_to' => 'required',
+    ]);
+
+    $svc_id = $request->svc_id;
+
+    if (
+        DB::table('services')
+            ->where('svc_sa_number', $request->svc_sa_number)
+            ->where('svc_id', '!=', $svc_id)
+            ->exists()
+    ) {
+
+        session()->flash('errorMessage', 'SA Number already exists.');
+        return redirect()->back();
+    }
+
+    $svc_id = $request->svc_id;
+    $isTermite = $request->svc_is_termite;
+    $isPackage = $request->svc_is_package;
+    $servicePrice = $request->svc_location_price;
+    $finalPrice = $request->svc_final_price;
+
+    // Fetch existing service record
+    $service = DB::table('services')->where('svc_id', $svc_id)->first();
+
+    // Shared fields across both paths
+    $sharedFields = [
+        'svc_sa_number' => $request->svc_sa_number,
+        'svc_property_type' => $request->svc_property_type,
+        'svc_km_distance' => $request->svc_km_distance,
+        'svc_fixed_price' => $request->svc_fixed_price,
+        'svc_chemical_quantity' => $request->svc_chemical_quantity,
+        'svc_chemical_metric' => $request->svc_chemical_metric,
+        'svc_assessment_recommendation' => $request->svc_assessment_recommendation,
+    ];
+
+    if ($isTermite == 1) {
+        // TERMITE PATH
+        $treatmentType = $request->svc_type_treatment;
+        $withDevice = ($treatmentType === 'HYBRID TREATMENT') ? 1 : 0;
+        $deviceCount = $withDevice ? (int) $request->svc_device_count : null;
+        $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+
+        // Recompute device price server-side (mirrors JS: count × unit cost)
+        $deviceCostRow = DB::table('service_package_area_devices')
+            ->where('branch_id', $service->branch_id)
+            ->where('svcpad_active', 1)
+            ->first();
+
+        $devicePrice = ($withDevice && $deviceCount && $deviceCostRow)
+            ? $deviceCount * $deviceCostRow->svcpad_cost
+            : 0;
+
+        DB::table('services')
+            ->where('svc_id', $svc_id)
+            ->update(array_merge($sharedFields, [
+                'svc_is_termite' => 1,
+                'svcpat_id' => $request->svcpat_id,
+                'svc_type_treatment' => $treatmentType,
+                'svc_with_device' => $withDevice,
+                'svc_device_count' => $deviceCount,
+                'svc_device_price' => $devicePrice,
+                'svc_sqm_initial' => $sqmInitial,
+                'svc_sqm_final' => $sqmInitial,
+                'svc_status' => 'CONFIRM ASSESSMENT',
+                'svc_infestation' => $request->svc_infestation,
+                'svc_location_price' => $servicePrice,
+                'svc_final_price' => $finalPrice,
+                'svc_balance' => $finalPrice,
+                'svc_date_modified' => Carbon::now(),
+                'svc_modified_by' => session('usr_id'),
+            ]));
+
+        DB::table('service_orders')
+            ->where('svc_id', $svc_id)
+            ->update([
+                'svcpat_id' => $request->svcpat_id,
+                'svco_date_modified' => Carbon::now(),
+                'svco_modified_by' => session('usr_id'),
+            ]);
+
+    } else {
+        // NON-TERMITE PATH
+        $sqmInitial = $service->svc_sqm_initial;
+        if ($isPackage == 0 && is_null($service->svc_sqm_initial)) {
+            $sqmInitial = null;
+        } elseif ($isPackage == 1) {
+            $sqmInitial = $request->svc_sqm_initial ?? $service->svc_sqm_initial;
+        }
+
+        DB::table('services')
+            ->where('svc_id', $svc_id)
+            ->update(array_merge($sharedFields, [
+                'svc_is_package' => $isPackage,
+                'svc_sqm_initial' => $sqmInitial,
+                'svc_sqm_final' => $isPackage == 1 ? $sqmInitial : null,
+                'svc_status' => 'CONFIRM ASSESSMENT',
+                'svc_infestation' => $request->svc_infestation,
+                'svc_location_price' => $servicePrice,
+                'svc_initial_price' => $request->svc_initial_price ?? $service->svc_initial_price,
+                'svc_final_price' => $finalPrice,
+                'svc_balance' => $finalPrice,
+                'svc_date_modified' => Carbon::now(),
+                'svc_modified_by' => session('usr_id'),
+            ]));
+    }
+
+    // APPOINTMENT (shared)
+    DB::table('service_appointments')
+        ->where('svc_id', $svc_id)
+        ->update([
+            'svca_approved_date' => $request->svca_approved_date,
+            'svca_approved_time_from' => $request->svca_approved_time_from,
+            'svca_approved_time_to' => $request->svca_approved_time_to,
+            'svca_date_approved' => Carbon::now(),
+            'svca_approved_by' => session('usr_id'),
+            'svca_date_modified' => Carbon::now(),
+            'svca_modified_by' => session('usr_id'),
+        ]);
+
+    $serviceOrder = 'SA-' . str_pad($svc_id, 6, '0', STR_PAD_LEFT);
+
+    logUserActivity('Manage Appointments', 'Assessed appointment ' . $serviceOrder);
+
+    session()->flash('successMessage', 'Appointment successfully assessed.');
+    return redirect()->back();
+}
+
+so for my book appointment modal make me a function clients_book
+
+tables to be saved in the book appointment
+services
+svc_uuid = generateuuid(),
+svc_sa_number = svc_id (primary), so what is the svc_id that will be save (auto_incremnt that is the svc_sa_number)
+branch_id = the one I selected
+usr_id = the client's usr_id
+svc_is_package = 0
+svc_is_termite = if svcp_id = 8 is selected it is 1, if not 0
+svc_problem_description = the one we input in svc_problem_description
+svc_status = REQUESTED
+svc_initial_price = if svcp_id != 8, we just select the svcpa_cost that was displayed if svcp_id == 8, it is svcpat_cost that was dispalyed
+svc_balance = svc_initial_price but if we select svcp_id = 8 it should be svcpat_cost
+svc_payment_status = NO PAYMENT
+svc_date_created = Carbon::now(),
+svc_created_by = session('usr_id'),
+svc_active = 1
+
+service_order_pests
+svcop_uuid = generateuuid(),
+svc_id = svc_id
+svcp_id = the one we selected in problem type
+svcop_date_created = Carbon::now(),
+svcop_created_by = session('usr_id'),
+svcop_active = 1
+
+service_orders
+svco_uuid = generateuuid(),
+svc_id = svc_id
+svcpa_id = the one we select in svcpa_id (if svcp_id = 8 is selected so it means service_orders.svcpa_id is null)
+svcpat_id = the one we select in svcpat_id (we select svcp_id = 8, so it means it is termite flow, this we put here what we select and service_orders.svcpa_id is null)
+svco_date_created = Carbon::now(),
+svco_created_by = session('usr_id'),
+svco_active = 1
+
+service_appointments
+svca_uuid = generateuuid(),
+svc_id = svc_id
+uadd_id = the one we select in uadd_id
+svca_client_date = the one we select svca_client_date
+svca_client_time = the one we select svca_client_time

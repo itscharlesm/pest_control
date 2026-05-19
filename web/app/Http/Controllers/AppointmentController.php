@@ -102,6 +102,93 @@ class AppointmentController extends Controller
 
         return view('service_orders.appointments.book', compact('clients', 'search', 'branches', 'addresses', 'servicePackages', 'servicePackageAreas', 'termiteAreas'));
     }
+
+    public function clients_book(Request $request)
+    {
+        $request->validate([
+            'usr_id' => 'required|integer',
+            'branch_id' => 'required|integer',
+            'uadd_id' => 'required|integer',
+            'svcp_id' => 'required|integer',
+            'svca_client_date' => 'required|date',
+            'svca_client_time' => 'required',
+            'svc_problem_description' => 'nullable|string',
+            'svcpa_id' => 'nullable|integer',
+            'svcpat_id' => 'nullable|integer',
+        ]);
+
+        $isTermite = (int) $request->svcp_id === 8 ? 1 : 0;
+        $svcpaId = $isTermite ? null : $request->svcpa_id;
+        $svcpatId = $isTermite ? $request->svcpat_id : null;
+
+        if ($isTermite) {
+            $initialPrice = DB::table('service_package_area_termites')
+                ->where('svcpat_id', $svcpatId)
+                ->value('svcpat_cost') ?? 0;
+        } else {
+            $initialPrice = DB::table('service_package_areas')
+                ->where('svcpa_id', $svcpaId)
+                ->value('svcpa_cost') ?? 0;
+        }
+
+        $svcId = DB::table('services')->insertGetId([
+            'svc_uuid' => generateuuid(),
+            'branch_id' => $request->branch_id,
+            'usr_id' => $request->usr_id,
+            'svc_is_package' => 0,
+            'svcpat_id' => $svcpatId,
+            'svc_is_termite' => $isTermite,
+            'svc_problem_description' => $request->svc_problem_description,
+            'svc_status' => 'REQUESTED',
+            'svc_initial_price' => $initialPrice,
+            'svc_balance' => $initialPrice,
+            'svc_payment_status' => 'NO PAYMENT',
+            'svc_date_created' => Carbon::now(),
+            'svc_created_by' => session('usr_id'),
+            'svc_active' => 1,
+        ]);
+
+        DB::table('services')
+            ->where('svc_id', $svcId)
+            ->update(['svc_sa_number' => $svcId]);
+
+        DB::table('service_order_pests')->insert([
+            'svcop_uuid' => generateuuid(),
+            'svc_id' => $svcId,
+            'svcp_id' => $request->svcp_id,
+            'svcop_date_created' => Carbon::now(),
+            'svcop_created_by' => session('usr_id'),
+            'svcop_active' => 1,
+        ]);
+
+        DB::table('service_orders')->insert([
+            'svco_uuid' => generateuuid(),
+            'svc_id' => $svcId,
+            'svcpa_id' => $svcpaId,
+            'svcpat_id' => $svcpatId,
+            'svco_date_created' => Carbon::now(),
+            'svco_created_by' => session('usr_id'),
+            'svco_active' => 1,
+        ]);
+
+        DB::table('service_appointments')->insert([
+            'svca_uuid' => generateuuid(),
+            'svc_id' => $svcId,
+            'uadd_id' => $request->uadd_id,
+            'svca_client_date' => $request->svca_client_date,
+            'svca_client_time' => $request->svca_client_time,
+            'svca_status' => 'UNASSIGNED',
+            'svca_date_created' => Carbon::now(),
+            'svca_created_by' => session('usr_id'),
+            'svca_active' => 1,
+        ]);
+
+        $serviceOrder = 'SA-' . str_pad($svcId, 6, '0', STR_PAD_LEFT);
+        logUserActivity('Book Appointment', 'Booked appointment ' . $serviceOrder);
+
+        session()->flash('successMessage', 'Appointment successfully booked.');
+        return redirect()->back();
+    }
     // END BOOK APPOINTMENTS
 
     // START REQUESTED APPOINTMENTS
