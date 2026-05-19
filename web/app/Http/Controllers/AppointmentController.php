@@ -132,7 +132,7 @@ class AppointmentController extends Controller
                 ->value('svcpa_cost') ?? 0;
         }
 
-        // --- Distance & Location Price Calculation ---
+        // Distance & Location Price Calculation
         $address = DB::table('user_addresses')->where('uadd_id', $request->uadd_id)->first();
         $branch = DB::table('branches')->where('branch_id', $request->branch_id)->first();
         $locationFee = DB::table('service_package_area_locations')->where('branch_id', $request->branch_id)->first();
@@ -179,7 +179,6 @@ class AppointmentController extends Controller
                     + (($kmDistance - 10) * $locationFee->svcpal_succeeding_cost);
             }
         }
-        // --- End Distance Calculation ---
 
         $svcId = DB::table('services')->insertGetId([
             'svc_uuid' => generateuuid(),
