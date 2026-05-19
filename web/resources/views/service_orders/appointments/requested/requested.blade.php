@@ -82,7 +82,7 @@
                                                 @endif
                                             </td>
                                             <td style="vertical-align: middle; text-align: center">
-                                                @if ($appointment->svc_is_package== 1)
+                                                @if ($appointment->svc_is_package == 1)
                                                     YES
                                                 @else
                                                     NO
@@ -112,43 +112,6 @@
                                                 @endif
                                             </td>
                                         </tr>
-
-                                        {{-- Delete Modal --}}
-                                        <div class="modal fade" id="deleteModal-{{ $appointment->svc_id }}" tabindex="-1"
-                                            role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <form method="POST"
-                                                        action="{{ action('App\Http\Controllers\AppointmentController@delete_appointment', [$appointment->svc_id]) }}">
-                                                        @csrf
-                                                        <div class="modal-header bg-danger text-white">
-                                                            <h5 class="modal-title text-white" id="deleteModalLabel">
-                                                                Please Confirm
-                                                            </h5>
-                                                            <button type="button" class="close" data-dismiss="modal"
-                                                                aria-label="Close">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <p>Are you sure you want to <strong>DELETE</strong> the
-                                                                appointment of <strong>{{ $appointment->usr_first_name }}
-                                                                    {{ $appointment->usr_last_name }}</strong>?
-                                                            </p>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-                                                            <button type="submit" class="btn btn-danger">
-                                                                <span class="fa fa-trash"></span> Confirm Delete
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -158,6 +121,44 @@
             </div>
         </div>
     </section>
+
+    @foreach ($appointments as $appointment)
+        {{-- Delete Modal --}}
+        <div class="modal fade" id="deleteModal-{{ $appointment->svc_id }}" tabindex="-1" role="dialog"
+            aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST"
+                        action="{{ action('App\Http\Controllers\AppointmentController@delete_appointment', [$appointment->svc_id]) }}">
+                        @csrf
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title text-white" id="deleteModalLabel">
+                                Please Confirm
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to <strong>DELETE</strong> the
+                                appointment of <strong>{{ $appointment->usr_first_name }}
+                                    {{ $appointment->usr_last_name }}</strong>?
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                <span class="fa fa-trash"></span> Confirm Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
     {{-- Dynamic Search While Typing --}}
     <script>
         document.getElementById("searchInput").addEventListener("keyup", function() {
