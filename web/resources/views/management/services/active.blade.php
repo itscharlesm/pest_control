@@ -88,59 +88,6 @@
                                                         </a>
                                                     </td>
                                                 </tr>
-
-                                                {{-- Edit Service Modal --}}
-                                                <div class="modal fade" id="editServiceModal-{{ $service->svcpa_id }}"
-                                                    tabindex="-1" role="dialog" aria-hidden="true">
-                                                    <div class="modal-dialog" role="document">
-                                                        <form
-                                                            action="{{ url('management/services/area/cost/update', $service->svcpa_id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                            <div class="modal-content">
-                                                                <div class="modal-header bg-warning text-white">
-                                                                    <h5 class="modal-title text-black">Edit Service Area
-                                                                    </h5>
-                                                                    <button type="button" class="close"
-                                                                        data-dismiss="modal">
-                                                                        <span>&times;</span>
-                                                                    </button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <div class="form-group">
-                                                                        <label>Area Name <span
-                                                                                class="text-danger">*</span></label>
-                                                                        <input type="text" class="form-control"
-                                                                            name="svcpa_area"
-                                                                            value="{{ $service->svcpa_area }}" readonly>
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label>Cost (₱) <span
-                                                                                class="text-danger">*</span></label>
-                                                                        <input type="number" step="0.01"
-                                                                            class="form-control" name="svcpa_cost"
-                                                                            value="{{ $service->svcpa_cost }}" required>
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label>Branch</label>
-                                                                        <input type="text" class="form-control"
-                                                                            name="branch_name"
-                                                                            value="{{ $service->branch_name }}" readonly>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary"
-                                                                        data-dismiss="modal">
-                                                                        <span class="fa fa-close"></span> Close
-                                                                    </button>
-                                                                    <button type="submit" class="btn btn-warning">
-                                                                        <span class="fa fa-save"></span> Update
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
                                             @endforeach
                                         </tbody>
                                     </table>
@@ -174,7 +121,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse ($termiteServices as $termite)
+                                            @foreach ($termiteServices as $termite)
                                                 <tr>
                                                     <td style="vertical-align:middle">
                                                         {{ $termite->svcpat_sqm_details }}
@@ -193,69 +140,7 @@
                                                         </a>
                                                     </td>
                                                 </tr>
-
-                                                {{-- Edit Termite Cost Modal --}}
-                                                <div class="modal fade" id="editTermiteModal-{{ $termite->svcpat_id }}"
-                                                    tabindex="-1" role="dialog" aria-hidden="true">
-                                                    <div class="modal-dialog" role="document">
-                                                        <form
-                                                            action="{{ url('management/services/area/termites/cost/update', $termite->svcpat_id) }}"
-                                                            method="POST">
-                                                            @csrf
-                                                            <div class="modal-content">
-                                                                <div class="modal-header bg-warning text-white">
-                                                                    <h5 class="modal-title">
-                                                                        Edit Termite Service Pricing
-                                                                    </h5>
-                                                                    <button type="button" class="close text-white"
-                                                                        data-dismiss="modal">
-                                                                        <span>&times;</span>
-                                                                    </button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <div class="form-group">
-                                                                        <label>Sqm / Details</label>
-                                                                        <input type="text" class="form-control"
-                                                                            value="{{ $termite->svcpat_sqm_details }}"
-                                                                            readonly>
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label>Cost (₱) <span
-                                                                                class="text-danger">*</span></label>
-                                                                        <input type="number" step="0.01"
-                                                                            class="form-control" name="svcpat_cost"
-                                                                            value="{{ $termite->svcpat_cost }}" required>
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label>Branch</label>
-                                                                        <input type="text" class="form-control"
-                                                                            name="branch_name"
-                                                                            value="{{ $termite->branch_name }}" readonly>
-                                                                    </div>
-                                                                    <input type="hidden" name="svcpat_sqm_details"
-                                                                        value="{{ $termite->svcpat_sqm_details }}">
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary"
-                                                                        data-dismiss="modal">
-                                                                        <span class="fa fa-close"></span> Close
-                                                                    </button>
-                                                                    <button type="submit" class="btn btn-warning">
-                                                                        <span class="fa fa-save"></span> Update
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="4" class="text-center text-muted py-3">
-                                                        <span class="fa fa-info-circle mr-1"></span> No termite service
-                                                        records found.
-                                                    </td>
-                                                </tr>
-                                            @endforelse
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -322,64 +207,6 @@
                                                                 </a>
                                                             </td>
                                                         </tr>
-
-                                                        {{-- Edit Device Cost Modal --}}
-                                                        <div class="modal fade"
-                                                            id="editDeviceCostModal-{{ $device->svcpad_id }}"
-                                                            tabindex="-1" role="dialog" aria-hidden="true">
-
-                                                            <div class="modal-dialog" role="document">
-                                                                <form
-                                                                    action="{{ url('management/services/area/device/cost/update', $device->svcpad_id) }}"
-                                                                    method="POST">
-                                                                    @csrf
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header bg-warning text-white">
-                                                                            <h5 class="modal-title text-black">
-                                                                                Edit Device Cost
-                                                                            </h5>
-
-                                                                            <button type="button" class="close"
-                                                                                data-dismiss="modal">
-                                                                                <span>&times;</span>
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="modal-body">
-                                                                            <div class="form-group">
-                                                                                <label>Branch</label>
-
-                                                                                <input type="text" class="form-control"
-                                                                                    value="{{ $device->branch_name }}"
-                                                                                    readonly>
-                                                                            </div>
-
-                                                                            <div class="form-group">
-                                                                                <label>
-                                                                                    Cost (₱)
-                                                                                    <span class="text-danger">*</span>
-                                                                                </label>
-                                                                                <input type="number" step="0.01"
-                                                                                    class="form-control"
-                                                                                    name="svcpad_cost"
-                                                                                    value="{{ $device->svcpad_cost }}"
-                                                                                    required>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="modal-footer">
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
-                                                                                data-dismiss="modal">
-                                                                                <span class="fa fa-close"></span> Close
-                                                                            </button>
-                                                                            <button type="submit"
-                                                                                class="btn btn-warning">
-                                                                                <span class="fa fa-save"></span> Update
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
                                                     @endforeach
                                                 </tbody>
                                             </table>
@@ -438,76 +265,6 @@
                                                                 </a>
                                                             </td>
                                                         </tr>
-
-                                                        {{-- Edit Location Cost Modal --}}
-                                                        <div class="modal fade"
-                                                            id="editLocationCostModal-{{ $location->svcpal_id }}"
-                                                            tabindex="-1" role="dialog" aria-hidden="true">
-
-                                                            <div class="modal-dialog" role="document">
-                                                                <form
-                                                                    action="{{ url('management/services/area/location/cost/update', $location->svcpal_id) }}"
-                                                                    method="POST">
-                                                                    @csrf
-                                                                    <div class="modal-content">
-                                                                        <div class="modal-header bg-warning text-white">
-                                                                            <h5 class="modal-title text-black">
-                                                                                Edit Location Cost
-                                                                            </h5>
-
-                                                                            <button type="button" class="close"
-                                                                                data-dismiss="modal">
-                                                                                <span>&times;</span>
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="modal-body">
-                                                                            <div class="form-group">
-                                                                                <label>Branch</label>
-
-                                                                                <input type="text" class="form-control"
-                                                                                    value="{{ $location->branch_name }}"
-                                                                                    readonly>
-                                                                            </div>
-
-                                                                            <div class="form-group">
-                                                                                <label>
-                                                                                    First 10KM Cost (₱)
-                                                                                    <span class="text-danger">*</span>
-                                                                                </label>
-                                                                                <input type="number" step="0.01"
-                                                                                    class="form-control"
-                                                                                    name="svcpal_first_cost"
-                                                                                    value="{{ $location->svcpal_first_cost }}"
-                                                                                    required>
-                                                                            </div>
-
-                                                                            <div class="form-group">
-                                                                                <label>
-                                                                                    Succeeding KM Cost (₱)
-                                                                                    <span class="text-danger">*</span>
-                                                                                </label>
-                                                                                <input type="number" step="0.01"
-                                                                                    class="form-control"
-                                                                                    name="svcpal_succeeding_cost"
-                                                                                    value="{{ $location->svcpal_succeeding_cost }}"
-                                                                                    required>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="modal-footer">
-                                                                            <button type="button"
-                                                                                class="btn btn-secondary"
-                                                                                data-dismiss="modal">
-                                                                                <span class="fa fa-close"></span> Close
-                                                                            </button>
-                                                                            <button type="submit"
-                                                                                class="btn btn-warning">
-                                                                                <span class="fa fa-save"></span> Update
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
                                                     @endforeach
                                                 </tbody>
                                             </table>
@@ -546,6 +303,209 @@
             </div>
         </div>
     </section>
+
+    @foreach ($services as $service)
+        {{-- Edit Service Modal --}}
+        <div class="modal fade" id="editServiceModal-{{ $service->svcpa_id }}" tabindex="-1" role="dialog"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form action="{{ url('management/services/area/cost/update', $service->svcpa_id) }}" method="POST">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-white">
+                            <h5 class="modal-title text-black">Edit Service Area
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Area Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="svcpa_area"
+                                    value="{{ $service->svcpa_area }}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Cost (₱) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="svcpa_cost"
+                                    value="{{ $service->svcpa_cost }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Branch</label>
+                                <input type="text" class="form-control" name="branch_name"
+                                    value="{{ $service->branch_name }}" readonly>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fa fa-save"></span> Update
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
+
+    @foreach ($termiteServices as $termite)
+        {{-- Edit Termite Cost Modal --}}
+        <div class="modal fade" id="editTermiteModal-{{ $termite->svcpat_id }}" tabindex="-1" role="dialog"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form action="{{ url('management/services/area/termites/cost/update', $termite->svcpat_id) }}"
+                    method="POST">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-white">
+                            <h5 class="modal-title">
+                                Edit Termite Service Pricing
+                            </h5>
+                            <button type="button" class="close text-white" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Sqm / Details</label>
+                                <input type="text" class="form-control" value="{{ $termite->svcpat_sqm_details }}"
+                                    readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Cost (₱) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="svcpat_cost"
+                                    value="{{ $termite->svcpat_cost }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Branch</label>
+                                <input type="text" class="form-control" name="branch_name"
+                                    value="{{ $termite->branch_name }}" readonly>
+                            </div>
+                            <input type="hidden" name="svcpat_sqm_details" value="{{ $termite->svcpat_sqm_details }}">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fa fa-save"></span> Update
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
+
+    @foreach ($deviceCosts as $device)
+        {{-- Edit Device Cost Modal --}}
+        <div class="modal fade" id="editDeviceCostModal-{{ $device->svcpad_id }}" tabindex="-1" role="dialog"
+            aria-hidden="true">
+
+            <div class="modal-dialog" role="document">
+                <form action="{{ url('management/services/area/device/cost/update', $device->svcpad_id) }}"
+                    method="POST">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-white">
+                            <h5 class="modal-title text-black">
+                                Edit Device Cost
+                            </h5>
+
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Branch</label>
+
+                                <input type="text" class="form-control" value="{{ $device->branch_name }}" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    Cost (₱)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svcpad_cost"
+                                    value="{{ $device->svcpad_cost }}" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fa fa-save"></span> Update
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
+
+    @foreach ($locationCosts as $location)
+        {{-- Edit Location Cost Modal --}}
+        <div class="modal fade" id="editLocationCostModal-{{ $location->svcpal_id }}" tabindex="-1" role="dialog"
+            aria-hidden="true">
+
+            <div class="modal-dialog" role="document">
+                <form action="{{ url('management/services/area/location/cost/update', $location->svcpal_id) }}"
+                    method="POST">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-white">
+                            <h5 class="modal-title text-black">
+                                Edit Location Cost
+                            </h5>
+
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Branch</label>
+
+                                <input type="text" class="form-control" value="{{ $location->branch_name }}"
+                                    readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    First 10KM Cost (₱)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svcpal_first_cost"
+                                    value="{{ $location->svcpal_first_cost }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    Succeeding KM Cost (₱)
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" step="0.01" class="form-control" name="svcpal_succeeding_cost"
+                                    value="{{ $location->svcpal_succeeding_cost }}" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fa fa-save"></span> Update
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
 
     {{-- Dynamic Search While Typing --}}
     <script>
