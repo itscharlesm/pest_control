@@ -121,16 +121,19 @@
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">INITIAL PRICE</td>
-                                        <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                        <td style="font-weight: bold;">LOCATION PRICE</td>
+                                        <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
                                         <td style="font-weight: bold;">BALANCE</td>
-                                        <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
+                                        <td>₱{{ number_format($display->svc_balance, 2) }}</td>
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">IS TERMITE</td>
                                         <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                        <td style="font-weight: bold;">DISTANCE</td>
+                                        <td>{{ $display->svc_km_distance }}KM</td>
                                         <td style="font-weight: bold;">IS PACKAGE</td>
                                         <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                        <td colspan="2"></td>
                                     </tr>
                                     @if ($display->svc_is_termite)
                                         <tr>
@@ -637,16 +640,19 @@
                                         </tr>
                                         <tr>
                                             <td style="font-weight: bold;">INITIAL PRICE</td>
-                                            <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                            <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                            <td style="font-weight: bold;">LOCATION PRICE</td>
+                                            <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
                                             <td style="font-weight: bold;">BALANCE</td>
-                                            <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
+                                            <td>₱{{ number_format($display->svc_balance, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td style="font-weight: bold;">IS TERMITE</td>
                                             <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                            <td style="font-weight: bold;">DISTANCE</td>
+                                            <td>{{ $display->svc_km_distance }}KM</td>
                                             <td style="font-weight: bold;">IS PACKAGE</td>
                                             <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                            <td colspan="2"></td>
                                         </tr>
                                         @if ($display->svc_is_termite)
                                             <tr>
@@ -1045,17 +1051,20 @@
                                             <td>{{ $display->svc_payment_status }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight:bold;">INITIAL PRICE</td>
-                                            <td colspan="2">₱{{ number_format($display->svc_initial_price, 2) }}</td>
-                                            <td style="font-weight:bold;">BALANCE</td>
-                                            <td colspan="2">₱{{ number_format($display->svc_balance, 2) }}</td>
+                                            <td style="font-weight: bold;">INITIAL PRICE</td>
+                                            <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                            <td style="font-weight: bold;">LOCATION PRICE</td>
+                                            <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
+                                            <td style="font-weight: bold;">BALANCE</td>
+                                            <td>₱{{ number_format($display->svc_balance, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="font-weight:bold;">IS TERMITE</td>
+                                            <td style="font-weight: bold;">IS TERMITE</td>
                                             <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
-                                            <td style="font-weight:bold;">IS PACKAGE</td>
+                                            <td style="font-weight: bold;">DISTANCE</td>
+                                            <td>{{ $display->svc_km_distance }}KM</td>
+                                            <td style="font-weight: bold;">IS PACKAGE</td>
                                             <td>{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
-                                            <td colspan="2"></td>
                                         </tr>
 
                                         @if ($display->svc_is_termite)

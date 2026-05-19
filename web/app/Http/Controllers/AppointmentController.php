@@ -131,17 +131,52 @@ class AppointmentController extends Controller
                 ->value('svcpa_cost') ?? 0;
         }
 
+        // Distance & Location Price Calculation
+        $address = DB::table('user_addresses')->where('uadd_id', $request->uadd_id)->first();
+        $branch = DB::table('branches')->where('branch_id', $request->branch_id)->first();
+        $locationFee = DB::table('service_package_area_locations')->where('branch_id', $request->branch_id)->first();
+
+        $kmDistance = 0;
+        $locationPrice = 0;
+
+        if ($address && $branch && $locationFee) {
+            // Haversine formula
+            $lat1 = deg2rad($branch->branch_latitude);
+            $lon1 = deg2rad($branch->branch_longitude);
+            $lat2 = deg2rad($address->uadd_latitude);
+            $lon2 = deg2rad($address->uadd_longitude);
+
+            $dlat = $lat2 - $lat1;
+            $dlon = $lon2 - $lon1;
+
+            $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
+            $km = 6371 * 2 * asin(sqrt($a));
+
+            // Round: .1–.4 round down, .5–.9 round up
+            $kmDistance = (fmod($km, 1) >= 0.5) ? ceil($km) : floor($km);
+
+            // Price: first 10km = flat rate, beyond = flat + extra km * succeeding cost
+            if ($kmDistance <= 10) {
+                $locationPrice = $locationFee->svcpal_first_cost;
+            } else {
+                $locationPrice = $locationFee->svcpal_first_cost
+                    + (($kmDistance - 10) * $locationFee->svcpal_succeeding_cost);
+            }
+        }
+
         $svcId = DB::table('services')->insertGetId([
             'svc_uuid' => generateuuid(),
             'branch_id' => $request->branch_id,
             'usr_id' => $request->usr_id,
+            'svc_km_distance' => $kmDistance,
             'svc_is_package' => 0,
             'svcpat_id' => $svcpatId,
             'svc_is_termite' => $isTermite,
             'svc_problem_description' => $request->svc_problem_description,
             'svc_status' => 'REQUESTED',
             'svc_initial_price' => $initialPrice,
-            'svc_balance' => $initialPrice,
+            'svc_location_price' => $locationPrice,
+            'svc_balance' => $initialPrice + $locationPrice,
             'svc_payment_status' => 'NO PAYMENT',
             'svc_date_created' => Carbon::now(),
             'svc_created_by' => session('usr_id'),
