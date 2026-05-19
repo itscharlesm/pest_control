@@ -1,119 +1,487 @@
-public function assessed_appointments_view($svc_id)
+@extends('layouts.themes.main')
+
+@section('content')
+    {{-- Content Header --}}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Book Appointment</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item">
+                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
+                        </li>
+                        <li class="breadcrumb-item">Appointments</li>
+                        <li class="breadcrumb-item active">Book Appointment</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <section class="content">
+        @include('layouts.partials.onclick')
+        @include('layouts.partials.alerts')
+        @include('layouts.partials.modal_style')
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-body overflow-auto">
+                    <div class="row">
+                        <!-- Table Column -->
+                        <div class="col-lg-12 col-md-7">
+                            <form method="GET" action="{{ url('service/orders/appointments/clients') }}" class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" name="search" id="searchInput" class="form-control"
+                                        placeholder="Search clients..." value="{{ request('search') }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="fa fa-search"></span> Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <table id="profilingTable" class="table table-hover table-bordered table-sm responsive">
+                                <thead>
+                                    <tr>
+                                        <th style="vertical-align: middle; text-align: center">Name</th>
+                                        <th style="vertical-align: middle; text-align: center">Branch</th>
+                                        <th style="vertical-align: middle; text-align: center">Address(es)</th>
+                                        <th style="vertical-align: middle; text-align: center" width="110px">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($clients as $client)
+                                        <tr>
+                                            <td style="vertical-align: middle; text-align: left">
+                                                {{ $client->usr_last_name }}, {{ $client->usr_first_name }}
+                                                {{ $client->usr_middle_name }}
+                                                <br />
+                                                <small>{{ $client->usr_email }}</small>
+                                                <br />
+                                                <small>0{{ $client->usr_mobile }}</small>
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                {{ $client->branch_name }}
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: left">
+                                                @if (isset($addresses[$client->usr_id]) && count($addresses[$client->usr_id]) > 0)
+                                                    <ul style="padding-left: 18px; margin-bottom: 0;">
+                                                        @foreach ($addresses[$client->usr_id] as $address)
+                                                            <li>
+                                                                {{ $address->uadd_street }},
+                                                                {{ $address->uadd_barangay }},
+                                                                {{ $address->uadd_city }},
+                                                                {{ $address->uadd_province }},
+                                                                {{ $address->uadd_region }}
+
+                                                                @if (!empty($address->uadd_longitude) && !empty($address->uadd_latitude))
+                                                                    ({{ $address->uadd_longitude }},
+                                                                    {{ $address->uadd_latitude }})
+                                                                @endif
+
+                                                                - {{ $address->add_name }}
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <small class="text-muted">No active address</small>
+                                                @endif
+                                            </td>
+                                            <td style="vertical-align: middle; text-align: center">
+                                                <a class="btn btn-success btn-sm mb-1" href="javascript:void(0)"
+                                                    data-toggle="modal"
+                                                    data-target="#bookAppointmentModal-{{ $client->usr_id }}">
+                                                    <span class="fa fa-calendar"></span>
+                                                </a>
+                                            </td>
+                                        </tr>
+
+                                        {{-- Book Appointment Modal --}}
+                                        <div class="modal fade" id="bookAppointmentModal-{{ $client->usr_id }}"
+                                            tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <form method="POST"
+                                                        action="{{ action('App\Http\Controllers\ProfilingController@clients_delete', [$client->usr_id]) }}">
+                                                        @csrf
+                                                        <div class="modal-header bg-success text-white">
+                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                                                Book Appointment
+                                                            </h5>
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+
+                                                            {{-- ===================== LOCATION ===================== --}}
+                                                            <div class="form-group">
+                                                                <label><strong>Address</strong></label>
+                                                                <select class="form-control" name="uadd_id" required>
+                                                                    <option value="">— Select Address —</option>
+                                                                    @if (isset($addresses[$client->usr_id]) && count($addresses[$client->usr_id]) > 0)
+                                                                        @foreach ($addresses[$client->usr_id] as $address)
+                                                                            <option value="{{ $address->uadd_id }}">
+                                                                                {{ $address->add_name }} —
+                                                                                {{ $address->uadd_street }},
+                                                                                {{ $address->uadd_barangay }},
+                                                                                {{ $address->uadd_city }},
+                                                                                {{ $address->uadd_province }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    @else
+                                                                        <option disabled>No active address available
+                                                                        </option>
+                                                                    @endif
+                                                                </select>
+                                                            </div>
+
+                                                            {{-- ===================== ASSIGN BRANCH ===================== --}}
+                                                            <div class="form-group">
+                                                                <label><strong>Assign Branch</strong></label>
+                                                                <select class="form-control book-branch-select"
+                                                                    name="branch_id" data-client="{{ $client->usr_id }}"
+                                                                    required>
+                                                                    <option value="">— Select Branch —</option>
+                                                                    @foreach ($branches as $branch)
+                                                                        @if ($branch->branch_id != 1)
+                                                                            <option value="{{ $branch->branch_id }}">
+                                                                                {{ $branch->branch_name }}
+                                                                            </option>
+                                                                        @endif
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            <hr>
+
+                                                            {{-- ===================== PROBLEM TYPE ===================== --}}
+                                                            <div class="form-group">
+                                                                <label><strong>Problem Type</strong></label>
+                                                                <select class="form-control book-pest-select" name="svcp_id"
+                                                                    data-client="{{ $client->usr_id }}" required>
+                                                                    <option value="">— Select Problem Type —</option>
+                                                                    @foreach ($servicePackages as $pkg)
+                                                                        <option value="{{ $pkg->svcp_id }}">
+                                                                            {{ $pkg->svcp_pest_type }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            {{-- Location (area) — shown when svcp_id != 9 --}}
+                                                            <div class="form-group book-area-group-{{ $client->usr_id }}"
+                                                                style="display:none;">
+                                                                <label><strong>Location</strong></label>
+                                                                <select class="form-control book-area-select"
+                                                                    name="svcpa_id" data-client="{{ $client->usr_id }}">
+                                                                    <option value="">— Select Branch First —</option>
+
+                                                                    {{-- Pre-render all areas grouped by branch as data attributes --}}
+                                                                    @foreach ($servicePackageAreas as $branchId => $areas)
+                                                                        @foreach ($areas as $area)
+                                                                            <option value="{{ $area->svcpa_id }}"
+                                                                                data-branch="{{ $branchId }}"
+                                                                                data-cost="{{ $area->svcpa_cost }}"
+                                                                                style="display:none;">
+                                                                                {{ $area->svcpa_area }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    @endforeach
+                                                                </select>
+                                                                <small
+                                                                    class="text-muted book-area-cost-{{ $client->usr_id }}"></small>
+                                                            </div>
+
+                                                            {{-- Termite Treatment Size — shown when svcp_id == 9 --}}
+                                                            <div class="form-group book-termite-group-{{ $client->usr_id }}"
+                                                                style="display:none;">
+                                                                <label><strong>Termite Treatment Size</strong></label>
+                                                                <select class="form-control book-termite-select"
+                                                                    name="svcpat_id" data-client="{{ $client->usr_id }}">
+                                                                    <option value="">— Select Branch First —</option>
+
+                                                                    @foreach ($termiteAreas as $branchId => $tAreas)
+                                                                        @foreach ($tAreas as $t)
+                                                                            <option value="{{ $t->svcpat_id }}"
+                                                                                data-branch="{{ $branchId }}"
+                                                                                style="display:none;">
+                                                                                {{ $t->svcpat_sqm_details }}
+                                                                                (₱{{ number_format($t->svcpat_cost, 2) }})
+                                                                            </option>
+                                                                        @endforeach
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            {{-- Problem Description --}}
+                                                            <div class="form-group">
+                                                                <label><strong>Problem Description <span
+                                                                            class="text-muted">(Optional)</span></strong></label>
+                                                                <textarea class="form-control" name="svc_problem_details" rows="3" placeholder="Describe the problem..."></textarea>
+                                                            </div>
+
+                                                            <hr>
+
+                                                            {{-- ===================== SCHEDULE ===================== --}}
+                                                            <div class="form-group">
+                                                                <label><strong>Preferred Date</strong></label>
+                                                                <input type="date" class="form-control"
+                                                                    name="svca_client_date"
+                                                                    value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}"
+                                                                    min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}"
+                                                                    required>
+                                                            </div>
+
+                                                            <div class="form-group">
+                                                                <label><strong>Time Window</strong></label>
+                                                                <select class="form-control" name="svca_client_time"
+                                                                    required>
+                                                                    <option value="">— Select Time Window —</option>
+                                                                    <option value="08:00">Morning (8:00 AM – 12:00 PM)
+                                                                    </option>
+                                                                    <option value="12:00">Afternoon (12:00 PM – 5:00 PM)
+                                                                    </option>
+                                                                    <option value="17:00">Evening (5:00 PM – 8:00 PM)
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-dismiss="modal">
+                                                                <span class="fa fa-close"></span> Close
+                                                            </button>
+                                                            <button type="submit" class="btn btn-success">
+                                                                <span class="fa fa-check"></span> Book Appointment
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Dynamic Search While Typing --}}
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            let value = this.value.toLowerCase();
+
+            // Select all tables with ID containing "Table"
+            let tables = document.querySelectorAll('table[id*="Table"]');
+
+            tables.forEach(function(table) {
+                let rows = table.querySelectorAll("tbody tr");
+
+                rows.forEach(function(row) {
+                    let text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(value) ? "" : "none";
+                });
+            });
+        });
+    </script>
+
+    <script>
+        (function() {
+            const TERMITE_ID = 9;
+
+            function filterOptionsByBranch(select, branchId) {
+                const options = select.querySelectorAll('option[data-branch]');
+                let hasVisible = false;
+
+                options.forEach(function(opt) {
+                    if (opt.dataset.branch == branchId) {
+                        opt.style.display = '';
+                        hasVisible = true;
+                    } else {
+                        opt.style.display = 'none';
+                        opt.selected = false;
+                    }
+                });
+
+                // Reset to placeholder
+                select.value = '';
+                select.querySelector('option:not([data-branch])').textContent =
+                    hasVisible ? '— Select —' : '— No options for this branch —';
+            }
+
+            function toggleAreaTermite(clientId, pestId, branchId) {
+                const areaGroup = document.querySelector('.book-area-group-' + clientId);
+                const termiteGroup = document.querySelector('.book-termite-group-' + clientId);
+
+                if (!pestId) {
+                    areaGroup.style.display = 'none';
+                    termiteGroup.style.display = 'none';
+                    return;
+                }
+
+                if (parseInt(pestId) === TERMITE_ID) {
+                    areaGroup.style.display = 'none';
+                    termiteGroup.style.display = 'block';
+                    if (branchId) {
+                        filterOptionsByBranch(
+                            document.querySelector('.book-termite-select[data-client="' + clientId + '"]'),
+                            branchId
+                        );
+                    }
+                } else {
+                    termiteGroup.style.display = 'none';
+                    areaGroup.style.display = 'block';
+                    if (branchId) {
+                        filterOptionsByBranch(
+                            document.querySelector('.book-area-select[data-client="' + clientId + '"]'),
+                            branchId
+                        );
+                    }
+                }
+            }
+
+            // Branch change
+            document.querySelectorAll('.book-branch-select').forEach(function(branchSel) {
+                branchSel.addEventListener('change', function() {
+                    const clientId = this.dataset.client;
+                    const branchId = this.value;
+                    const pestId = document.querySelector('.book-pest-select[data-client="' + clientId +
+                        '"]').value;
+
+                    toggleAreaTermite(clientId, pestId, branchId);
+                });
+            });
+
+            // Pest type change
+            document.querySelectorAll('.book-pest-select').forEach(function(pestSel) {
+                pestSel.addEventListener('change', function() {
+                    const clientId = this.dataset.client;
+                    const pestId = this.value;
+                    const branchId = document.querySelector('.book-branch-select[data-client="' +
+                        clientId + '"]').value;
+
+                    toggleAreaTermite(clientId, pestId, branchId);
+                });
+            });
+
+            // Area cost hint
+            document.querySelectorAll('.book-area-select').forEach(function(areaSel) {
+                areaSel.addEventListener('change', function() {
+                    const clientId = this.dataset.client;
+                    const selected = this.options[this.selectedIndex];
+                    const costEl = document.querySelector('.book-area-cost-' + clientId);
+
+                    costEl.textContent = selected && selected.dataset.cost ?
+                        'Cost: ₱' + parseFloat(selected.dataset.cost).toLocaleString('en-PH', {
+                            minimumFractionDigits: 2
+                        }) :
+                        '';
+                });
+            });
+        })();
+    </script>
+@endsection
+
+public function clients(Request $request)
 {
-    $display = DB::table('services')
-        ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
-        ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
-        ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
-        ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
-        ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
-        ->where('services.svc_id', $svc_id)
-        ->select(
-            'services.svc_id',
-            'services.svc_sa_number',
-            'services.svc_km_distance',
-            'services.svc_property_type',
-            'services.svc_is_package',
-            'services.svcpat_id',
-            'services.svc_is_termite',
-            'services.svc_type_treatment',
-            'services.svc_sqm_initial',
-            'services.svc_sqm_final',
-            'services.svc_with_device',
-            'services.svc_device_count',
-            'services.svc_problem_description',
-            'services.svc_status',
-            'services.svc_infestation',
-            'services.svc_initial_price',
-            'services.svc_location_price',
-            'services.svc_device_price',
-            'services.svc_fixed_price',
-            'services.svc_final_price',
-            'services.svc_balance',
-            'services.svc_payment_status',
-            'services.svc_assessment_recommendation',
-            'services.svc_chemical_quantity',
-            'services.svc_chemical_metric',
-            'users.usr_first_name',
+    $search = $request->search ?? '';
+
+    $sessionBranchId = session('branch_id');
+
+    // Base query
+    $query = DB::table('users')
+        ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+        ->where('users.utyp_id', '=', '3')
+        ->where('users.usr_active', '=', '1');
+
+    // Branch filter (unless super admin)
+    if ($sessionBranchId != 1) {
+        $query->where('users.branch_id', $sessionBranchId);
+    }
+
+    $query->select(
+        'users.usr_id',
+        'users.usr_uuid',
+        'branches.branch_name',
+        'users.usr_last_name',
+        'users.usr_first_name',
+        'users.usr_middle_name',
+        'users.usr_email',
+        'users.usr_mobile',
+        'users.usr_birth_date',
+        'users.usr_active',
+    )
+        ->groupBy(
+            'users.usr_id',
+            'users.usr_uuid',
+            'branches.branch_name',
             'users.usr_last_name',
+            'users.usr_first_name',
+            'users.usr_middle_name',
             'users.usr_email',
             'users.usr_mobile',
-            'branches.branch_id',
-            'branches.branch_name',
-            'service_appointments.svca_client_date',
-            'service_appointments.svca_client_time',
-            'service_appointments.svca_approved_date',
-            'service_appointments.svca_approved_time_from',
-            'service_appointments.svca_approved_time_to',
-            'service_appointments.svca_date_approved',
-            'user_addresses.uadd_street',
-            'user_addresses.uadd_barangay',
-            'user_addresses.uadd_city',
-            'user_addresses.uadd_province',
-            'user_addresses.uadd_region',
+            'users.usr_birth_date',
+            'users.usr_active'
+        )
+        ->orderBy('users.usr_last_name')
+        ->orderBy('users.usr_first_name');
+
+    // Search filter
+    if (!empty($search)) {
+        $query->where(function ($q) use ($search) {
+            $q->where('users.usr_last_name', 'LIKE', "%$search%")
+                ->orWhere('users.usr_first_name', 'LIKE', "%$search%")
+                ->orWhere('users.usr_email', 'LIKE', "%$search%")
+                ->orWhere('users.usr_mobile', 'LIKE', "%$search%")
+                ->orWhere('branches.branch_name', 'LIKE', "%$search%");
+        });
+    }
+
+    $clients = $query->paginate(500);
+
+    // Get all addresses for listed clients
+    $clientIds = collect($clients->items())->pluck('usr_id');
+
+    $addresses = DB::table('user_addresses')
+        ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+        ->whereIn('user_addresses.usr_id', $clientIds)
+        ->where('user_addresses.uadd_active', 1)
+        ->select(
+            'user_addresses.*',
             'addresses.add_name'
         )
-        ->first();
+        ->get()
+        ->groupBy('usr_id');
 
-    // Pest Types for this service
-    $pestTypes = DB::table('service_order_pests')
-        ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
-        ->where('service_order_pests.svc_id', $svc_id)
-        ->where('service_order_pests.svcop_active', 1)
-        ->select(
-            'service_order_pests.svcop_id',
-            'service_packages.svcp_id',
-            'service_packages.svcp_pest_type'
-        )
+    $branches = DB::table('branches')
+        ->select('branch_id', 'branch_name')
+        ->where('branch_active', 1)
         ->get();
 
-    // Service Orders with Areas (non-termite: svcpat_id IS NULL)
-    $serviceAreas = DB::table('service_orders')
-        ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
-        ->where('service_orders.svc_id', $svc_id)
-        ->whereNull('service_orders.svcpat_id')
-        ->where('service_orders.svco_active', 1)
-        ->select(
-            'service_orders.svco_id',
-            'service_package_areas.svcpa_id',
-            'service_package_areas.svcpa_area',
-            'service_package_areas.svcpa_cost'
-        )
-        ->get();
+    $servicePackages = DB::table('service_packages')->get();
 
-    // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
-    $termiteAreas = DB::table('service_orders')
-        ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
-        ->where('service_orders.svc_id', $svc_id)
-        ->whereNotNull('service_orders.svcpat_id')
-        ->where('service_orders.svco_active', 1)
-        ->select(
-            'service_orders.svco_id',
-            'service_package_area_termites.svcpat_id',
-            'service_package_area_termites.svcpat_sqm_details',
-            'service_package_area_termites.svcpat_cost'
-        )
-        ->get();
+    $servicePackageAreas = DB::table('service_package_areas')
+        ->where('svcpa_active', 1)
+        ->select('svcpa_id', 'svcpa_area', 'svcpa_cost', 'branch_id')
+        ->get()
+        ->groupBy('branch_id');
 
-    // Client Appointment Images
-    $appointmentImages = DB::table('service_appointment_images')
-        ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
-        ->where('service_appointments.svc_id', $svc_id)
-        ->where('service_appointment_images.svcap_active', 1)
-        ->select('service_appointment_images.*')
-        ->get();
+    $termiteAreas = DB::table('service_package_area_termites')
+        ->where('svcpat_active', 1)
+        ->select('svcpat_id', 'svcpat_sqm_details', 'svcpat_cost', 'branch_id')
+        ->get()
+        ->groupBy('branch_id');
 
-    // Technicians
-    $technicians = DB::table('users')
-        ->where('utyp_id', 2)
-        ->where('usr_active', 1)
-        ->where('branch_id', $display->branch_id)
-        ->orderBy('usr_last_name', 'asc')
-        ->select(
-            'usr_id',
-            'usr_first_name',
-            'usr_last_name'
-        )
-        ->get();
-
-    return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
+    return view('service_orders.appointments.book', compact('clients', 'search', 'branches', 'addresses', 'servicePackages', 'servicePackageAreas', 'termiteAreas'));
 }

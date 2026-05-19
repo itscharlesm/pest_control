@@ -86,7 +86,21 @@ class AppointmentController extends Controller
             ->where('branch_active', 1)
             ->get();
 
-        return view('service_orders.appointments.book', compact('clients', 'search', 'branches', 'addresses'));
+        $servicePackages = DB::table('service_packages')->get();
+
+        $servicePackageAreas = DB::table('service_package_areas')
+            ->where('svcpa_active', 1)
+            ->select('svcpa_id', 'svcpa_area', 'svcpa_cost', 'branch_id')
+            ->get()
+            ->groupBy('branch_id');
+
+        $termiteAreas = DB::table('service_package_area_termites')
+            ->where('svcpat_active', 1)
+            ->select('svcpat_id', 'svcpat_sqm_details', 'svcpat_cost', 'branch_id')
+            ->get()
+            ->groupBy('branch_id');
+
+        return view('service_orders.appointments.book', compact('clients', 'search', 'branches', 'addresses', 'servicePackages', 'servicePackageAreas', 'termiteAreas'));
     }
     // END BOOK APPOINTMENTS
 
@@ -845,6 +859,7 @@ class AppointmentController extends Controller
 
         return view('service_orders.appointments.assessed.assessed', compact('appointments', 'search'));
     }
+
     public function assessed_appointments_view($svc_id)
     {
         $display = DB::table('services')
