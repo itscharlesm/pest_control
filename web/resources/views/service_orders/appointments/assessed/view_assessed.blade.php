@@ -28,6 +28,20 @@
     .content-wrapper {
         overflow-x: hidden;
     }
+
+    #timelineTabs .nav-link {
+        color: #28a745;
+    }
+
+    #timelineTabs .nav-link.active {
+        color: #28a745;
+        border-color: #28a745 #28a745 #fff;
+    }
+
+    #timelineTabs .nav-link:hover {
+        color: #1e7e34;
+        border-color: #1e7e34 #1e7e34 transparent;
+    }
 </style>
 
 @extends('layouts.themes.main')
@@ -247,8 +261,7 @@
                                 <div class="dropdown-menu p-3" style="min-width: 200px;">
                                     <label class="dropdown-item">
                                         <input type="checkbox" class="print-toggle mr-1" data-target="sectionA">
-                                        Appointment
-                                        Information
+                                        Appointment Information
                                     </label>
                                     <label class="dropdown-item">
                                         <input type="checkbox" class="print-toggle mr-1" data-target="sectionB"> Service
@@ -257,8 +270,7 @@
                                     @if ($appointmentImages->count() > 0)
                                         <label class="dropdown-item">
                                             <input type="checkbox" class="print-toggle mr-1" data-target="sectionC">
-                                            Client
-                                            Appointment Images
+                                            Client Appointment Images
                                         </label>
                                     @endif
                                     <div class="dropdown-item text-center">
@@ -267,8 +279,7 @@
                                     </div>
                                     <div class="dropdown-item">
                                         <p id="warning" style="color:red; display:none;" class="mt-1">Select at least
-                                            one
-                                            section.</p>
+                                            one section.</p>
                                     </div>
                                 </div>
                             </div>
@@ -394,7 +405,6 @@
                                             </th>
                                         </tr>
                                     </thead>
-
                                     <tbody>
                                         @foreach ($appointmentImages->chunk(5) as $chunk)
                                             <tr>
@@ -403,15 +413,12 @@
                                                         <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
                                                             target="_blank"
                                                             style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden;">
-
                                                             <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
                                                                 alt="Appointment Image"
                                                                 style="width:100%; height:100%; object-fit:cover; display:block;">
                                                         </a>
                                                     </td>
                                                 @endforeach
-
-                                                {{-- Fill empty cells if less than 5 images --}}
                                                 @for ($i = $chunk->count(); $i < 5; $i++)
                                                     <td style="vertical-align: middle;"></td>
                                                 @endfor
@@ -470,57 +477,82 @@
                             </select>
                         </div>
 
-                        {{-- Timeline --}}
-                        <div id="techTimelineWrap" style="display:none;">
-                            <hr>
-                            <p class="mb-2" style="font-size:13px; color:#666;">
-                                Schedule for <strong>{{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}</strong>
-                            </p>
+                        <hr>
 
-                            <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
-                                <span style="display:inline-flex;align-items:center;gap:4px;">
-                                    <span
-                                        style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
-                                    Existing appointment
-                                </span>
-                                <span style="display:inline-flex;align-items:center;gap:4px;">
-                                    <span
-                                        style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
-                                    This appointment
-                                </span>
+                        {{-- Tab Navigation --}}
+                        <ul class="nav nav-tabs" id="timelineTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="selected-tech-tab" data-toggle="tab"
+                                    href="#selectedTechPane" role="tab" aria-controls="selectedTechPane"
+                                    aria-selected="true">
+                                    <span class="fa fa-user mr-1"></span> Selected Technician
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="all-tech-tab" data-toggle="tab" href="#allTechPane"
+                                    role="tab" aria-controls="allTechPane" aria-selected="false">
+                                    <span class="fa fa-users mr-1"></span> All Technicians
+                                </a>
+                            </li>
+                        </ul>
+
+                        {{-- Tab Content --}}
+                        <div class="tab-content pt-3" id="timelineTabContent">
+
+                            {{-- Tab 1: Selected Technician --}}
+                            <div class="tab-pane fade show active" id="selectedTechPane" role="tabpanel"
+                                aria-labelledby="selected-tech-tab">
+                                <p id="noTechSelected" class="text-muted" style="font-size:13px;">
+                                    Select a technician above to view their schedule.
+                                </p>
+                                <div id="techTimelineWrap" style="display:none;">
+                                    <p class="mb-2" style="font-size:13px; color:#666;">
+                                        Schedule for
+                                        <strong>{{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}</strong>
+                                    </p>
+                                    <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
+                                        <span style="display:inline-flex;align-items:center;gap:4px;">
+                                            <span
+                                                style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
+                                            Existing appointment
+                                        </span>
+                                        <span style="display:inline-flex;align-items:center;gap:4px;">
+                                            <span
+                                                style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
+                                            This appointment
+                                        </span>
+                                    </div>
+                                    <div style="overflow-x:auto;">
+                                        <div id="techTimeline" style="min-width:600px; padding-bottom:8px;"></div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div style="overflow-x:auto;">
-                                <div id="techTimeline" style="min-width:600px; padding-bottom:8px;"></div>
-                            </div>
-                        </div>
-
-                        {{-- All-Technicians Timeline --}}
-                        <div id="allTechTimelineWrap" style="margin-top:16px;">
-                            <hr>
-                            <p class="mb-1" style="font-size:13px; font-weight:600; color:#333;">
-                                All Technicians — {{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}
-                            </p>
-                            <p class="mb-2" style="font-size:12px; color:#666;">
-                                Overview of the full team's schedule for this day.
-                            </p>
-
-                            <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
-                                <span style="display:inline-flex;align-items:center;gap:4px;">
-                                    <span
-                                        style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
-                                    Existing appointment
-                                </span>
-                                <span style="display:inline-flex;align-items:center;gap:4px;">
-                                    <span
-                                        style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
-                                    This appointment
-                                </span>
+                            {{-- Tab 2: All Technicians --}}
+                            <div class="tab-pane fade" id="allTechPane" role="tabpanel" aria-labelledby="all-tech-tab">
+                                <p class="mb-1" style="font-size:13px; font-weight:600; color:#333;">
+                                    All Technicians — {{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}
+                                </p>
+                                <p class="mb-2" style="font-size:12px; color:#666;">
+                                    Overview of the full team's schedule for this day.
+                                </p>
+                                <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
+                                    <span style="display:inline-flex;align-items:center;gap:4px;">
+                                        <span
+                                            style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
+                                        Existing appointment
+                                    </span>
+                                    <span style="display:inline-flex;align-items:center;gap:4px;">
+                                        <span
+                                            style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
+                                        This appointment
+                                    </span>
+                                </div>
+                                <div style="overflow-x:auto;">
+                                    <div id="allTechTimeline" style="min-width:600px; padding-bottom:8px;"></div>
+                                </div>
                             </div>
 
-                            <div style="overflow-x:auto;">
-                                <div id="allTechTimeline" style="min-width:600px; padding-bottom:8px;"></div>
-                            </div>
                         </div>
                     </div>
 
@@ -549,10 +581,7 @@
             const warning = document.getElementById('warning');
             let anyChecked = false;
 
-            // Reset all sections (show all initially) - Check if the section exists
-            const sectionIds = [
-                'sectionA', 'sectionB', 'sectionC'
-            ];
+            const sectionIds = ['sectionA', 'sectionB', 'sectionC'];
 
             sectionIds.forEach(sectionId => {
                 const section = document.getElementById(sectionId);
@@ -561,12 +590,10 @@
                 }
             });
 
-            // Hide unselected sections
             checkboxes.forEach(checkbox => {
                 const targetId = checkbox.dataset.target;
                 const targetDiv = document.getElementById(targetId);
 
-                // Only modify the target if it exists
                 if (targetDiv) {
                     if (checkbox.checked) {
                         anyChecked = true;
@@ -586,13 +613,11 @@
 
             warning.style.display = 'none';
 
-            // Delay the print to ensure sections are properly hidden/shown
             setTimeout(() => {
                 console.log("Triggering print dialog...");
                 window.print();
-            }, 500); // Allow time for the layout to update
+            }, 500);
 
-            // Restore view after printing
             setTimeout(() => {
                 sectionIds.forEach(sectionId => {
                     const section = document.getElementById(sectionId);
@@ -610,7 +635,7 @@
             const HOURS_END = 24;
             const TOTAL_HRS = HOURS_END - HOURS_START;
             const ROW_HEIGHT = 36;
-            const LABEL_W = 52; // px reserved for the technician label on the left
+            const LABEL_W = 52;
 
             const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
             const NEW_TO_STR = "{{ $approvedTimeTo }}";
@@ -625,14 +650,18 @@
             const NEW_FROM = parseTime(NEW_FROM_STR);
             const NEW_TO = parseTime(NEW_TO_STR);
 
+            // ── Only change: toggle placeholder + wrap together ──
             document.getElementById('technicianSelect').addEventListener('change', function() {
                 const techId = this.value;
                 const wrap = document.getElementById('techTimelineWrap');
+                const noTechMsg = document.getElementById('noTechSelected');
                 if (!techId) {
                     wrap.style.display = 'none';
+                    noTechMsg.style.display = 'block';
                     return;
                 }
                 wrap.style.display = 'block';
+                noTechMsg.style.display = 'none';
                 renderTimeline(techId);
             });
 
@@ -644,7 +673,6 @@
                 const container = document.getElementById('techTimeline');
                 container.innerHTML = '';
 
-                // ── Hour axis ────────────────────────────────────────────────
                 const axis = document.createElement('div');
                 axis.style.cssText = `display:flex; margin-left:0; position:relative; height:20px; margin-bottom:4px;`;
 
@@ -660,22 +688,13 @@
                 }
                 container.appendChild(axis);
 
-                // ── Track row ─────────────────────────────────────────────────
                 const rowWrap = document.createElement('div');
                 rowWrap.style.cssText = `display:flex; align-items:center; margin-bottom:2px;`;
 
-                // (No label since it's a single-tech view — the select shows who it is)
-                // const labelDiv = document.createElement('div');
-                // labelDiv.style.cssText = `flex:none; width:${LABEL_W}px; font-size:11px; color:#666; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
-                // labelDiv.textContent = '';
-                // rowWrap.appendChild(labelDiv);
-
-                // Track
                 const track = document.createElement('div');
                 track.style.cssText =
                     `flex:1; position:relative; height:${ROW_HEIGHT}px; background:#f7f7f7; border:0.5px solid #ddd; border-radius:6px; overflow:visible;`;
 
-                // Hour grid lines
                 for (let h = HOURS_START; h <= HOURS_END; h++) {
                     const line = document.createElement('div');
                     line.style.cssText =
@@ -683,13 +702,11 @@
                     track.appendChild(line);
                 }
 
-                // Existing blocks
                 const existingSlots = DAY_SCHEDULES[techId] || [];
                 existingSlots.forEach(ev => {
                     const evFrom = parseTime(ev.svca_approved_time_from);
                     const evTo = parseTime(ev.svca_approved_time_to);
                     if (evFrom === null || evTo === null) return;
-                    // clamp to display range
                     const dispFrom = Math.max(evFrom, HOURS_START);
                     const dispTo = Math.min(evTo, HOURS_END);
                     if (dispFrom >= dispTo) return;
@@ -707,7 +724,6 @@
                     track.appendChild(blk);
                 });
 
-                // New appointment block
                 if (NEW_FROM !== null && NEW_TO !== null) {
                     const dispFrom = Math.max(NEW_FROM, HOURS_START);
                     const dispTo = Math.min(NEW_TO, HOURS_END);
@@ -742,7 +758,6 @@
                 return blk;
             }
 
-            // Tooltip
             let tt = null;
 
             function ensureTT() {
@@ -784,13 +799,11 @@
             const HOURS_END = 24;
             const TOTAL_HRS = HOURS_END - HOURS_START;
             const ROW_HEIGHT = 36;
-            const LABEL_W = 110; // px for technician name label column
+            const LABEL_W = 110;
 
             const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
             const NEW_TO_STR = "{{ $approvedTimeTo }}";
             const DAY_SCHEDULES = @json($daySchedules);
-
-            // All technicians from the technicians collection (available + unavailable)
             const ALL_TECHS = @json($allTechs);
 
             function parseTime(str) {
@@ -811,7 +824,6 @@
                 if (!container) return;
                 container.innerHTML = '';
 
-                // ── Hour axis ────────────────────────────────────────────────────
                 const axis = document.createElement('div');
                 axis.style.cssText =
                     `display:flex; position:relative; height:20px; margin-bottom:4px; margin-left:${LABEL_W}px;`;
@@ -827,12 +839,10 @@
                 }
                 container.appendChild(axis);
 
-                // ── One row per technician ───────────────────────────────────────
                 ALL_TECHS.forEach(tech => {
                     const rowWrap = document.createElement('div');
                     rowWrap.style.cssText = `display:flex; align-items:center; margin-bottom:3px;`;
 
-                    // Label
                     const labelDiv = document.createElement('div');
                     const restBusy = tech.is_rest ?
                         ' <span style="color:#c00;font-size:9px;">(rest)</span>' :
@@ -844,12 +854,10 @@
                     labelDiv.innerHTML = tech.label + restBusy;
                     rowWrap.appendChild(labelDiv);
 
-                    // Track
                     const track = document.createElement('div');
                     track.style.cssText =
                         `flex:1; position:relative; height:${ROW_HEIGHT}px; background:#f7f7f7; border:0.5px solid #ddd; border-radius:6px; overflow:visible;`;
 
-                    // Hour grid lines
                     for (let h = HOURS_START; h <= HOURS_END; h++) {
                         const line = document.createElement('div');
                         line.style.cssText =
@@ -857,7 +865,6 @@
                         track.appendChild(line);
                     }
 
-                    // Existing blocks for this tech
                     const slots = DAY_SCHEDULES[tech.id] || [];
                     slots.forEach(ev => {
                         const evFrom = parseTime(ev.svca_approved_time_from);
@@ -882,7 +889,6 @@
                             '#B5D4F4', '#0C447C', '#85B7EB'));
                     });
 
-                    // "This appointment" block
                     if (NEW_FROM !== null && NEW_TO !== null) {
                         const dF = Math.max(NEW_FROM, HOURS_START);
                         const dT = Math.min(NEW_TO, HOURS_END);
@@ -917,8 +923,6 @@
                 return blk;
             }
 
-            // Shared tooltip (reuses the one from the single-tech block if already created,
-            // or creates a new one — both use the same `tt` variable via closure-safe guard)
             let tt2 = null;
 
             function ensureTT() {
@@ -952,16 +956,15 @@
                 if (tt2) tt2.style.display = 'none';
             }
 
-            // Build immediately (it's always visible, no dropdown trigger needed)
             document.addEventListener('DOMContentLoaded', buildAllTechTimeline);
 
-            // Also rebuild if the modal is opened (in case DOM wasn't ready)
             const modal = document.getElementById('assignTechnicianModal');
             if (modal) {
                 modal.addEventListener('shown.bs.modal', buildAllTechTimeline);
-                // Bootstrap 3/AdminLTE uses jQuery events
                 if (typeof $ !== 'undefined') {
                     $('#assignTechnicianModal').on('shown.bs.modal', buildAllTechTimeline);
+                    // Re-render when switching to the All Technicians tab
+                    $('a[href="#allTechPane"]').on('shown.bs.tab', buildAllTechTimeline);
                 }
             }
         })();
