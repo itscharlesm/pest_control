@@ -1105,20 +1105,96 @@ class AppointmentController extends Controller
             ->select('service_appointment_images.*')
             ->get();
 
+        $approvedDate = null;
+        $approvedTimeFrom = null;
+        $approvedTimeTo = null;
+
+        $appointment = DB::table('service_appointments')
+            ->where('svc_id', $svc_id)
+            ->first();
+
+        if ($appointment) {
+            $approvedDate = $appointment->svca_approved_date;
+            $approvedTimeFrom = $appointment->svca_approved_time_from;
+            $approvedTimeTo = $appointment->svca_approved_time_to;
+        }
+
+        // Day-of-week name from approved date (MONDAY, TUESDAY, etc.)
+        $dayName = $approvedDate
+            ? strtoupper(Carbon::parse($approvedDate)->format('l'))
+            : null;
+
         // Technicians
         $technicians = DB::table('users')
             ->where('utyp_id', 2)
             ->where('usr_active', 1)
             ->where('branch_id', $display->branch_id)
             ->orderBy('usr_last_name', 'asc')
-            ->select(
-                'usr_id',
-                'usr_first_name',
-                'usr_last_name'
-            )
-            ->get();
+            ->select('usr_id', 'usr_first_name', 'usr_last_name')
+            ->get()
+            ->map(function ($tech) use ($dayName, $approvedDate, $approvedTimeFrom, $approvedTimeTo) {
+                // Check rest day
+                $isRestDay = false;
+                if ($dayName) {
+                    $avail = DB::table('user_availabilities')
+                        ->where('usr_id', $tech->usr_id)
+                        ->where('uavail_name', $dayName)
+                        ->first();
+                    $isRestDay = !$avail || $avail->uavail_active == 0;
+                }
 
-        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
+                // Check existing assignments that overlap
+                $isBusy = false;
+                if ($approvedDate && $approvedTimeFrom && $approvedTimeTo) {
+                    $conflict = DB::table('service_appointment_schedules')
+                        ->join('service_appointments', 'service_appointments.svca_id', '=', 'service_appointment_schedules.svca_id')
+                        ->where('service_appointment_schedules.svcas_assigned_to', $tech->usr_id)
+                        ->where('service_appointment_schedules.svcas_active', 1)
+                        ->where('service_appointments.svca_approved_date', $approvedDate)
+                        ->where('service_appointments.svca_approved_time_from', '<', $approvedTimeTo)
+                        ->where('service_appointments.svca_approved_time_to', '>', $approvedTimeFrom)
+                        ->first();
+                    $isBusy = (bool) $conflict;
+                }
+
+                $tech->is_rest_day = $isRestDay;
+                $tech->is_busy = $isBusy;
+                return $tech;
+            });
+
+        // Existing schedules for the timeline (all techs, same date)
+        $daySchedules = [];
+        if ($approvedDate) {
+            $rows = DB::table('service_appointment_schedules')
+                ->join('service_appointments', 'service_appointments.svca_id', '=', 'service_appointment_schedules.svca_id')
+                ->join('services', 'services.svc_id', '=', 'service_appointments.svc_id')
+                ->join('users as clients', 'clients.usr_id', '=', 'services.usr_id')
+                ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+                ->where('service_appointment_schedules.svcas_active', 1)
+                ->where('service_appointments.svca_approved_date', $approvedDate)
+                ->select(
+                    'service_appointment_schedules.svcas_assigned_to',
+                    'service_appointments.svca_approved_time_from',
+                    'service_appointments.svca_approved_time_to',
+                    'clients.usr_first_name',
+                    'clients.usr_last_name',
+                    'clients.usr_email',
+                    'clients.usr_mobile',
+                    'user_addresses.uadd_street',
+                    'user_addresses.uadd_barangay',
+                    'user_addresses.uadd_city',
+                    'user_addresses.uadd_province',
+                    'user_addresses.uadd_region',
+                    'services.svc_km_distance'
+                )
+                ->get();
+
+            foreach ($rows as $row) {
+                $daySchedules[$row->svcas_assigned_to][] = $row;
+            }
+        }
+
+        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians', 'approvedDate', 'approvedTimeFrom', 'approvedTimeTo', 'daySchedules'));
     }
     // END ASSESSED APPOINTMENTS
 

@@ -188,7 +188,8 @@
                                     </tr>
                                     <tr>
                                         <td style="font-weight: bold;">APPROVED BY</td>
-                                        <td colspan="2">{{ $display->approved_first_name }} {{ $display->approved_last_name }}</td>
+                                        <td>{{ $display->approved_first_name }}
+                                            {{ $display->approved_last_name }}</td>
                                         <td style="font-weight: bold;">CLIENT DATE</td>
                                         <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
                                         <td style="font-weight: bold;">CLIENT TIME</td>
@@ -431,13 +432,12 @@
     <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
         aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-            <form action="{{ url('management/branches/add') }}" method="POST">
+            <form action="{{ url('management/service-orders/assign-technician') }}" method="POST">
                 @csrf
-
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title text-white" id="assignTechnicianModalLabel">
-                            <span class="fa fa-plus text-white"></span> Assign Technician
+                            <span class="fa fa-user text-white"></span> Assign Technician
                         </h5>
                         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -445,32 +445,63 @@
                     </div>
 
                     <div class="modal-body">
-                        {{-- Service ID --}}
-                        <input type="hidden" name="svc_id" value="{{ $appointment->svc_id ?? '' }}">
+                        <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
 
-                        <div class="row">
-                            {{-- Branch Name --}}
-                            <div class="col-md-12 mb-3">
-                                <label>Assign Technician <span class="text-danger">*</span></label>
-                                <select class="form-control" name="svcas_assigned_to" required>
-                                    <option value="" disabled selected>Select Technician</option>
-                                    @foreach ($technicians as $technician)
-                                        <option value="{{ $technician->usr_id }}">
-                                            {{ $technician->usr_last_name }},
-                                            {{ $technician->usr_first_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                        <div class="form-group mb-3">
+                            <label>Assign Technician <span class="text-danger">*</span></label>
+                            <select class="form-control" name="svcas_assigned_to" id="technicianSelect" required>
+                                <option value="" disabled selected>Select Technician</option>
+                                @foreach ($technicians as $tech)
+                                    @php
+                                        $label = $tech->usr_last_name . ', ' . $tech->usr_first_name;
+                                        $disabled = $tech->is_rest_day || $tech->is_busy;
+                                        $suffix = $tech->is_rest_day
+                                            ? ' — (Rest Day)'
+                                            : ($tech->is_busy
+                                                ? ' — (Not Available)'
+                                                : '');
+                                    @endphp
+                                    <option value="{{ $tech->usr_id }}" data-rest="{{ $tech->is_rest_day ? 1 : 0 }}"
+                                        data-busy="{{ $tech->is_busy ? 1 : 0 }}"
+                                        @if ($disabled) disabled @endif>
+                                        {{ $label }}{{ $suffix }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Timeline --}}
+                        <div id="techTimelineWrap" style="display:none;">
+                            <hr>
+                            <p class="mb-2" style="font-size:13px; color:#666;">
+                                Schedule for <strong>{{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}</strong>
+                            </p>
+
+                            <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
+                                <span style="display:inline-flex;align-items:center;gap:4px;">
+                                    <span
+                                        style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
+                                    Existing appointment
+                                </span>
+                                <span style="display:inline-flex;align-items:center;gap:4px;">
+                                    <span
+                                        style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
+                                    This appointment
+                                </span>
+                            </div>
+
+                            <div style="overflow-x:auto;">
+                                <div id="techTimeline" style="min-width:500px;"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <span class="fa fa-close"></span> Close
+                            <span class="fa fa-times"></span> Close
                         </button>
                         <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save Branch
+                            <span class="fa fa-save"></span> Assign
                         </button>
                     </div>
                 </div>
@@ -543,5 +574,172 @@
                 });
             }, 1000);
         }
+    </script>
+
+    <script>
+        (function() {
+            const HOURS_START = 0;
+            const HOURS_END = 24;
+            const TOTAL_HRS = HOURS_END - HOURS_START;
+
+            // Data from controller
+            const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
+            const NEW_TO_STR = "{{ $approvedTimeTo }}";
+
+            const DAY_SCHEDULES = @json($daySchedules);
+
+            function parseTime(str) {
+                if (!str) return null;
+                const parts = str.split(':');
+                return parseInt(parts[0]) + parseInt(parts[1]) / 60;
+            }
+
+            const NEW_FROM = parseTime(NEW_FROM_STR);
+            const NEW_TO = parseTime(NEW_TO_STR);
+
+            document.getElementById('technicianSelect').addEventListener('change', function() {
+                const techId = this.value;
+                const wrap = document.getElementById('techTimelineWrap');
+
+                if (!techId) {
+                    wrap.style.display = 'none';
+                    return;
+                }
+                wrap.style.display = 'block';
+                renderTimeline(techId);
+            });
+
+            function renderTimeline(techId) {
+                const container = document.getElementById('techTimeline');
+                container.innerHTML = '';
+
+                const existingSlots = DAY_SCHEDULES[techId] || [];
+
+                for (let h = HOURS_START; h < HOURS_END; h++) {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex;height:44px;position:relative;border-bottom:0.5px solid #eee;';
+
+                    // Hour label
+                    const lbl = document.createElement('div');
+                    lbl.style.cssText =
+                        'flex:none;width:52px;font-size:11px;color:#999;display:flex;align-items:center;padding-right:6px;';
+                    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                    const ampm = h < 12 ? 'am' : 'pm';
+                    lbl.textContent = h12 + ampm;
+                    row.appendChild(lbl);
+
+                    // Cells area
+                    const cells = document.createElement('div');
+                    cells.style.cssText = 'flex:1;position:relative;border-left:0.5px solid #eee;';
+
+                    // Existing blocks
+                    existingSlots.forEach(ev => {
+                        const evFrom = parseTime(ev.svca_approved_time_from);
+                        const evTo = parseTime(ev.svca_approved_time_to);
+                        if (!(evFrom < h + 1 && evTo > h)) return;
+
+                        const segFrom = Math.max(evFrom, h);
+                        const segTo = Math.min(evTo, h + 1);
+
+                        const contactParts = [
+                            ev.usr_email,
+                            '0' + ev.usr_mobile,
+                        ].filter(p => p && p.trim() !== '');
+
+                        const addressParts = [
+                            ev.uadd_street,
+                            ev.uadd_barangay,
+                            ev.uadd_city,
+                            ev.uadd_province,
+                            ev.uadd_region,
+                        ].filter(p => p && p.trim() !== '');
+
+                        const distanceLine = ev.svc_km_distance ?
+                            ev.svc_km_distance + 'KM from the office' :
+                            null;
+
+                        const addr = [...contactParts, ...addressParts, distanceLine].filter(Boolean).join(
+                        ', ');
+
+                        const blk = makeBlock(segFrom, segTo, h,
+                            ev.usr_first_name + ' ' + ev.usr_last_name,
+                            addr,
+                            '#B5D4F4', '#0C447C', '#85B7EB');
+                        cells.appendChild(blk);
+                    });
+
+                    // New appointment block
+                    if (NEW_FROM !== null && NEW_TO !== null && NEW_FROM < h + 1 && NEW_TO > h) {
+                        const segFrom = Math.max(NEW_FROM, h);
+                        const segTo = Math.min(NEW_TO, h + 1);
+                        const blk = makeBlock(segFrom, segTo, h,
+                            'This appointment', '',
+                            '#C0DD97', '#27500A', '#97C459');
+                        cells.appendChild(blk);
+                    }
+
+                    row.appendChild(cells);
+                    container.appendChild(row);
+                }
+            }
+
+            function makeBlock(segFrom, segTo, hourBase, label, addr, bg, color, border) {
+                const blk = document.createElement('div');
+                const leftPct = ((segFrom - hourBase) * 100).toFixed(2) + '%';
+                const widthPct = ((segTo - segFrom) * 100).toFixed(2) + '%';
+                blk.style.cssText = [
+                    'position:absolute;top:4px;bottom:4px;',
+                    'left:' + leftPct + ';width:' + widthPct + ';',
+                    'background:' + bg + ';color:' + color + ';border:0.5px solid ' + border + ';',
+                    'border-radius:5px;display:flex;align-items:center;justify-content:center;',
+                    'font-size:11px;font-weight:500;overflow:hidden;white-space:nowrap;',
+                    'text-overflow:ellipsis;padding:0 4px;cursor:default;'
+                ].join('');
+                blk.textContent = label;
+
+                // Tooltip
+                blk.title = label + (addr ? '\n' + addr : '');
+
+                blk.addEventListener('mouseenter', function(e) {
+                    showTooltip(e, label, addr);
+                });
+                blk.addEventListener('mousemove', moveTooltip);
+                blk.addEventListener('mouseleave', hideTooltip);
+                return blk;
+            }
+
+            // Tooltip
+            let tt = null;
+
+            function ensureTT() {
+                if (!tt) {
+                    tt = document.createElement('div');
+                    tt.style.cssText = [
+                        'position:fixed;background:#fff;border:0.5px solid #ccc;',
+                        'border-radius:8px;padding:8px 12px;font-size:12px;',
+                        'pointer-events:none;z-index:9999;display:none;',
+                        'box-shadow:0 4px 12px rgba(0,0,0,.08);max-width:200px;line-height:1.5;'
+                    ].join('');
+                    document.body.appendChild(tt);
+                }
+            }
+
+            function showTooltip(e, label, addr) {
+                ensureTT();
+                tt.innerHTML = '<strong>' + label + '</strong>' + (addr ? '<br>' + addr : '');
+                tt.style.display = 'block';
+                moveTooltip(e);
+            }
+
+            function moveTooltip(e) {
+                if (!tt) return;
+                tt.style.left = (e.clientX + 14) + 'px';
+                tt.style.top = (e.clientY + 14) + 'px';
+            }
+
+            function hideTooltip() {
+                if (tt) tt.style.display = 'none';
+            }
+        })();
     </script>
 @endsection
