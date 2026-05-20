@@ -494,6 +494,34 @@
                                 <div id="techTimeline" style="min-width:600px; padding-bottom:8px;"></div>
                             </div>
                         </div>
+
+                        {{-- All-Technicians Timeline --}}
+                        <div id="allTechTimelineWrap" style="margin-top:16px;">
+                            <hr>
+                            <p class="mb-1" style="font-size:13px; font-weight:600; color:#333;">
+                                All Technicians — {{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}
+                            </p>
+                            <p class="mb-2" style="font-size:12px; color:#666;">
+                                Overview of the full team's schedule for this day.
+                            </p>
+
+                            <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
+                                <span style="display:inline-flex;align-items:center;gap:4px;">
+                                    <span
+                                        style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
+                                    Existing appointment
+                                </span>
+                                <span style="display:inline-flex;align-items:center;gap:4px;">
+                                    <span
+                                        style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
+                                    This appointment
+                                </span>
+                            </div>
+
+                            <div style="overflow-x:auto;">
+                                <div id="allTechTimeline" style="min-width:600px; padding-bottom:8px;"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -746,6 +774,195 @@
 
             function hideTooltip() {
                 if (tt) tt.style.display = 'none';
+            }
+        })();
+    </script>
+
+    <script>
+        (function() {
+            const HOURS_START = 0;
+            const HOURS_END = 24;
+            const TOTAL_HRS = HOURS_END - HOURS_START;
+            const ROW_HEIGHT = 36;
+            const LABEL_W = 110; // px for technician name label column
+
+            const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
+            const NEW_TO_STR = "{{ $approvedTimeTo }}";
+            const DAY_SCHEDULES = @json($daySchedules);
+
+            // All technicians from the technicians collection (available + unavailable)
+            const ALL_TECHS = @json($allTechs);
+
+            function parseTime(str) {
+                if (!str) return null;
+                const p = str.split(':');
+                return parseInt(p[0]) + parseInt(p[1]) / 60;
+            }
+
+            const NEW_FROM = parseTime(NEW_FROM_STR);
+            const NEW_TO = parseTime(NEW_TO_STR);
+
+            function pct(h) {
+                return ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+            }
+
+            function buildAllTechTimeline() {
+                const container = document.getElementById('allTechTimeline');
+                if (!container) return;
+                container.innerHTML = '';
+
+                // ── Hour axis ────────────────────────────────────────────────────
+                const axis = document.createElement('div');
+                axis.style.cssText =
+                    `display:flex; position:relative; height:20px; margin-bottom:4px; margin-left:${LABEL_W}px;`;
+                for (let h = HOURS_START; h <= HOURS_END; h++) {
+                    const span = document.createElement('span');
+                    const leftPct = ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                    span.style.cssText =
+                        `position:absolute; left:${leftPct}; transform:translateX(-50%); font-size:10px; color:#999; white-space:nowrap;`;
+                    const h12 = h === 0 || h === 24 ? 12 : h > 12 ? h - 12 : h;
+                    const ampm = h < 12 || h === 0 ? 'am' : 'pm';
+                    span.textContent = h12 + ampm;
+                    axis.appendChild(span);
+                }
+                container.appendChild(axis);
+
+                // ── One row per technician ───────────────────────────────────────
+                ALL_TECHS.forEach(tech => {
+                    const rowWrap = document.createElement('div');
+                    rowWrap.style.cssText = `display:flex; align-items:center; margin-bottom:3px;`;
+
+                    // Label
+                    const labelDiv = document.createElement('div');
+                    const restBusy = tech.is_rest ?
+                        ' <span style="color:#c00;font-size:9px;">(rest)</span>' :
+                        tech.is_busy ?
+                        ' <span style="color:#a06000;font-size:9px;">(busy)</span>' :
+                        '';
+                    labelDiv.style.cssText =
+                        `flex:none; width:${LABEL_W}px; font-size:11px; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:6px;`;
+                    labelDiv.innerHTML = tech.label + restBusy;
+                    rowWrap.appendChild(labelDiv);
+
+                    // Track
+                    const track = document.createElement('div');
+                    track.style.cssText =
+                        `flex:1; position:relative; height:${ROW_HEIGHT}px; background:#f7f7f7; border:0.5px solid #ddd; border-radius:6px; overflow:visible;`;
+
+                    // Hour grid lines
+                    for (let h = HOURS_START; h <= HOURS_END; h++) {
+                        const line = document.createElement('div');
+                        line.style.cssText =
+                            `position:absolute; top:0; bottom:0; left:${pct(h)}; width:0.5px; background:#e0e0e0;`;
+                        track.appendChild(line);
+                    }
+
+                    // Existing blocks for this tech
+                    const slots = DAY_SCHEDULES[tech.id] || [];
+                    slots.forEach(ev => {
+                        const evFrom = parseTime(ev.svca_approved_time_from);
+                        const evTo = parseTime(ev.svca_approved_time_to);
+                        if (evFrom === null || evTo === null) return;
+                        const dF = Math.max(evFrom, HOURS_START);
+                        const dT = Math.min(evTo, HOURS_END);
+                        if (dF >= dT) return;
+
+                        const contactParts = [ev.usr_email, '0' + ev.usr_mobile].filter(p => p && p
+                            .trim());
+                        const addrParts = [ev.uadd_street, ev.uadd_barangay, ev.uadd_city, ev
+                            .uadd_province, ev.uadd_region
+                        ].filter(p => p && p.trim());
+                        const distLine = ev.svc_km_distance ? ev.svc_km_distance + 'KM from office' :
+                            null;
+                        const addr = [...contactParts, ...addrParts, distLine].filter(Boolean).join(
+                            ', ');
+
+                        track.appendChild(makeBlock(dF, dT,
+                            ev.usr_first_name + ' ' + ev.usr_last_name, addr,
+                            '#B5D4F4', '#0C447C', '#85B7EB'));
+                    });
+
+                    // "This appointment" block
+                    if (NEW_FROM !== null && NEW_TO !== null) {
+                        const dF = Math.max(NEW_FROM, HOURS_START);
+                        const dT = Math.min(NEW_TO, HOURS_END);
+                        if (dF < dT) {
+                            track.appendChild(makeBlock(dF, dT,
+                                'This appointment', '',
+                                '#C0DD97', '#27500A', '#97C459'));
+                        }
+                    }
+
+                    rowWrap.appendChild(track);
+                    container.appendChild(rowWrap);
+                });
+            }
+
+            function makeBlock(from, to, label, addr, bg, color, border) {
+                const blk = document.createElement('div');
+                const leftPct = ((from - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                const widthPct = ((to - from) / TOTAL_HRS * 100).toFixed(4) + '%';
+                blk.style.cssText = [
+                    'position:absolute; top:4px; bottom:4px;',
+                    'left:' + leftPct + '; width:' + widthPct + ';',
+                    'background:' + bg + '; color:' + color + '; border:0.5px solid ' + border + ';',
+                    'border-radius:5px; display:flex; align-items:center; justify-content:center;',
+                    'font-size:11px; font-weight:500; overflow:hidden; white-space:nowrap;',
+                    'text-overflow:ellipsis; padding:0 6px; cursor:default;'
+                ].join('');
+                blk.textContent = label;
+                blk.addEventListener('mouseenter', e => showTooltip(e, label, addr));
+                blk.addEventListener('mousemove', moveTooltip);
+                blk.addEventListener('mouseleave', hideTooltip);
+                return blk;
+            }
+
+            // Shared tooltip (reuses the one from the single-tech block if already created,
+            // or creates a new one — both use the same `tt` variable via closure-safe guard)
+            let tt2 = null;
+
+            function ensureTT() {
+                if (!tt2) {
+                    tt2 = document.createElement('div');
+                    tt2.style.cssText = [
+                        'position:fixed; background:#fff; border:0.5px solid #ccc;',
+                        'border-radius:8px; padding:8px 12px; font-size:12px;',
+                        'pointer-events:none; z-index:9999; display:none;',
+                        'box-shadow:0 4px 12px rgba(0,0,0,.08); max-width:220px; line-height:1.5;'
+                    ].join('');
+                    document.body.appendChild(tt2);
+                }
+            }
+
+            function showTooltip(e, label, addr) {
+                ensureTT();
+                tt2.innerHTML = '<strong>' + label + '</strong>' + (addr ? '<br>' + addr : '');
+                tt2.style.display = 'block';
+                moveTooltip(e);
+            }
+
+            function moveTooltip(e) {
+                if (tt2) {
+                    tt2.style.left = (e.clientX + 14) + 'px';
+                    tt2.style.top = (e.clientY + 14) + 'px';
+                }
+            }
+
+            function hideTooltip() {
+                if (tt2) tt2.style.display = 'none';
+            }
+
+            // Build immediately (it's always visible, no dropdown trigger needed)
+            document.addEventListener('DOMContentLoaded', buildAllTechTimeline);
+
+            // Also rebuild if the modal is opened (in case DOM wasn't ready)
+            const modal = document.getElementById('assignTechnicianModal');
+            if (modal) {
+                modal.addEventListener('shown.bs.modal', buildAllTechTimeline);
+                // Bootstrap 3/AdminLTE uses jQuery events
+                if (typeof $ !== 'undefined') {
+                    $('#assignTechnicianModal').on('shown.bs.modal', buildAllTechTimeline);
+                }
             }
         })();
     </script>

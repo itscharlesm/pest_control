@@ -1194,7 +1194,16 @@ class AppointmentController extends Controller
             }
         }
 
-        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians', 'approvedDate', 'approvedTimeFrom', 'approvedTimeTo', 'daySchedules'));
+        $allTechs = $technicians->map(function ($t) {
+            return [
+                'id' => $t->usr_id,
+                'label' => $t->usr_last_name . ', ' . substr($t->usr_first_name, 0, 1) . '.',
+                'is_rest' => $t->is_rest_day,
+                'is_busy' => $t->is_busy,
+            ];
+        })->values();
+
+        return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians', 'approvedDate', 'approvedTimeFrom', 'approvedTimeTo', 'daySchedules', 'allTechs'));
     }
     // END ASSESSED APPOINTMENTS
 
