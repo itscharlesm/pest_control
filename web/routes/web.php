@@ -88,6 +88,9 @@ Route::post('profiling/clients/restore/{usr_id}', [ProfilingController::class, '
 
 // ------------------------------------------------------------------------------------------------------------------------------------ //
 // SERVICE ORDER
+// - Book Appointment
+Route::get('service/orders/appointments/clients', [AppointmentController::class, 'clients']);
+Route::post('service/orders/appointments/clients/book', [AppointmentController::class, 'clients_book']);
 // - Requested Appointments
 Route::get('service/orders/appointments/requested', [AppointmentController::class, 'requested_appointments']);
 Route::get('service/orders/appointments/requested/{svc_id}', [AppointmentController::class, 'requested_appointments_view']);

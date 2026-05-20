@@ -109,90 +109,6 @@
                                                 @endif
                                             </td>
                                         </tr>
-
-                                        {{-- Update Address Modal --}}
-                                        <div class="modal fade" id="updateAddressModal-{{ $address->add_id }}" tabindex="-1"
-                                                role="dialog" aria-labelledby="updateAddressModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog modal-xs" role="document">
-                                                <form
-                                                    action="{{ url('management/addresses/update/' . $address->add_id) }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    <div class="modal-content">
-                                                        <div class="modal-header bg-warning text-black">
-                                                            <h5 class="modal-title text-black"
-                                                                id="updateAddressModalLabel-{{ $address->add_id }}">
-                                                                <span class="fa fa-edit"></span> Update Address Identifier
-                                                            </h5>
-
-                                                            <button type="button" class="close text-black"
-                                                                data-dismiss="modal">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-
-                                                        <div class="modal-body">
-                                                            {{-- Address Identifier --}}
-                                                            <div class="form-group">
-                                                                <label>Address Identifier <span
-                                                                        class="text-danger">*</span></label>
-                                                                <input type="text" class="form-control"
-                                                                    name="add_name" value="{{ $address->add_name }}"
-                                                                    required>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-
-                                                            <button type="submit" class="btn btn-warning">
-                                                                <span class="fa fa-save"></span> Update
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-
-                                        {{-- Delete Modal --}}
-                                        <div class="modal fade" id="deleteModal-{{ $address->add_id }}" tabindex="-1"
-                                            role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <form method="POST"
-                                                        action="{{ action('App\Http\Controllers\ManagementController@addresses_delete', [$address->add_id]) }}">
-                                                        @csrf
-                                                        <div class="modal-header bg-danger text-white">
-                                                            <h5 class="modal-title text-white" id="deleteModalLabel">
-                                                                Please Confirm
-                                                            </h5>
-                                                            <button type="button" class="close" data-dismiss="modal"
-                                                                aria-label="Close">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <p>Are you sure you want to <strong>DELETE</strong> address
-                                                                identifier -
-                                                                <strong>{{ $address->add_name }}</strong>?
-                                                            </p>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-                                                            <button type="submit" class="btn btn-danger">
-                                                                <span class="fa fa-trash"></span> Confirm Delete
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -243,6 +159,83 @@
             </form>
         </div>
     </div>
+
+    @foreach ($addresses as $address)
+        {{-- Update Address Modal --}}
+        <div class="modal fade" id="updateAddressModal-{{ $address->add_id }}" tabindex="-1" role="dialog"
+            aria-labelledby="updateAddressModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xs" role="document">
+                <form action="{{ url('management/addresses/update/' . $address->add_id) }}" method="POST">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-black">
+                            <h5 class="modal-title text-black" id="updateAddressModalLabel-{{ $address->add_id }}">
+                                <span class="fa fa-edit"></span> Update Address Identifier
+                            </h5>
+
+                            <button type="button" class="close text-black" data-dismiss="modal">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            {{-- Address Identifier --}}
+                            <div class="form-group">
+                                <label>Address Identifier <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="add_name"
+                                    value="{{ $address->add_name }}" required>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fa fa-save"></span> Update
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Delete Modal --}}
+        <div class="modal fade" id="deleteModal-{{ $address->add_id }}" tabindex="-1" role="dialog"
+            aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST"
+                        action="{{ action('App\Http\Controllers\ManagementController@addresses_delete', [$address->add_id]) }}">
+                        @csrf
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title text-white" id="deleteModalLabel">
+                                Please Confirm
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to <strong>DELETE</strong> address
+                                identifier -
+                                <strong>{{ $address->add_name }}</strong>?
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                <span class="fa fa-trash"></span> Confirm Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 
     {{-- Dynamic Search While Typing --}}
     <script>

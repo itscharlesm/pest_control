@@ -28,6 +28,20 @@
     .content-wrapper {
         overflow-x: hidden;
     }
+
+    #timelineTabs .nav-link {
+        color: #28a745;
+    }
+
+    #timelineTabs .nav-link.active {
+        color: #28a745;
+        border-color: #28a745 #28a745 #fff;
+    }
+
+    #timelineTabs .nav-link:hover {
+        color: #1e7e34;
+        border-color: #1e7e34 #1e7e34 transparent;
+    }
 </style>
 
 @extends('layouts.themes.main')
@@ -187,10 +201,13 @@
                                         <th colspan="6" class="text-center table-light">SCHEDULE</th>
                                     </tr>
                                     <tr>
+                                        <td style="font-weight: bold;">APPROVED BY</td>
+                                        <td>{{ $display->approved_first_name }}
+                                            {{ $display->approved_last_name }}</td>
                                         <td style="font-weight: bold;">CLIENT DATE</td>
                                         <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
                                         <td style="font-weight: bold;">CLIENT TIME</td>
-                                        <td colspan="3">
+                                        <td>
                                             {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
                                     </tr>
                                     <tr>
@@ -244,8 +261,7 @@
                                 <div class="dropdown-menu p-3" style="min-width: 200px;">
                                     <label class="dropdown-item">
                                         <input type="checkbox" class="print-toggle mr-1" data-target="sectionA">
-                                        Appointment
-                                        Information
+                                        Appointment Information
                                     </label>
                                     <label class="dropdown-item">
                                         <input type="checkbox" class="print-toggle mr-1" data-target="sectionB"> Service
@@ -254,8 +270,7 @@
                                     @if ($appointmentImages->count() > 0)
                                         <label class="dropdown-item">
                                             <input type="checkbox" class="print-toggle mr-1" data-target="sectionC">
-                                            Client
-                                            Appointment Images
+                                            Client Appointment Images
                                         </label>
                                     @endif
                                     <div class="dropdown-item text-center">
@@ -264,8 +279,7 @@
                                     </div>
                                     <div class="dropdown-item">
                                         <p id="warning" style="color:red; display:none;" class="mt-1">Select at least
-                                            one
-                                            section.</p>
+                                            one section.</p>
                                     </div>
                                 </div>
                             </div>
@@ -391,7 +405,6 @@
                                             </th>
                                         </tr>
                                     </thead>
-
                                     <tbody>
                                         @foreach ($appointmentImages->chunk(5) as $chunk)
                                             <tr>
@@ -400,15 +413,12 @@
                                                         <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
                                                             target="_blank"
                                                             style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden;">
-
                                                             <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
                                                                 alt="Appointment Image"
                                                                 style="width:100%; height:100%; object-fit:cover; display:block;">
                                                         </a>
                                                     </td>
                                                 @endforeach
-
-                                                {{-- Fill empty cells if less than 5 images --}}
                                                 @for ($i = $chunk->count(); $i < 5; $i++)
                                                     <td style="vertical-align: middle;"></td>
                                                 @endfor
@@ -428,14 +438,13 @@
     {{-- Assign Technician Modal --}}
     <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
         aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md" role="document">
-            <form action="{{ url('management/branches/add') }}" method="POST">
+        <div class="modal-dialog modal-xl" role="document">
+            <form action="{{ url('management/service-orders/assign-technician') }}" method="POST">
                 @csrf
-
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
                         <h5 class="modal-title text-white" id="assignTechnicianModalLabel">
-                            <span class="fa fa-plus text-white"></span> Assign Technician
+                            <span class="fa fa-user text-white"></span> Assign Technician
                         </h5>
                         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -443,31 +452,116 @@
                     </div>
 
                     <div class="modal-body">
-                        {{-- Service ID --}}
-                        <input type="hidden" name="svc_id" value="{{ $appointment->svc_id ?? '' }}">
+                        <input type="hidden" name="svc_id" value="{{ $display->svc_id }}">
 
-                        <div class="row">
-                            {{-- Branch Name --}}
-                            <div class="col-md-12 mb-3">
-                                <label>Assign Technician <span class="text-danger">*</span></label>
-                                <select class="form-control" name="svcas_assigned_to" required>
-                                    @foreach ($technicians as $technician)
-                                        <option value="{{ $technician->usr_id }}">
-                                            {{ $technician->usr_last_name }},
-                                            {{ $technician->usr_first_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                        <div class="form-group mb-3">
+                            <label>Assign Technician <span class="text-danger">*</span></label>
+                            <select class="form-control" name="svcas_assigned_to" id="technicianSelect" required>
+                                <option value="" disabled selected>Select Technician</option>
+                                @foreach ($technicians as $tech)
+                                    @php
+                                        $label = $tech->usr_last_name . ', ' . $tech->usr_first_name;
+                                        $disabled = $tech->is_rest_day || $tech->is_busy;
+                                        $suffix = $tech->is_rest_day
+                                            ? ' — (Rest Day)'
+                                            : ($tech->is_busy
+                                                ? ' — (Not Available)'
+                                                : '');
+                                    @endphp
+                                    <option value="{{ $tech->usr_id }}" data-rest="{{ $tech->is_rest_day ? 1 : 0 }}"
+                                        data-busy="{{ $tech->is_busy ? 1 : 0 }}"
+                                        @if ($disabled) disabled @endif>
+                                        {{ $label }}{{ $suffix }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        {{-- Tab Navigation --}}
+                        <ul class="nav nav-tabs" id="timelineTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="selected-tech-tab" data-toggle="tab"
+                                    href="#selectedTechPane" role="tab" aria-controls="selectedTechPane"
+                                    aria-selected="true">
+                                    <span class="fa fa-user mr-1"></span> Selected Technician
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="all-tech-tab" data-toggle="tab" href="#allTechPane"
+                                    role="tab" aria-controls="allTechPane" aria-selected="false">
+                                    <span class="fa fa-users mr-1"></span> All Technicians
+                                </a>
+                            </li>
+                        </ul>
+
+                        {{-- Tab Content --}}
+                        <div class="tab-content pt-3" id="timelineTabContent">
+
+                            {{-- Tab 1: Selected Technician --}}
+                            <div class="tab-pane fade show active" id="selectedTechPane" role="tabpanel"
+                                aria-labelledby="selected-tech-tab">
+                                <p id="noTechSelected" class="text-muted" style="font-size:13px;">
+                                    Select a technician above to view their schedule.
+                                </p>
+                                <div id="techTimelineWrap" style="display:none;">
+                                    <p class="mb-2" style="font-size:13px; color:#666;">
+                                        Schedule for
+                                        <strong>{{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}</strong>
+                                    </p>
+                                    <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
+                                        <span style="display:inline-flex;align-items:center;gap:4px;">
+                                            <span
+                                                style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
+                                            Existing appointment
+                                        </span>
+                                        <span style="display:inline-flex;align-items:center;gap:4px;">
+                                            <span
+                                                style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
+                                            This appointment
+                                        </span>
+                                    </div>
+                                    <div style="overflow-x:auto;">
+                                        <div id="techTimeline" style="min-width:600px; padding-bottom:8px;"></div>
+                                    </div>
+                                </div>
                             </div>
+
+                            {{-- Tab 2: All Technicians --}}
+                            <div class="tab-pane fade" id="allTechPane" role="tabpanel" aria-labelledby="all-tech-tab">
+                                <p class="mb-1" style="font-size:13px; font-weight:600; color:#333;">
+                                    All Technicians — {{ \Carbon\Carbon::parse($approvedDate)->format('F d, Y') }}
+                                </p>
+                                <p class="mb-2" style="font-size:12px; color:#666;">
+                                    Overview of the full team's schedule for this day.
+                                </p>
+                                <div class="d-flex mb-2" style="gap:12px; font-size:11px; color:#666;">
+                                    <span style="display:inline-flex;align-items:center;gap:4px;">
+                                        <span
+                                            style="width:12px;height:12px;border-radius:3px;background:#B5D4F4;border:0.5px solid #85B7EB;display:inline-block;"></span>
+                                        Existing appointment
+                                    </span>
+                                    <span style="display:inline-flex;align-items:center;gap:4px;">
+                                        <span
+                                            style="width:12px;height:12px;border-radius:3px;background:#C0DD97;border:0.5px solid #97C459;display:inline-block;"></span>
+                                        This appointment
+                                    </span>
+                                </div>
+                                <div style="overflow-x:auto;">
+                                    <div id="allTechTimeline" style="min-width:600px; padding-bottom:8px;"></div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                            <span class="fa fa-close"></span> Close
+                            <span class="fa fa-times"></span> Close
                         </button>
                         <button type="submit" class="btn btn-success">
-                            <span class="fa fa-save"></span> Save Branch
+                            <span class="fa fa-save"></span> Assign
                         </button>
                     </div>
                 </div>
@@ -487,10 +581,7 @@
             const warning = document.getElementById('warning');
             let anyChecked = false;
 
-            // Reset all sections (show all initially) - Check if the section exists
-            const sectionIds = [
-                'sectionA', 'sectionB', 'sectionC'
-            ];
+            const sectionIds = ['sectionA', 'sectionB', 'sectionC'];
 
             sectionIds.forEach(sectionId => {
                 const section = document.getElementById(sectionId);
@@ -499,12 +590,10 @@
                 }
             });
 
-            // Hide unselected sections
             checkboxes.forEach(checkbox => {
                 const targetId = checkbox.dataset.target;
                 const targetDiv = document.getElementById(targetId);
 
-                // Only modify the target if it exists
                 if (targetDiv) {
                     if (checkbox.checked) {
                         anyChecked = true;
@@ -524,13 +613,11 @@
 
             warning.style.display = 'none';
 
-            // Delay the print to ensure sections are properly hidden/shown
             setTimeout(() => {
                 console.log("Triggering print dialog...");
                 window.print();
-            }, 500); // Allow time for the layout to update
+            }, 500);
 
-            // Restore view after printing
             setTimeout(() => {
                 sectionIds.forEach(sectionId => {
                     const section = document.getElementById(sectionId);
@@ -540,5 +627,346 @@
                 });
             }, 1000);
         }
+    </script>
+
+    <script>
+        (function() {
+            const HOURS_START = 0;
+            const HOURS_END = 24;
+            const TOTAL_HRS = HOURS_END - HOURS_START;
+            const ROW_HEIGHT = 36;
+            const LABEL_W = 52;
+
+            const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
+            const NEW_TO_STR = "{{ $approvedTimeTo }}";
+            const DAY_SCHEDULES = @json($daySchedules);
+
+            function parseTime(str) {
+                if (!str) return null;
+                const parts = str.split(':');
+                return parseInt(parts[0]) + parseInt(parts[1]) / 60;
+            }
+
+            const NEW_FROM = parseTime(NEW_FROM_STR);
+            const NEW_TO = parseTime(NEW_TO_STR);
+
+            // ── Only change: toggle placeholder + wrap together ──
+            document.getElementById('technicianSelect').addEventListener('change', function() {
+                const techId = this.value;
+                const wrap = document.getElementById('techTimelineWrap');
+                const noTechMsg = document.getElementById('noTechSelected');
+                if (!techId) {
+                    wrap.style.display = 'none';
+                    noTechMsg.style.display = 'block';
+                    return;
+                }
+                wrap.style.display = 'block';
+                noTechMsg.style.display = 'none';
+                renderTimeline(techId);
+            });
+
+            function pct(h) {
+                return ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+            }
+
+            function renderTimeline(techId) {
+                const container = document.getElementById('techTimeline');
+                container.innerHTML = '';
+
+                const axis = document.createElement('div');
+                axis.style.cssText = `display:flex; margin-left:0; position:relative; height:20px; margin-bottom:4px;`;
+
+                for (let h = HOURS_START; h <= HOURS_END; h++) {
+                    const span = document.createElement('span');
+                    const leftPct = ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                    span.style.cssText =
+                        `position:absolute; left:${leftPct}; transform:translateX(-50%); font-size:10px; color:#999; white-space:nowrap;`;
+                    const h12 = h === 0 || h === 24 ? 12 : h > 12 ? h - 12 : h;
+                    const ampm = h === 0 || h === 24 ? 'am' : h < 12 ? 'am' : h === 12 ? 'pm' : 'pm';
+                    span.textContent = h12 + ampm;
+                    axis.appendChild(span);
+                }
+                container.appendChild(axis);
+
+                const rowWrap = document.createElement('div');
+                rowWrap.style.cssText = `display:flex; align-items:center; margin-bottom:2px;`;
+
+                const track = document.createElement('div');
+                track.style.cssText =
+                    `flex:1; position:relative; height:${ROW_HEIGHT}px; background:#f7f7f7; border:0.5px solid #ddd; border-radius:6px; overflow:visible;`;
+
+                for (let h = HOURS_START; h <= HOURS_END; h++) {
+                    const line = document.createElement('div');
+                    line.style.cssText =
+                        `position:absolute; top:0; bottom:0; left:${pct(h)}; width:0.5px; background:#e0e0e0;`;
+                    track.appendChild(line);
+                }
+
+                const existingSlots = DAY_SCHEDULES[techId] || [];
+                existingSlots.forEach(ev => {
+                    const evFrom = parseTime(ev.svca_approved_time_from);
+                    const evTo = parseTime(ev.svca_approved_time_to);
+                    if (evFrom === null || evTo === null) return;
+                    const dispFrom = Math.max(evFrom, HOURS_START);
+                    const dispTo = Math.min(evTo, HOURS_END);
+                    if (dispFrom >= dispTo) return;
+
+                    const contactParts = [ev.usr_email, '0' + ev.usr_mobile].filter(p => p && p.trim());
+                    const addressParts = [ev.uadd_street, ev.uadd_barangay, ev.uadd_city, ev.uadd_province, ev
+                        .uadd_region
+                    ].filter(p => p && p.trim());
+                    const distanceLine = ev.svc_km_distance ? ev.svc_km_distance + 'KM from office' : null;
+                    const addr = [...contactParts, ...addressParts, distanceLine].filter(Boolean).join(', ');
+
+                    const blk = makeBlock(dispFrom, dispTo,
+                        ev.usr_first_name + ' ' + ev.usr_last_name, addr,
+                        '#B5D4F4', '#0C447C', '#85B7EB');
+                    track.appendChild(blk);
+                });
+
+                if (NEW_FROM !== null && NEW_TO !== null) {
+                    const dispFrom = Math.max(NEW_FROM, HOURS_START);
+                    const dispTo = Math.min(NEW_TO, HOURS_END);
+                    if (dispFrom < dispTo) {
+                        const blk = makeBlock(dispFrom, dispTo,
+                            'This appointment', '',
+                            '#C0DD97', '#27500A', '#97C459');
+                        track.appendChild(blk);
+                    }
+                }
+
+                rowWrap.appendChild(track);
+                container.appendChild(rowWrap);
+            }
+
+            function makeBlock(from, to, label, addr, bg, color, border) {
+                const blk = document.createElement('div');
+                const leftPct = ((from - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                const widthPct = ((to - from) / TOTAL_HRS * 100).toFixed(4) + '%';
+                blk.style.cssText = [
+                    'position:absolute; top:4px; bottom:4px;',
+                    'left:' + leftPct + '; width:' + widthPct + ';',
+                    'background:' + bg + '; color:' + color + '; border:0.5px solid ' + border + ';',
+                    'border-radius:5px; display:flex; align-items:center; justify-content:center;',
+                    'font-size:11px; font-weight:500; overflow:hidden; white-space:nowrap;',
+                    'text-overflow:ellipsis; padding:0 6px; cursor:default;'
+                ].join('');
+                blk.textContent = label;
+                blk.addEventListener('mouseenter', e => showTooltip(e, label, addr));
+                blk.addEventListener('mousemove', moveTooltip);
+                blk.addEventListener('mouseleave', hideTooltip);
+                return blk;
+            }
+
+            let tt = null;
+
+            function ensureTT() {
+                if (!tt) {
+                    tt = document.createElement('div');
+                    tt.style.cssText = [
+                        'position:fixed; background:#fff; border:0.5px solid #ccc;',
+                        'border-radius:8px; padding:8px 12px; font-size:12px;',
+                        'pointer-events:none; z-index:9999; display:none;',
+                        'box-shadow:0 4px 12px rgba(0,0,0,.08); max-width:220px; line-height:1.5;'
+                    ].join('');
+                    document.body.appendChild(tt);
+                }
+            }
+
+            function showTooltip(e, label, addr) {
+                ensureTT();
+                tt.innerHTML = '<strong>' + label + '</strong>' + (addr ? '<br>' + addr : '');
+                tt.style.display = 'block';
+                moveTooltip(e);
+            }
+
+            function moveTooltip(e) {
+                if (tt) {
+                    tt.style.left = (e.clientX + 14) + 'px';
+                    tt.style.top = (e.clientY + 14) + 'px';
+                }
+            }
+
+            function hideTooltip() {
+                if (tt) tt.style.display = 'none';
+            }
+        })();
+    </script>
+
+    <script>
+        (function() {
+            const HOURS_START = 0;
+            const HOURS_END = 24;
+            const TOTAL_HRS = HOURS_END - HOURS_START;
+            const ROW_HEIGHT = 36;
+            const LABEL_W = 110;
+
+            const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
+            const NEW_TO_STR = "{{ $approvedTimeTo }}";
+            const DAY_SCHEDULES = @json($daySchedules);
+            const ALL_TECHS = @json($allTechs);
+
+            function parseTime(str) {
+                if (!str) return null;
+                const p = str.split(':');
+                return parseInt(p[0]) + parseInt(p[1]) / 60;
+            }
+
+            const NEW_FROM = parseTime(NEW_FROM_STR);
+            const NEW_TO = parseTime(NEW_TO_STR);
+
+            function pct(h) {
+                return ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+            }
+
+            function buildAllTechTimeline() {
+                const container = document.getElementById('allTechTimeline');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const axis = document.createElement('div');
+                axis.style.cssText =
+                    `display:flex; position:relative; height:20px; margin-bottom:4px; margin-left:${LABEL_W}px;`;
+                for (let h = HOURS_START; h <= HOURS_END; h++) {
+                    const span = document.createElement('span');
+                    const leftPct = ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                    span.style.cssText =
+                        `position:absolute; left:${leftPct}; transform:translateX(-50%); font-size:10px; color:#999; white-space:nowrap;`;
+                    const h12 = h === 0 || h === 24 ? 12 : h > 12 ? h - 12 : h;
+                    const ampm = h < 12 || h === 0 ? 'am' : 'pm';
+                    span.textContent = h12 + ampm;
+                    axis.appendChild(span);
+                }
+                container.appendChild(axis);
+
+                ALL_TECHS.forEach(tech => {
+                    const rowWrap = document.createElement('div');
+                    rowWrap.style.cssText = `display:flex; align-items:center; margin-bottom:3px;`;
+
+                    const labelDiv = document.createElement('div');
+                    const restBusy = tech.is_rest ?
+                        ' <span style="color:#c00;font-size:9px;">(rest)</span>' :
+                        tech.is_busy ?
+                        ' <span style="color:#a06000;font-size:9px;">(busy)</span>' :
+                        '';
+                    labelDiv.style.cssText =
+                        `flex:none; width:${LABEL_W}px; font-size:11px; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:6px;`;
+                    labelDiv.innerHTML = tech.label + restBusy;
+                    rowWrap.appendChild(labelDiv);
+
+                    const track = document.createElement('div');
+                    track.style.cssText =
+                        `flex:1; position:relative; height:${ROW_HEIGHT}px; background:#f7f7f7; border:0.5px solid #ddd; border-radius:6px; overflow:visible;`;
+
+                    for (let h = HOURS_START; h <= HOURS_END; h++) {
+                        const line = document.createElement('div');
+                        line.style.cssText =
+                            `position:absolute; top:0; bottom:0; left:${pct(h)}; width:0.5px; background:#e0e0e0;`;
+                        track.appendChild(line);
+                    }
+
+                    const slots = DAY_SCHEDULES[tech.id] || [];
+                    slots.forEach(ev => {
+                        const evFrom = parseTime(ev.svca_approved_time_from);
+                        const evTo = parseTime(ev.svca_approved_time_to);
+                        if (evFrom === null || evTo === null) return;
+                        const dF = Math.max(evFrom, HOURS_START);
+                        const dT = Math.min(evTo, HOURS_END);
+                        if (dF >= dT) return;
+
+                        const contactParts = [ev.usr_email, '0' + ev.usr_mobile].filter(p => p && p
+                            .trim());
+                        const addrParts = [ev.uadd_street, ev.uadd_barangay, ev.uadd_city, ev
+                            .uadd_province, ev.uadd_region
+                        ].filter(p => p && p.trim());
+                        const distLine = ev.svc_km_distance ? ev.svc_km_distance + 'KM from office' :
+                            null;
+                        const addr = [...contactParts, ...addrParts, distLine].filter(Boolean).join(
+                            ', ');
+
+                        track.appendChild(makeBlock(dF, dT,
+                            ev.usr_first_name + ' ' + ev.usr_last_name, addr,
+                            '#B5D4F4', '#0C447C', '#85B7EB'));
+                    });
+
+                    if (NEW_FROM !== null && NEW_TO !== null) {
+                        const dF = Math.max(NEW_FROM, HOURS_START);
+                        const dT = Math.min(NEW_TO, HOURS_END);
+                        if (dF < dT) {
+                            track.appendChild(makeBlock(dF, dT,
+                                'This appointment', '',
+                                '#C0DD97', '#27500A', '#97C459'));
+                        }
+                    }
+
+                    rowWrap.appendChild(track);
+                    container.appendChild(rowWrap);
+                });
+            }
+
+            function makeBlock(from, to, label, addr, bg, color, border) {
+                const blk = document.createElement('div');
+                const leftPct = ((from - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                const widthPct = ((to - from) / TOTAL_HRS * 100).toFixed(4) + '%';
+                blk.style.cssText = [
+                    'position:absolute; top:4px; bottom:4px;',
+                    'left:' + leftPct + '; width:' + widthPct + ';',
+                    'background:' + bg + '; color:' + color + '; border:0.5px solid ' + border + ';',
+                    'border-radius:5px; display:flex; align-items:center; justify-content:center;',
+                    'font-size:11px; font-weight:500; overflow:hidden; white-space:nowrap;',
+                    'text-overflow:ellipsis; padding:0 6px; cursor:default;'
+                ].join('');
+                blk.textContent = label;
+                blk.addEventListener('mouseenter', e => showTooltip(e, label, addr));
+                blk.addEventListener('mousemove', moveTooltip);
+                blk.addEventListener('mouseleave', hideTooltip);
+                return blk;
+            }
+
+            let tt2 = null;
+
+            function ensureTT() {
+                if (!tt2) {
+                    tt2 = document.createElement('div');
+                    tt2.style.cssText = [
+                        'position:fixed; background:#fff; border:0.5px solid #ccc;',
+                        'border-radius:8px; padding:8px 12px; font-size:12px;',
+                        'pointer-events:none; z-index:9999; display:none;',
+                        'box-shadow:0 4px 12px rgba(0,0,0,.08); max-width:220px; line-height:1.5;'
+                    ].join('');
+                    document.body.appendChild(tt2);
+                }
+            }
+
+            function showTooltip(e, label, addr) {
+                ensureTT();
+                tt2.innerHTML = '<strong>' + label + '</strong>' + (addr ? '<br>' + addr : '');
+                tt2.style.display = 'block';
+                moveTooltip(e);
+            }
+
+            function moveTooltip(e) {
+                if (tt2) {
+                    tt2.style.left = (e.clientX + 14) + 'px';
+                    tt2.style.top = (e.clientY + 14) + 'px';
+                }
+            }
+
+            function hideTooltip() {
+                if (tt2) tt2.style.display = 'none';
+            }
+
+            document.addEventListener('DOMContentLoaded', buildAllTechTimeline);
+
+            const modal = document.getElementById('assignTechnicianModal');
+            if (modal) {
+                modal.addEventListener('shown.bs.modal', buildAllTechTimeline);
+                if (typeof $ !== 'undefined') {
+                    $('#assignTechnicianModal').on('shown.bs.modal', buildAllTechTimeline);
+                    // Re-render when switching to the All Technicians tab
+                    $('a[href="#allTechPane"]').on('shown.bs.tab', buildAllTechTimeline);
+                }
+            }
+        })();
     </script>
 @endsection

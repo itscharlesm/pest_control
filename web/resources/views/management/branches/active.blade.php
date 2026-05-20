@@ -122,142 +122,6 @@
                                                 @endif
                                             </td>
                                         </tr>
-
-                                        {{-- Update Branch Modal --}}
-                                        <div class="modal fade" id="updateBranchModal-{{ $branch->branch_id }}"
-                                            tabindex="-1" role="dialog" aria-labelledby="updateBranchModalLabel"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog modal-md" role="document">
-                                                <form
-                                                    action="{{ url('management/branches/update/' . $branch->branch_id) }}"
-                                                    method="POST">
-                                                    @csrf
-                                                    <div class="modal-content">
-                                                        <div class="modal-header bg-warning text-black">
-                                                            <h5 class="modal-title text-black"
-                                                                id="updateBranchModalLabel-{{ $branch->branch_id }}">
-                                                                <span class="fa fa-edit"></span> Update Branch
-                                                            </h5>
-                                                            <button type="button" class="close text-black"
-                                                                data-dismiss="modal">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-
-                                                        <div class="modal-body">
-                                                            {{-- Branch Name --}}
-                                                            <div class="form-group">
-                                                                <label>Branch Name <span
-                                                                        class="text-danger">*</span></label>
-                                                                <input type="text" class="form-control"
-                                                                    name="branch_name" value="{{ $branch->branch_name }}"
-                                                                    required>
-                                                            </div>
-
-                                                            <div class="row">
-                                                                {{-- Latitude --}}
-                                                                <div class="col-md-6 mb-2">
-                                                                    <label>Latitude <span
-                                                                            class="text-danger">*</span></label>
-                                                                    <input type="text"
-                                                                        class="form-control update-branch-latitude"
-                                                                        id="update_branch_latitude_{{ $branch->branch_id }}"
-                                                                        name="branch_latitude"
-                                                                        value="{{ $branch->branch_latitude }}"
-                                                                        placeholder="Latitude" required readonly>
-                                                                </div>
-
-                                                                {{-- Longitude --}}
-                                                                <div class="col-md-6 mb-2">
-                                                                    <label>Longitude <span
-                                                                            class="text-danger">*</span></label>
-                                                                    <input type="text"
-                                                                        class="form-control update-branch-longitude"
-                                                                        id="update_branch_longitude_{{ $branch->branch_id }}"
-                                                                        name="branch_longitude"
-                                                                        value="{{ $branch->branch_longitude }}"
-                                                                        placeholder="Longitude" required readonly>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="row mb-2">
-                                                                <div class="col-md-12">
-                                                                    <button type="button"
-                                                                        class="btn btn-info btn-sm update-pin-map-btn"
-                                                                        data-id="{{ $branch->branch_id }}">
-                                                                        <span class="fa fa-map-marker-alt"></span> Pin Map
-                                                                    </button>
-                                                                    <small class="text-muted ml-2">Click the map to change
-                                                                        branch location</small>
-                                                                </div>
-                                                            </div>
-
-                                                            {{-- Map Container --}}
-                                                            <div class="row update-map-container"
-                                                                id="updateMapContainer-{{ $branch->branch_id }}"
-                                                                style="display: none;">
-                                                                <div class="col-md-12">
-                                                                    <div id="updateBranchMap-{{ $branch->branch_id }}"
-                                                                        style="width: 100%; height: 350px; border: 1px solid #ccc; border-radius: 4px;">
-                                                                    </div>
-                                                                    <small class="text-muted">
-                                                                        <span class="fa fa-info-circle"></span>
-                                                                        Click anywhere on the map to repin the branch
-                                                                        location. You can also drag the marker.
-                                                                    </small>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-                                                            <button type="submit" class="btn btn-warning">
-                                                                <span class="fa fa-save"></span> Update
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-
-                                        {{-- Delete Modal --}}
-                                        <div class="modal fade" id="deleteModal-{{ $branch->branch_id }}" tabindex="-1"
-                                            role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <form method="POST"
-                                                        action="{{ action('App\Http\Controllers\ManagementController@branches_delete', [$branch->branch_id]) }}">
-                                                        @csrf
-                                                        <div class="modal-header bg-danger text-white">
-                                                            <h5 class="modal-title text-white" id="exampleModalLabel">
-                                                                Please Confirm
-                                                            </h5>
-                                                            <button type="button" class="close" data-dismiss="modal"
-                                                                aria-label="Close">
-                                                                <span aria-hidden="true">&times;</span>
-                                                            </button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <p>Are you sure you want to <strong>DELETE</strong> branch -
-                                                                <strong>{{ $branch->branch_name }}</strong>?
-                                                            </p>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-dismiss="modal">
-                                                                <span class="fa fa-close"></span> Close
-                                                            </button>
-                                                            <button type="submit" class="btn btn-danger">
-                                                                <span class="fa fa-trash"></span> Confirm Delete
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -345,6 +209,125 @@
             </form>
         </div>
     </div>
+
+    @foreach ($branches as $branch)
+        {{-- Update Branch Modal --}}
+        <div class="modal fade" id="updateBranchModal-{{ $branch->branch_id }}" tabindex="-1" role="dialog"
+            aria-labelledby="updateBranchModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <form action="{{ url('management/branches/update/' . $branch->branch_id) }}" method="POST">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-black">
+                            <h5 class="modal-title text-black" id="updateBranchModalLabel-{{ $branch->branch_id }}">
+                                <span class="fa fa-edit"></span> Update Branch
+                            </h5>
+                            <button type="button" class="close text-black" data-dismiss="modal">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+                            {{-- Branch Name --}}
+                            <div class="form-group">
+                                <label>Branch Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="branch_name"
+                                    value="{{ $branch->branch_name }}" required>
+                            </div>
+
+                            <div class="row">
+                                {{-- Latitude --}}
+                                <div class="col-md-6 mb-2">
+                                    <label>Latitude <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control update-branch-latitude"
+                                        id="update_branch_latitude_{{ $branch->branch_id }}" name="branch_latitude"
+                                        value="{{ $branch->branch_latitude }}" placeholder="Latitude" required readonly>
+                                </div>
+
+                                {{-- Longitude --}}
+                                <div class="col-md-6 mb-2">
+                                    <label>Longitude <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control update-branch-longitude"
+                                        id="update_branch_longitude_{{ $branch->branch_id }}" name="branch_longitude"
+                                        value="{{ $branch->branch_longitude }}" placeholder="Longitude" required
+                                        readonly>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-info btn-sm update-pin-map-btn"
+                                        data-id="{{ $branch->branch_id }}">
+                                        <span class="fa fa-map-marker-alt"></span> Pin Map
+                                    </button>
+                                    <small class="text-muted ml-2">Click the map to change
+                                        branch location</small>
+                                </div>
+                            </div>
+
+                            {{-- Map Container --}}
+                            <div class="row update-map-container" id="updateMapContainer-{{ $branch->branch_id }}"
+                                style="display: none;">
+                                <div class="col-md-12">
+                                    <div id="updateBranchMap-{{ $branch->branch_id }}"
+                                        style="width: 100%; height: 350px; border: 1px solid #ccc; border-radius: 4px;">
+                                    </div>
+                                    <small class="text-muted">
+                                        <span class="fa fa-info-circle"></span>
+                                        Click anywhere on the map to repin the branch
+                                        location. You can also drag the marker.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fa fa-save"></span> Update
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Delete Modal --}}
+        <div class="modal fade" id="deleteModal-{{ $branch->branch_id }}" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST"
+                        action="{{ action('App\Http\Controllers\ManagementController@branches_delete', [$branch->branch_id]) }}">
+                        @csrf
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title text-white" id="exampleModalLabel">
+                                Please Confirm
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to <strong>DELETE</strong> branch -
+                                <strong>{{ $branch->branch_name }}</strong>?
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <span class="fa fa-close"></span> Close
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                <span class="fa fa-trash"></span> Confirm Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 
     {{-- Dynamic Search While Typing --}}
     <script>
