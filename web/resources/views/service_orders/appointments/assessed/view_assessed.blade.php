@@ -431,7 +431,7 @@
     {{-- Assign Technician Modal --}}
     <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
         aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <form action="{{ url('management/service-orders/assign-technician') }}" method="POST">
                 @csrf
                 <div class="modal-content">
@@ -491,7 +491,7 @@
                             </div>
 
                             <div style="overflow-x:auto;">
-                                <div id="techTimeline" style="min-width:500px;"></div>
+                                <div id="techTimeline" style="min-width:600px; padding-bottom:8px;"></div>
                             </div>
                         </div>
                     </div>
@@ -581,11 +581,11 @@
             const HOURS_START = 0;
             const HOURS_END = 24;
             const TOTAL_HRS = HOURS_END - HOURS_START;
+            const ROW_HEIGHT = 36;
+            const LABEL_W = 52; // px reserved for the technician label on the left
 
-            // Data from controller
             const NEW_FROM_STR = "{{ $approvedTimeFrom }}";
             const NEW_TO_STR = "{{ $approvedTimeTo }}";
-
             const DAY_SCHEDULES = @json($daySchedules);
 
             function parseTime(str) {
@@ -600,7 +600,6 @@
             document.getElementById('technicianSelect').addEventListener('change', function() {
                 const techId = this.value;
                 const wrap = document.getElementById('techTimelineWrap');
-
                 if (!techId) {
                     wrap.style.display = 'none';
                     return;
@@ -609,100 +608,107 @@
                 renderTimeline(techId);
             });
 
+            function pct(h) {
+                return ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+            }
+
             function renderTimeline(techId) {
                 const container = document.getElementById('techTimeline');
                 container.innerHTML = '';
 
+                // ── Hour axis ────────────────────────────────────────────────
+                const axis = document.createElement('div');
+                axis.style.cssText = `display:flex; margin-left:0; position:relative; height:20px; margin-bottom:4px;`;
+
+                for (let h = HOURS_START; h <= HOURS_END; h++) {
+                    const span = document.createElement('span');
+                    const leftPct = ((h - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                    span.style.cssText =
+                        `position:absolute; left:${leftPct}; transform:translateX(-50%); font-size:10px; color:#999; white-space:nowrap;`;
+                    const h12 = h === 0 || h === 24 ? 12 : h > 12 ? h - 12 : h;
+                    const ampm = h === 0 || h === 24 ? 'am' : h < 12 ? 'am' : h === 12 ? 'pm' : 'pm';
+                    span.textContent = h12 + ampm;
+                    axis.appendChild(span);
+                }
+                container.appendChild(axis);
+
+                // ── Track row ─────────────────────────────────────────────────
+                const rowWrap = document.createElement('div');
+                rowWrap.style.cssText = `display:flex; align-items:center; margin-bottom:2px;`;
+
+                // (No label since it's a single-tech view — the select shows who it is)
+                // const labelDiv = document.createElement('div');
+                // labelDiv.style.cssText = `flex:none; width:${LABEL_W}px; font-size:11px; color:#666; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
+                // labelDiv.textContent = '';
+                // rowWrap.appendChild(labelDiv);
+
+                // Track
+                const track = document.createElement('div');
+                track.style.cssText =
+                    `flex:1; position:relative; height:${ROW_HEIGHT}px; background:#f7f7f7; border:0.5px solid #ddd; border-radius:6px; overflow:visible;`;
+
+                // Hour grid lines
+                for (let h = HOURS_START; h <= HOURS_END; h++) {
+                    const line = document.createElement('div');
+                    line.style.cssText =
+                        `position:absolute; top:0; bottom:0; left:${pct(h)}; width:0.5px; background:#e0e0e0;`;
+                    track.appendChild(line);
+                }
+
+                // Existing blocks
                 const existingSlots = DAY_SCHEDULES[techId] || [];
+                existingSlots.forEach(ev => {
+                    const evFrom = parseTime(ev.svca_approved_time_from);
+                    const evTo = parseTime(ev.svca_approved_time_to);
+                    if (evFrom === null || evTo === null) return;
+                    // clamp to display range
+                    const dispFrom = Math.max(evFrom, HOURS_START);
+                    const dispTo = Math.min(evTo, HOURS_END);
+                    if (dispFrom >= dispTo) return;
 
-                for (let h = HOURS_START; h < HOURS_END; h++) {
-                    const row = document.createElement('div');
-                    row.style.cssText = 'display:flex;height:44px;position:relative;border-bottom:0.5px solid #eee;';
+                    const contactParts = [ev.usr_email, '0' + ev.usr_mobile].filter(p => p && p.trim());
+                    const addressParts = [ev.uadd_street, ev.uadd_barangay, ev.uadd_city, ev.uadd_province, ev
+                        .uadd_region
+                    ].filter(p => p && p.trim());
+                    const distanceLine = ev.svc_km_distance ? ev.svc_km_distance + 'KM from office' : null;
+                    const addr = [...contactParts, ...addressParts, distanceLine].filter(Boolean).join(', ');
 
-                    // Hour label
-                    const lbl = document.createElement('div');
-                    lbl.style.cssText =
-                        'flex:none;width:52px;font-size:11px;color:#999;display:flex;align-items:center;padding-right:6px;';
-                    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                    const ampm = h < 12 ? 'am' : 'pm';
-                    lbl.textContent = h12 + ampm;
-                    row.appendChild(lbl);
+                    const blk = makeBlock(dispFrom, dispTo,
+                        ev.usr_first_name + ' ' + ev.usr_last_name, addr,
+                        '#B5D4F4', '#0C447C', '#85B7EB');
+                    track.appendChild(blk);
+                });
 
-                    // Cells area
-                    const cells = document.createElement('div');
-                    cells.style.cssText = 'flex:1;position:relative;border-left:0.5px solid #eee;';
-
-                    // Existing blocks
-                    existingSlots.forEach(ev => {
-                        const evFrom = parseTime(ev.svca_approved_time_from);
-                        const evTo = parseTime(ev.svca_approved_time_to);
-                        if (!(evFrom < h + 1 && evTo > h)) return;
-
-                        const segFrom = Math.max(evFrom, h);
-                        const segTo = Math.min(evTo, h + 1);
-
-                        const contactParts = [
-                            ev.usr_email,
-                            '0' + ev.usr_mobile,
-                        ].filter(p => p && p.trim() !== '');
-
-                        const addressParts = [
-                            ev.uadd_street,
-                            ev.uadd_barangay,
-                            ev.uadd_city,
-                            ev.uadd_province,
-                            ev.uadd_region,
-                        ].filter(p => p && p.trim() !== '');
-
-                        const distanceLine = ev.svc_km_distance ?
-                            ev.svc_km_distance + 'KM from the office' :
-                            null;
-
-                        const addr = [...contactParts, ...addressParts, distanceLine].filter(Boolean).join(
-                        ', ');
-
-                        const blk = makeBlock(segFrom, segTo, h,
-                            ev.usr_first_name + ' ' + ev.usr_last_name,
-                            addr,
-                            '#B5D4F4', '#0C447C', '#85B7EB');
-                        cells.appendChild(blk);
-                    });
-
-                    // New appointment block
-                    if (NEW_FROM !== null && NEW_TO !== null && NEW_FROM < h + 1 && NEW_TO > h) {
-                        const segFrom = Math.max(NEW_FROM, h);
-                        const segTo = Math.min(NEW_TO, h + 1);
-                        const blk = makeBlock(segFrom, segTo, h,
+                // New appointment block
+                if (NEW_FROM !== null && NEW_TO !== null) {
+                    const dispFrom = Math.max(NEW_FROM, HOURS_START);
+                    const dispTo = Math.min(NEW_TO, HOURS_END);
+                    if (dispFrom < dispTo) {
+                        const blk = makeBlock(dispFrom, dispTo,
                             'This appointment', '',
                             '#C0DD97', '#27500A', '#97C459');
-                        cells.appendChild(blk);
+                        track.appendChild(blk);
                     }
-
-                    row.appendChild(cells);
-                    container.appendChild(row);
                 }
+
+                rowWrap.appendChild(track);
+                container.appendChild(rowWrap);
             }
 
-            function makeBlock(segFrom, segTo, hourBase, label, addr, bg, color, border) {
+            function makeBlock(from, to, label, addr, bg, color, border) {
                 const blk = document.createElement('div');
-                const leftPct = ((segFrom - hourBase) * 100).toFixed(2) + '%';
-                const widthPct = ((segTo - segFrom) * 100).toFixed(2) + '%';
+                const leftPct = ((from - HOURS_START) / TOTAL_HRS * 100).toFixed(4) + '%';
+                const widthPct = ((to - from) / TOTAL_HRS * 100).toFixed(4) + '%';
                 blk.style.cssText = [
-                    'position:absolute;top:4px;bottom:4px;',
-                    'left:' + leftPct + ';width:' + widthPct + ';',
-                    'background:' + bg + ';color:' + color + ';border:0.5px solid ' + border + ';',
-                    'border-radius:5px;display:flex;align-items:center;justify-content:center;',
-                    'font-size:11px;font-weight:500;overflow:hidden;white-space:nowrap;',
-                    'text-overflow:ellipsis;padding:0 4px;cursor:default;'
+                    'position:absolute; top:4px; bottom:4px;',
+                    'left:' + leftPct + '; width:' + widthPct + ';',
+                    'background:' + bg + '; color:' + color + '; border:0.5px solid ' + border + ';',
+                    'border-radius:5px; display:flex; align-items:center; justify-content:center;',
+                    'font-size:11px; font-weight:500; overflow:hidden; white-space:nowrap;',
+                    'text-overflow:ellipsis; padding:0 6px; cursor:default;'
                 ].join('');
                 blk.textContent = label;
-
-                // Tooltip
-                blk.title = label + (addr ? '\n' + addr : '');
-
-                blk.addEventListener('mouseenter', function(e) {
-                    showTooltip(e, label, addr);
-                });
+                blk.addEventListener('mouseenter', e => showTooltip(e, label, addr));
                 blk.addEventListener('mousemove', moveTooltip);
                 blk.addEventListener('mouseleave', hideTooltip);
                 return blk;
@@ -715,10 +721,10 @@
                 if (!tt) {
                     tt = document.createElement('div');
                     tt.style.cssText = [
-                        'position:fixed;background:#fff;border:0.5px solid #ccc;',
-                        'border-radius:8px;padding:8px 12px;font-size:12px;',
-                        'pointer-events:none;z-index:9999;display:none;',
-                        'box-shadow:0 4px 12px rgba(0,0,0,.08);max-width:200px;line-height:1.5;'
+                        'position:fixed; background:#fff; border:0.5px solid #ccc;',
+                        'border-radius:8px; padding:8px 12px; font-size:12px;',
+                        'pointer-events:none; z-index:9999; display:none;',
+                        'box-shadow:0 4px 12px rgba(0,0,0,.08); max-width:220px; line-height:1.5;'
                     ].join('');
                     document.body.appendChild(tt);
                 }
@@ -732,9 +738,10 @@
             }
 
             function moveTooltip(e) {
-                if (!tt) return;
-                tt.style.left = (e.clientX + 14) + 'px';
-                tt.style.top = (e.clientY + 14) + 'px';
+                if (tt) {
+                    tt.style.left = (e.clientX + 14) + 'px';
+                    tt.style.top = (e.clientY + 14) + 'px';
+                }
             }
 
             function hideTooltip() {
