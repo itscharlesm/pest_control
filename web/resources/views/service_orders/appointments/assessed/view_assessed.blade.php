@@ -187,10 +187,12 @@
                                         <th colspan="6" class="text-center table-light">SCHEDULE</th>
                                     </tr>
                                     <tr>
+                                        <td style="font-weight: bold;">APPROVED BY</td>
+                                        <td colspan="2">{{ $display->approved_first_name }} {{ $display->approved_last_name }}</td>
                                         <td style="font-weight: bold;">CLIENT DATE</td>
                                         <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
                                         <td style="font-weight: bold;">CLIENT TIME</td>
-                                        <td colspan="3">
+                                        <td>
                                             {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
                                     </tr>
                                     <tr>
@@ -428,7 +430,7 @@
     {{-- Assign Technician Modal --}}
     <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
         aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <form action="{{ url('management/branches/add') }}" method="POST">
                 @csrf
 
@@ -451,6 +453,7 @@
                             <div class="col-md-12 mb-3">
                                 <label>Assign Technician <span class="text-danger">*</span></label>
                                 <select class="form-control" name="svcas_assigned_to" required>
+                                    <option value="" disabled selected>Select Technician</option>
                                     @foreach ($technicians as $technician)
                                         <option value="{{ $technician->usr_id }}">
                                             {{ $technician->usr_last_name }},

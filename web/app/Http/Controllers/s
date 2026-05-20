@@ -1,657 +1,726 @@
-web book appointment
-    @foreach ($clients as $client)
-        {{-- Book Appointment Modal --}}
-        <div class="modal fade" id="bookAppointmentModal-{{ $client->usr_id }}" tabindex="-1" role="dialog"
-            aria-labelledby="bookAppointmentModal-{{ $client->usr_id }}" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form method="POST" action="{{ url('service/orders/appointments/clients/book') }}">
-                        @csrf
-                        <div class="modal-header bg-success text-white">
-                            <h5 class="modal-title text-white" id="bookAppointmentModal-{{ $client->usr_id }}">
-                                Book Appointment for {{ $client->usr_last_name }},
-                                {{ $client->usr_first_name }}
-                                {{ $client->usr_middle_name }}
-                            </h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
+public function assessed_appointments_view($svc_id)
+{
+    $display = DB::table('services')
+        ->leftJoin('users', 'services.usr_id', '=', 'users.usr_id')
+        ->leftJoin('branches', 'services.branch_id', '=', 'branches.branch_id')
+        ->leftJoin('service_appointments', 'services.svc_id', '=', 'service_appointments.svc_id')
+        ->leftJoin('user_addresses', 'service_appointments.uadd_id', '=', 'user_addresses.uadd_id')
+        ->leftJoin('addresses', 'user_addresses.add_id', '=', 'addresses.add_id')
+        ->where('services.svc_id', $svc_id)
+        ->select(
+            'services.svc_id',
+            'services.svc_sa_number',
+            'services.svc_km_distance',
+            'services.svc_property_type',
+            'services.svc_is_package',
+            'services.svcpat_id',
+            'services.svc_is_termite',
+            'services.svc_type_treatment',
+            'services.svc_sqm_initial',
+            'services.svc_sqm_final',
+            'services.svc_with_device',
+            'services.svc_device_count',
+            'services.svc_problem_description',
+            'services.svc_status',
+            'services.svc_infestation',
+            'services.svc_initial_price',
+            'services.svc_location_price',
+            'services.svc_device_price',
+            'services.svc_fixed_price',
+            'services.svc_final_price',
+            'services.svc_balance',
+            'services.svc_payment_status',
+            'services.svc_assessment_recommendation',
+            'services.svc_chemical_quantity',
+            'services.svc_chemical_metric',
+            'users.usr_first_name',
+            'users.usr_last_name',
+            'users.usr_email',
+            'users.usr_mobile',
+            'branches.branch_id',
+            'branches.branch_name',
+            'service_appointments.svca_client_date',
+            'service_appointments.svca_client_time',
+            'service_appointments.svca_approved_date',
+            'service_appointments.svca_approved_time_from',
+            'service_appointments.svca_approved_time_to',
+            'service_appointments.svca_date_approved',
+            'user_addresses.uadd_street',
+            'user_addresses.uadd_barangay',
+            'user_addresses.uadd_city',
+            'user_addresses.uadd_province',
+            'user_addresses.uadd_region',
+            'addresses.add_name'
+        )
+        ->first();
 
-                            <input type="hidden" name="usr_id" value="{{ $client->usr_id }}">
+    // Pest Types for this service
+    $pestTypes = DB::table('service_order_pests')
+        ->leftJoin('service_packages', 'service_order_pests.svcp_id', '=', 'service_packages.svcp_id')
+        ->where('service_order_pests.svc_id', $svc_id)
+        ->where('service_order_pests.svcop_active', 1)
+        ->select(
+            'service_order_pests.svcop_id',
+            'service_packages.svcp_id',
+            'service_packages.svcp_pest_type'
+        )
+        ->get();
 
-                            {{-- ADDRESS --}}
-                            <div class="form-group">
-                                <label>Address: <span class="text-danger">*</span></label>
-                                <select class="form-control" name="uadd_id" required>
-                                    @if (isset($addresses[$client->usr_id]) && count($addresses[$client->usr_id]) > 0)
-                                        @foreach ($addresses[$client->usr_id] as $address)
-                                            <option value="{{ $address->uadd_id }}">
-                                                {{ $address->add_name }} —
-                                                {{ $address->uadd_street }},
-                                                {{ $address->uadd_barangay }},
-                                                {{ $address->uadd_city }},
-                                                {{ $address->uadd_province }}
-                                            </option>
-                                        @endforeach
-                                    @else
-                                        <option disabled>No active address available
-                                        </option>
-                                    @endif
-                                </select>
-                            </div>
+    // Service Orders with Areas (non-termite: svcpat_id IS NULL)
+    $serviceAreas = DB::table('service_orders')
+        ->leftJoin('service_package_areas', 'service_orders.svcpa_id', '=', 'service_package_areas.svcpa_id')
+        ->where('service_orders.svc_id', $svc_id)
+        ->whereNull('service_orders.svcpat_id')
+        ->where('service_orders.svco_active', 1)
+        ->select(
+            'service_orders.svco_id',
+            'service_package_areas.svcpa_id',
+            'service_package_areas.svcpa_area',
+            'service_package_areas.svcpa_cost'
+        )
+        ->get();
 
-                            {{-- ASSIGN BRANCH --}}
-                            <div class="form-group">
-                                <label>Assign Branch: <span class="text-danger">*</span></label>
-                                <select class="form-control book-branch-select" name="branch_id"
-                                    data-client="{{ $client->usr_id }}" required>
-                                    <option value="">— Select Branch —</option>
-                                    @foreach ($branches as $branch)
-                                        @if ($branch->branch_id != 1)
-                                            <option value="{{ $branch->branch_id }}">
-                                                {{ $branch->branch_name }}
-                                            </option>
-                                        @endif
-                                    @endforeach
-                                </select>
-                            </div>
+    // Service Orders with Termite Areas (termite: svcpat_id IS NOT NULL)
+    $termiteAreas = DB::table('service_orders')
+        ->leftJoin('service_package_area_termites', 'service_orders.svcpat_id', '=', 'service_package_area_termites.svcpat_id')
+        ->where('service_orders.svc_id', $svc_id)
+        ->whereNotNull('service_orders.svcpat_id')
+        ->where('service_orders.svco_active', 1)
+        ->select(
+            'service_orders.svco_id',
+            'service_package_area_termites.svcpat_id',
+            'service_package_area_termites.svcpat_sqm_details',
+            'service_package_area_termites.svcpat_cost'
+        )
+        ->get();
 
-                            <hr>
+    // Client Appointment Images
+    $appointmentImages = DB::table('service_appointment_images')
+        ->join('service_appointments', 'service_appointment_images.svca_id', '=', 'service_appointments.svca_id')
+        ->where('service_appointments.svc_id', $svc_id)
+        ->where('service_appointment_images.svcap_active', 1)
+        ->select('service_appointment_images.*')
+        ->get();
 
-                            {{-- PROBLEM TYPE --}}
-                            <div class="form-group">
-                                <label>Problem Type <span class="text-danger">*</span></label>
-                                <select class="form-control book-pest-select" name="svcp_id"
-                                    data-client="{{ $client->usr_id }}" required>
-                                    <option value="">— Select Problem Type —</option>
-                                    @foreach ($servicePackages as $pkg)
-                                        <option value="{{ $pkg->svcp_id }}">
-                                            {{ $pkg->svcp_pest_type }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+    // Technicians
+    $technicians = DB::table('users')
+        ->where('utyp_id', 2)
+        ->where('usr_active', 1)
+        ->where('branch_id', $display->branch_id)
+        ->orderBy('usr_last_name', 'asc')
+        ->select(
+            'usr_id',
+            'usr_first_name',
+            'usr_last_name'
+        )
+        ->get();
 
-                            {{-- Location (area) — shown when svcp_id != 9 --}}
-                            <div class="form-group book-area-group-{{ $client->usr_id }}" style="display:none;">
-                                <label>Location <span class="text-danger">*</span></label>
-                                <select class="form-control book-area-select" name="svcpa_id"
-                                    data-client="{{ $client->usr_id }}">
-                                    <option value="">— Select Branch First —</option>
+    return view('service_orders.appointments.assessed.view_assessed', compact('display', 'pestTypes', 'serviceAreas', 'termiteAreas', 'appointmentImages', 'technicians'));
+}
 
-                                    {{-- Pre-render all areas grouped by branch as data attributes --}}
-                                    @foreach ($servicePackageAreas as $branchId => $areas)
-                                        @foreach ($areas as $area)
-                                            <option value="{{ $area->svcpa_id }}" data-branch="{{ $branchId }}"
-                                                data-cost="{{ $area->svcpa_cost }}" style="display:none;">
-                                                {{ $area->svcpa_area }}
-                                            </option>
-                                        @endforeach
-                                    @endforeach
-                                </select>
-                                <small class="text-muted book-area-cost-{{ $client->usr_id }}"></small>
-                            </div>
+<style>
+    @media print {
+        body {
+            zoom: 100%;
+        }
 
-                            {{-- Termite Treatment Size — shown when svcp_id == 9 --}}
-                            <div class="form-group book-termite-group-{{ $client->usr_id }}" style="display:none;">
-                                <label>Termite Treatment Size <span class="text-danger">*</span></label>
-                                <select class="form-control book-termite-select" name="svcpat_id"
-                                    data-client="{{ $client->usr_id }}">
-                                    <option value="">— Select Branch First —</option>
+        .no-print {
+            display: none !important;
+        }
 
-                                    @foreach ($termiteAreas as $branchId => $tAreas)
-                                        @foreach ($tAreas as $t)
-                                            <option value="{{ $t->svcpat_id }}" data-branch="{{ $branchId }}"
-                                                style="display:none;">
-                                                {{ $t->svcpat_sqm_details }}
-                                                (₱{{ number_format($t->svcpat_cost, 2) }})
-                                            </option>
-                                        @endforeach
-                                    @endforeach
-                                </select>
-                            </div>
+        .print-only {
+            display: block !important;
+        }
 
-                            {{-- Problem Description --}}
-                            <div class="form-group">
-                                <label><strong>Problem Description <span
-                                            class="text-muted">(Optional)</span></strong></label>
-                                <textarea class="form-control" name="svc_problem_description" rows="3" placeholder="Describe the problem..."></textarea>
-                            </div>
+        .print-hide {
+            display: none !important;
+        }
+    }
 
-                            <hr>
+    .table-responsive {
+        overflow: visible !important;
+    }
 
-                            {{-- SCHEDULE --}}
-                            <div class="form-group">
-                                <label>Preferred Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="svca_client_date"
-                                    value="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}"
-                                    min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" required>
-                            </div>
+    #sectionB {
+        overflow: visible !important;
+    }
 
-                            <div class="form-group">
-                                <label>Time Window <span class="text-danger">*</span></label>
-                                <select class="form-control" name="svca_client_time" required>
-                                    <option value="">— Select Time Window —</option>
-                                    <option value="08:00">Morning (8:00 AM – 12:00 PM)
-                                    </option>
-                                    <option value="12:00">Afternoon (12:00 PM – 5:00 PM)
-                                    </option>
-                                    <option value="17:00">Evening (5:00 PM – 8:00 PM)
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                <span class="fa fa-close"></span> Close
-                            </button>
-                            <button type="submit" class="btn btn-success">
-                                <span class="fa fa-check"></span> Book Appointment
-                            </button>
-                        </div>
-                    </form>
+    .content-wrapper {
+        overflow-x: hidden;
+    }
+</style>
+
+<style>
+    @media print {
+        body {
+            zoom: 100%;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        .print-only {
+            display: block !important;
+        }
+
+        .print-hide {
+            display: none !important;
+        }
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+    }
+
+    #sectionB {
+        overflow: visible !important;
+    }
+
+    .content-wrapper {
+        overflow-x: hidden;
+    }
+</style>
+
+@extends('layouts.themes.main')
+
+@section('content')
+    {{-- Content Header --}}
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Assessed Appointment</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item">
+                            <a href="{{ action('App\Http\Controllers\AdminController@home') }}">Home</a>
+                        </li>
+                        <li class="breadcrumb-item">Appointment</li>
+                        <li class="breadcrumb-item">Assessed</li>
+                        <li class="breadcrumb-item active">View</li>
+                    </ol>
                 </div>
             </div>
         </div>
-    @endforeach
+    </div>
+
+    {{-- Main Content --}}
+    <section class="content">
+        @include('layouts.partials.onclick')
+        @include('layouts.partials.alerts')
+        @include('layouts.partials.modal_style')
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-body overflow-auto">
+                    <div class="text-center mb-2">
+                        <h5 style="margin: 0; font-weight: bold;">GO FORWARD PEST CONTROL</h5>
+                        <p style="margin: 0;">{{ $display->branch_name }}</p>
+                    </div>
+
+                    <div class="mb-4 position-relative text-center">
+                        <strong style="color: red;">SERVICE ORDER</strong>
+
+                        <strong style="position: absolute; right: 0; top: 0;">
+                            SA-{{ str_pad($display->svc_sa_number, 6, '0', STR_PAD_LEFT) }}
+                        </strong>
+                    </div>
+                    <div class="row">
+
+                        {{-- Appointment Information Display --}}
+                        <div class="table-responsive overflow-auto" id="sectionA">
+                            <table class="table table-bordered text-left align-middle">
+                                <tbody>
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">CLIENT INFORMATION</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">CLIENT NAME</td>
+                                        <td>{{ $display->usr_first_name }} {{ $display->usr_last_name }}</td>
+                                        <td style="font-weight: bold;">EMAIL</td>
+                                        <td>{{ $display->usr_email }}</td>
+                                        <td style="font-weight: bold;">MOBILE</td>
+                                        <td>{{ $display->usr_mobile }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">ADDRESS</td>
+                                        <td colspan="3">
+                                            {{ implode(
+                                                ', ',
+                                                array_filter([
+                                                    $display->uadd_street,
+                                                    $display->uadd_barangay,
+                                                    $display->uadd_city,
+                                                    $display->uadd_province,
+                                                    $display->uadd_region,
+                                                ]),
+                                            ) }}
+                                        </td>
+                                        <td style="font-weight: bold;">ADDRESS TYPE</td>
+                                        <td>{{ $display->add_name }}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">SERVICE INFORMATION</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">BRANCH</td>
+                                        <td>{{ $display->branch_name }}</td>
+                                        <td style="font-weight: bold;">STATUS</td>
+                                        <td>{{ $display->svc_status }}</td>
+                                        <td style="font-weight: bold;">PAYMENT STATUS</td>
+                                        <td>{{ $display->svc_payment_status }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">PROPERTY TYPE</td>
+                                        <td>{{ $display->svc_property_type }}</td>
+                                        <td style="font-weight: bold;">INFESTATION</td>
+                                        <td>{{ $display->svc_infestation }}</td>
+                                        <td style="font-weight: bold;">DISTANCE</td>
+                                        <td>{{ $display->svc_km_distance }} KM</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">IS TERMITE</td>
+                                        <td>{{ $display->svc_is_termite ? 'YES' : 'NO' }}</td>
+                                        <td style="font-weight: bold;">IS PACKAGE</td>
+                                        <td colspan="3">{{ $display->svc_is_package ? 'YES' : 'NO' }}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">PRICING</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">INITIAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_initial_price, 2) }}</td>
+                                        <td style="font-weight: bold;">LOCATION PRICE</td>
+                                        <td>₱{{ number_format($display->svc_location_price, 2) }}</td>
+                                        <td style="font-weight: bold;">FIXED PRICE</td>
+                                        <td>₱{{ number_format($display->svc_fixed_price, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">FINAL PRICE</td>
+                                        <td>₱{{ number_format($display->svc_final_price, 2) }}</td>
+                                        <td style="font-weight: bold;">BALANCE</td>
+                                        <td colspan="3">₱{{ number_format($display->svc_balance, 2) }}</td>
+                                    </tr>
+
+                                    @if ($display->svc_is_termite)
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">TERMITE CASE</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">TREATMENT TYPE</td>
+                                            <td>{{ $display->svc_type_treatment }}</td>
+                                            <td style="font-weight: bold;">INITIAL SQM</td>
+                                            <td>{{ $display->svc_sqm_initial }}</td>
+                                            <td style="font-weight: bold;">FINAL SQM</td>
+                                            <td>{{ $display->svc_sqm_final }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">WITH DEVICE</td>
+                                            <td>{{ $display->svc_with_device ? 'YES' : 'NO' }}</td>
+                                            <td style="font-weight: bold;">DEVICE COUNT</td>
+                                            <td colspan="3">{{ $display->svc_device_count ?? 'N/A' }}</td>
+                                        </tr>
+                                    @endif
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">CHEMICAL</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">CHEMICAL QUANTITY</td>
+                                        <td>{{ $display->svc_chemical_quantity }}</td>
+                                        <td style="font-weight: bold;">CHEMICAL METRIC</td>
+                                        <td colspan="3">{{ $display->svc_chemical_metric }}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">SCHEDULE</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">CLIENT DATE</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_client_date)->format('m/d/Y') }}</td>
+                                        <td style="font-weight: bold;">CLIENT TIME</td>
+                                        <td colspan="3">
+                                            {{ \Carbon\Carbon::parse($display->svca_client_time)->format('h:i A') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-weight: bold;">DATE APPROVED</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_date_approved)->format('m/d/Y') }}</td>
+                                        <td style="font-weight: bold;">TIME FROM</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_from)->format('h:i A') }}
+                                        </td>
+                                        <td style="font-weight: bold;">TIME TO</td>
+                                        <td>{{ \Carbon\Carbon::parse($display->svca_approved_time_to)->format('h:i A') }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th colspan="6" class="text-center table-light">PROBLEM DESCRIPTION</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6" style="text-align: justify">
+                                            {{ $display->svc_problem_description }}
+                                        </td>
+                                    </tr>
+
+                                    @if (!empty($display->svc_assessment_recommendation))
+                                        <tr>
+                                            <th colspan="6" class="text-center table-light">ASSESSMENT RECOMMENDATION
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="6" style="text-align: justify">
+                                                {{ $display->svc_assessment_recommendation }}
+                                            </td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-end flex-wrap mb-3 no-print">
+                            <button type="button" class="btn btn-success mr-2 mb-2" data-toggle="modal"
+                                data-target="#assignTechnicianModal">
+                                <span class="fa fa-user"></span> Assign Technician
+                            </button>
+                            <button type="button" class="btn btn-primary mr-2 mb-2" onclick="printDefault()">
+                                <span class="fa fa-print"></span> Print
+                            </button>
+                            <div class="btn-group mr-2 mb-2">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <span class="fa fa-print"></span> Print Options
+                                </button>
+                                <div class="dropdown-menu p-3" style="min-width: 200px;">
+                                    <label class="dropdown-item">
+                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionA">
+                                        Appointment
+                                        Information
+                                    </label>
+                                    <label class="dropdown-item">
+                                        <input type="checkbox" class="print-toggle mr-1" data-target="sectionB"> Service
+                                        Orders
+                                    </label>
+                                    @if ($appointmentImages->count() > 0)
+                                        <label class="dropdown-item">
+                                            <input type="checkbox" class="print-toggle mr-1" data-target="sectionC">
+                                            Client
+                                            Appointment Images
+                                        </label>
+                                    @endif
+                                    <div class="dropdown-item text-center">
+                                        <button class="btn btn-primary btn-sm mt-2" onclick="handlePrint()">Confirm &
+                                            Print</button>
+                                    </div>
+                                    <div class="dropdown-item">
+                                        <p id="warning" style="color:red; display:none;" class="mt-1">Select at least
+                                            one
+                                            section.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a class="btn btn-danger mr-2 mb-2" href="">
+                                <span class="fa fa-user-shield"></span> Override
+                            </a>
+                        </div>
+
+                        {{-- Service Order Display --}}
+                        <div class="table-responsive" id="sectionB">
+                            <hr class="no-print">
+                            @if ($display->svc_is_termite == 0)
+                                {{-- NON-TERMITE: Two columns - Pest Type & Service Order --}}
+                                <div class="row">
+                                    {{-- PEST TYPE TABLE --}}
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th colspan="3"><strong>PEST TYPE</strong></th>
+                                                </tr>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th style="width: 50px;">No.</th>
+                                                    <th>Pest</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($pestTypes as $index => $type)
+                                                    <tr>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $index + 1 }}</td>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $type->svcp_pest_type }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {{-- SERVICE ORDER TABLE (non-termite areas) --}}
+                                    <div class="col-md-6">
+                                        <table class="table table-bordered text-center mb-2">
+                                            <thead>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th colspan="4"><strong>SERVICE ORDER</strong></th>
+                                                </tr>
+                                                <tr style="background-color: #f5f5f5;">
+                                                    <th style="width: 50px;">No.</th>
+                                                    <th>Service</th>
+                                                    <th>Cost</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($serviceAreas as $index => $area)
+                                                    <tr>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $index + 1 }}</td>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            {{ $area->svcpa_area }}</td>
+                                                        <td style="vertical-align: middle; text-align: center">
+                                                            ₱{{ number_format($area->svcpa_cost, 2) }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @elseif ($display->svc_is_termite == 1)
+                                {{-- TERMITE: Full width - Termite Details --}}
+                                <div class="col-md-12">
+                                    <table class="table table-bordered text-center mb-2">
+                                        <thead>
+                                            <tr style="background-color: #f5f5f5;">
+                                                <th colspan="5"><strong>TERMITE DETAILS</strong></th>
+                                            </tr>
+                                            <tr style="background-color: #f5f5f5;">
+                                                <th style="width: 50px;">No.</th>
+                                                <th>SQM Details</th>
+                                                <th>Cost</th>
+                                                <th>Computation</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($termiteAreas as $index => $area)
+                                                <tr>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        {{ $index + 1 }}</td>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        {{ $area->svcpat_sqm_details }}</td>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        ₱{{ number_format($area->svcpat_cost, 2) }}</td>
+                                                    <td style="vertical-align: middle; text-align: center">
+                                                        @if ($display->svc_type_treatment == 'STANDARD TREATMENT')
+                                                            <p>STANDARD TREATMENT: sqm × cost</p>
+                                                        @elseif ($display->svc_type_treatment == 'HYBRID TREATMENT')
+                                                            <p>HYBRID TREATMENT: sqm × cost + device</p>
+                                                        @else
+                                                            <p>{{ $display->svc_type_treatment }}: sqm × cost</p>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">No termite areas
+                                                        added.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Client Appointment Images --}}
+                        @if ($appointmentImages->count() > 0)
+                            <div class="table-responsive" id="sectionC">
+                                <table class="table table-bordered text-center mb-2">
+                                    <thead>
+                                        <tr style="background-color: #f5f5f5;">
+                                            <th colspan="5">
+                                                <strong>CLIENT APPOINTMENT IMAGES</strong>
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach ($appointmentImages->chunk(5) as $chunk)
+                                            <tr>
+                                                @foreach ($chunk as $img)
+                                                    <td style="width:20%; padding:10px; vertical-align:middle;">
+                                                        <a href="{{ asset('images/client_images/' . $img->svcap_image) }}"
+                                                            target="_blank"
+                                                            style="display:block; width:100%; aspect-ratio:1/1; overflow:hidden;">
+
+                                                            <img src="{{ asset('images/client_images/' . $img->svcap_image) }}"
+                                                                alt="Appointment Image"
+                                                                style="width:100%; height:100%; object-fit:cover; display:block;">
+                                                        </a>
+                                                    </td>
+                                                @endforeach
+
+                                                {{-- Fill empty cells if less than 5 images --}}
+                                                @for ($i = $chunk->count(); $i < 5; $i++)
+                                                    <td style="vertical-align: middle;"></td>
+                                                @endfor
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Assign Technician Modal --}}
+    <div class="modal fade" id="assignTechnicianModal" tabindex="-1" role="dialog"
+        aria-labelledby="assignTechnicianModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <form action="{{ url('management/branches/add') }}" method="POST">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title text-white" id="assignTechnicianModalLabel">
+                            <span class="fa fa-plus text-white"></span> Assign Technician
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        {{-- Service ID --}}
+                        <input type="hidden" name="svc_id" value="{{ $appointment->svc_id ?? '' }}">
+
+                        <div class="row">
+                            {{-- Branch Name --}}
+                            <div class="col-md-12 mb-3">
+                                <label>Assign Technician <span class="text-danger">*</span></label>
+                                <select class="form-control" name="svcas_assigned_to" required>
+                                    <option value="" disabled selected>Select Technician</option>
+                                    @foreach ($technicians as $technician)
+                                        <option value="{{ $technician->usr_id }}">
+                                            {{ $technician->usr_last_name }},
+                                            {{ $technician->usr_first_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <span class="fa fa-close"></span> Close
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="fa fa-save"></span> Save Branch
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
-        (function() {
-            const TERMITE_ID = 8;
+        function printDefault() {
+            window.print();
+        }
 
-            function filterOptionsByBranch(select, branchId) {
-                const options = select.querySelectorAll('option[data-branch]');
-                let hasVisible = false;
+        function handlePrint() {
+            console.log("Print button clicked!");
 
-                options.forEach(function(opt) {
-                    if (opt.dataset.branch == branchId) {
-                        opt.style.display = '';
-                        hasVisible = true;
-                    } else {
-                        opt.style.display = 'none';
-                        opt.selected = false;
-                    }
-                });
+            const checkboxes = document.querySelectorAll('.print-toggle');
+            const warning = document.getElementById('warning');
+            let anyChecked = false;
 
-                // Reset to placeholder
-                select.value = '';
-                select.querySelector('option:not([data-branch])').textContent =
-                    hasVisible ? '— Select —' : '— No options for this branch —';
-            }
+            // Reset all sections (show all initially) - Check if the section exists
+            const sectionIds = [
+                'sectionA', 'sectionB', 'sectionC'
+            ];
 
-            function toggleAreaTermite(clientId, pestId, branchId) {
-                const areaGroup = document.querySelector('.book-area-group-' + clientId);
-                const termiteGroup = document.querySelector('.book-termite-group-' + clientId);
-
-                if (!pestId) {
-                    areaGroup.style.display = 'none';
-                    termiteGroup.style.display = 'none';
-                    return;
+            sectionIds.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.remove('print-hide');
                 }
+            });
 
-                if (parseInt(pestId) === TERMITE_ID) {
-                    areaGroup.style.display = 'none';
-                    termiteGroup.style.display = 'block';
-                    if (branchId) {
-                        filterOptionsByBranch(
-                            document.querySelector('.book-termite-select[data-client="' + clientId + '"]'),
-                            branchId
-                        );
+            // Hide unselected sections
+            checkboxes.forEach(checkbox => {
+                const targetId = checkbox.dataset.target;
+                const targetDiv = document.getElementById(targetId);
+
+                // Only modify the target if it exists
+                if (targetDiv) {
+                    if (checkbox.checked) {
+                        anyChecked = true;
+                        targetDiv.classList.remove('print-hide');
+                    } else {
+                        targetDiv.classList.add('print-hide');
                     }
                 } else {
-                    termiteGroup.style.display = 'none';
-                    areaGroup.style.display = 'block';
-                    if (branchId) {
-                        filterOptionsByBranch(
-                            document.querySelector('.book-area-select[data-client="' + clientId + '"]'),
-                            branchId
-                        );
-                    }
+                    console.error(`Element with ID ${targetId} not found!`);
                 }
+            });
+
+            if (!anyChecked) {
+                warning.style.display = 'block';
+                return;
             }
 
-            // Branch change
-            document.querySelectorAll('.book-branch-select').forEach(function(branchSel) {
-                branchSel.addEventListener('change', function() {
-                    const clientId = this.dataset.client;
-                    const branchId = this.value;
-                    const pestId = document.querySelector('.book-pest-select[data-client="' + clientId +
-                        '"]').value;
+            warning.style.display = 'none';
 
-                    toggleAreaTermite(clientId, pestId, branchId);
+            // Delay the print to ensure sections are properly hidden/shown
+            setTimeout(() => {
+                console.log("Triggering print dialog...");
+                window.print();
+            }, 500); // Allow time for the layout to update
+
+            // Restore view after printing
+            setTimeout(() => {
+                sectionIds.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        section.classList.remove('print-hide');
+                    }
                 });
-            });
-
-            // Pest type change
-            document.querySelectorAll('.book-pest-select').forEach(function(pestSel) {
-                pestSel.addEventListener('change', function() {
-                    const clientId = this.dataset.client;
-                    const pestId = this.value;
-                    const branchId = document.querySelector('.book-branch-select[data-client="' +
-                        clientId + '"]').value;
-
-                    toggleAreaTermite(clientId, pestId, branchId);
-                });
-            });
-
-            // Area cost hint
-            document.querySelectorAll('.book-area-select').forEach(function(areaSel) {
-                areaSel.addEventListener('change', function() {
-                    const clientId = this.dataset.client;
-                    const selected = this.options[this.selectedIndex];
-                    const costEl = document.querySelector('.book-area-cost-' + clientId);
-
-                    costEl.textContent = selected && selected.dataset.cost ?
-                        'Cost: ₱' + parseFloat(selected.dataset.cost).toLocaleString('en-PH', {
-                            minimumFractionDigits: 2
-                        }) :
-                        '';
-                });
-            });
-        })();
+            }, 1000);
+        }
     </script>
 @endsection
 
-public function clients_book(Request $request)
-{
-    $request->validate([
-        'usr_id' => 'required|integer',
-        'branch_id' => 'required|integer',
-        'uadd_id' => 'required|integer',
-        'svcp_id' => 'required|integer',
-        'svca_client_date' => 'required|date',
-        'svca_client_time' => 'required',
-        'svc_problem_description' => 'nullable|string',
-        'svcpa_id' => 'nullable|integer',
-        'svcpat_id' => 'nullable|integer',
-    ]);
+user_availabilities
+usr_id
+uavail_name
+uavail_active = 1
 
-    $isTermite = (int) $request->svcp_id === 8 ? 1 : 0;
-    $svcpaId = $isTermite ? null : $request->svcpa_id;
-    $svcpatId = $isTermite ? $request->svcpat_id : null;
+users
+usr_id
+usr_first_name
+usr_middle_name
+usr_last_name
+utyp_id = 2 (technician)
 
-    if ($isTermite) {
-        $initialPrice = DB::table('service_package_area_termites')
-            ->where('svcpat_id', $svcpatId)
-            ->value('svcpat_cost') ?? 0;
-    } else {
-        $initialPrice = DB::table('service_package_areas')
-            ->where('svcpa_id', $svcpaId)
-            ->value('svcpa_cost') ?? 0;
-    }
+services
+svc_id
+svc_sa_number
+svc_status
 
-    // Distance & Location Price Calculation
-    $address = DB::table('user_addresses')->where('uadd_id', $request->uadd_id)->first();
-    $branch = DB::table('branches')->where('branch_id', $request->branch_id)->first();
-    $locationFee = DB::table('service_package_area_locations')->where('branch_id', $request->branch_id)->first();
+service_appointments
+svc_id
+svca_status
+svca_approved_date
+svca_approved_time_from
+svca_approved_time_to
 
-    $kmDistance = 0;
-    $locationPrice = 0;
-
-    if ($address && $branch && $locationFee) {
-        // Haversine formula
-        $lat1 = deg2rad($branch->branch_latitude);
-        $lon1 = deg2rad($branch->branch_longitude);
-        $lat2 = deg2rad($address->uadd_latitude);
-        $lon2 = deg2rad($address->uadd_longitude);
-
-        $dlat = $lat2 - $lat1;
-        $dlon = $lon2 - $lon1;
-
-        $a = sin($dlat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dlon / 2) ** 2;
-        $km = 6371 * 2 * asin(sqrt($a));
-
-        // Round: .1–.4 round down, .5–.9 round up
-        $kmDistance = (fmod($km, 1) >= 0.5) ? ceil($km) : floor($km);
-
-        // Price: first 10km = flat rate, beyond = flat + extra km * succeeding cost
-        if ($kmDistance <= 10) {
-            $locationPrice = $locationFee->svcpal_first_cost;
-        } else {
-            $locationPrice = $locationFee->svcpal_first_cost
-                + (($kmDistance - 10) * $locationFee->svcpal_succeeding_cost);
-        }
-    }
-
-    $svcId = DB::table('services')->insertGetId([
-        'svc_uuid' => generateuuid(),
-        'branch_id' => $request->branch_id,
-        'usr_id' => $request->usr_id,
-        'svc_km_distance' => $kmDistance,
-        'svc_is_package' => 0,
-        'svcpat_id' => $svcpatId,
-        'svc_is_termite' => $isTermite,
-        'svc_problem_description' => $request->svc_problem_description,
-        'svc_status' => 'REQUESTED',
-        'svc_initial_price' => $initialPrice,
-        'svc_location_price' => $locationPrice,
-        'svc_balance' => $initialPrice + $locationPrice,
-        'svc_payment_status' => 'NO PAYMENT',
-        'svc_date_created' => Carbon::now(),
-        'svc_created_by' => session('usr_id'),
-        'svc_active' => 1,
-    ]);
-
-    DB::table('services')
-        ->where('svc_id', $svcId)
-        ->update(['svc_sa_number' => $svcId]);
-
-    DB::table('service_order_pests')->insert([
-        'svcop_uuid' => generateuuid(),
-        'svc_id' => $svcId,
-        'svcp_id' => $request->svcp_id,
-        'svcop_date_created' => Carbon::now(),
-        'svcop_created_by' => session('usr_id'),
-        'svcop_active' => 1,
-    ]);
-
-    DB::table('service_orders')->insert([
-        'svco_uuid' => generateuuid(),
-        'svc_id' => $svcId,
-        'svcpa_id' => $svcpaId,
-        'svcpat_id' => $svcpatId,
-        'svco_date_created' => Carbon::now(),
-        'svco_created_by' => session('usr_id'),
-        'svco_active' => 1,
-    ]);
-
-    DB::table('service_appointments')->insert([
-        'svca_uuid' => generateuuid(),
-        'svc_id' => $svcId,
-        'uadd_id' => $request->uadd_id,
-        'svca_client_date' => $request->svca_client_date,
-        'svca_client_time' => $request->svca_client_time,
-        'svca_status' => 'UNASSIGNED',
-        'svca_date_created' => Carbon::now(),
-        'svca_created_by' => session('usr_id'),
-        'svca_active' => 1,
-    ]);
-
-    $serviceOrder = 'SA-' . str_pad($svcId, 6, '0', STR_PAD_LEFT);
-    logUserActivity('Book Appointment', 'Booked appointment ' . $serviceOrder);
-
-    session()->flash('successMessage', 'Appointment successfully booked.');
-    return redirect()->back();
-}
-
-mobile logic:
-public function store(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'uadd_id' => 'required',
-        'client_date' => 'required|date',
-        'client_time' => 'required',
-        'initial_price' => 'nullable|numeric',
-        'service_packages' => 'required',
-        'service_areas' => 'nullable',
-        'is_termite' => 'nullable|in:0,1',
-        'termite_sqm_id' => 'nullable|integer',
-        'images.*' => 'mimes:jpeg,jpg,png,webp|max:8192',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $user = DB::table('users')
-            ->where('usr_email', $request->email)
-            ->first();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.',
-            ], 404);
-        }
-
-        $servicePackages = json_decode($request->service_packages, true) ?? [];
-        $serviceAreas = json_decode($request->service_areas, true) ?? [];
-        $isTermite = $request->is_termite == 1;
-        $termiteSqmId = $request->termite_sqm_id;
-        $initialPrice = $request->filled('initial_price')
-            ? $request->initial_price
-            : 0;
-        $address = DB::table('user_addresses')
-            ->where('uadd_id', $request->uadd_id)
-            ->where('usr_id', $user->usr_id)
-            ->first();
-
-        if (!$address || !$address->uadd_latitude || !$address->uadd_longitude) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Selected address has no pinned map location.',
-            ], 400);
-        }
-
-        $nearestBranch = null;
-        $nearestDistance = null;
-
-        $branches = DB::table('branches')
-            ->whereNotNull('branch_latitude')
-            ->whereNotNull('branch_longitude')
-            ->get();
-
-        foreach ($branches as $branch) {
-            $distance = $this->calculateDistanceKm(
-                $address->uadd_latitude,
-                $address->uadd_longitude,
-                $branch->branch_latitude,
-                $branch->branch_longitude
-            );
-
-            if ($nearestDistance === null || $distance < $nearestDistance) {
-                $nearestDistance = $distance;
-                $nearestBranch = $branch;
-            }
-        }
-
-        if (!$nearestBranch) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No available branch found for this location.',
-            ], 400);
-        }
-
-        $drivingDistance = MobileMapboxDistanceController::getDrivingDistanceKm(
-            $nearestBranch->branch_longitude,
-            $nearestBranch->branch_latitude,
-            $address->uadd_longitude,
-            $address->uadd_latitude
-        );
-
-        $finalDistance = $drivingDistance ?? $nearestDistance;
-
-        $locationRate = DB::table('service_package_area_locations')
-            ->where('branch_id', $nearestBranch->branch_id)
-            ->where('svcpal_active', 1)
-            ->first();
-
-        if (!$locationRate) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No location pricing found for this branch.',
-            ], 400);
-        }
-
-        $baseKm = 10;
-        $baseCost = (float) $locationRate->svcpal_first_cost;
-        $succeedingCost = (float) $locationRate->svcpal_succeeding_cost;
-        $distanceKm = (int) $finalDistance;
-
-        if ($distanceKm <= $baseKm) {
-            $deliveryFee = $baseCost;
-        } else {
-            $excessKm = $distanceKm - $baseKm;
-            $deliveryFee = $baseCost + ($excessKm * $succeedingCost);
-        }
-
-        $totalInitialPrice = (float) $initialPrice + $deliveryFee;
-
-        $serviceId = DB::table('services')->insertGetId([
-            'svc_uuid' => Str::uuid(),
-            'branch_id' => $nearestBranch->branch_id,
-            'usr_id' => $user->usr_id,
-            'svc_is_package' => count($servicePackages) > 1 ? 1 : 0,
-            'svcpat_id' => $isTermite ? $termiteSqmId : null,
-            'svc_is_termite' => $isTermite ? 1 : 0,
-            'svc_type_treatment' => null,
-            'svc_sqm_initial' => null,
-            'svc_sqm_final' => null,
-            'svc_with_device' => null,
-            'svc_device_count' => null,
-            'svc_problem_description' => strtoupper($request->problem_description),
-            'svc_status' => 'REQUESTED',
-            'svc_infestation' => null,
-            'svc_initial_price' => $totalInitialPrice,
-            'svc_km_distance' => $finalDistance,
-            'svc_final_price' => null,
-            'svc_balance' => $totalInitialPrice,
-            'svc_payment_status' => 'NO PAYMENT',
-            'svc_attachment' => null,
-            'svc_frequency_type' => null,
-            'svc_frequency' => null,
-            'svc_date_created' => now(),
-            'svc_created_by' => $user->usr_id,
-            'svc_date_modified' => null,
-            'svc_modified_by' => null,
-            'svc_active' => 1,
-        ]);
-
-        DB::table('services')
-        ->where('svc_id', $serviceId)
-        ->update([
-            'svc_sa_number' => $serviceId,
-        ]);
-
-        foreach ($servicePackages as $package) {
-            DB::table('service_order_pests')->insert([
-                'svcop_uuid' => Str::uuid(),
-                'svc_id' => $serviceId,
-                'svcp_id' => $package['id'],
-                'svcop_date_created' => now(),
-                'svcop_created_by' => $user->usr_id,
-                'svcop_date_modified' => null,
-                'svcop_modified_by' => null,
-                'svcop_active' => 1,
-            ]);
-        }
-
-        if ($isTermite && $termiteSqmId) {
-            DB::table('service_orders')->insert([
-                'svco_uuid' => Str::uuid(),
-                'svc_id' => $serviceId,
-                'svcpa_id' => null,
-                'svcpat_id' => $termiteSqmId,
-                'svco_date_created' => now(),
-                'svco_created_by' => $user->usr_id,
-                'svco_date_modified' => null,
-                'svco_modified_by' => null,
-                'svco_active' => 1,
-            ]);
-        } else {
-            foreach ($serviceAreas as $area) {
-                DB::table('service_orders')->insert([
-                    'svco_uuid' => Str::uuid(),
-                    'svc_id' => $serviceId,
-                    'svcpa_id' => $area['id'],
-                    'svcpat_id' => null,
-                    'svco_date_created' => now(),
-                    'svco_created_by' => $user->usr_id,
-                    'svco_date_modified' => null,
-                    'svco_modified_by' => null,
-                    'svco_active' => 1,
-                ]);
-            }
-        }
-
-        $appointmentId = DB::table('service_appointments')->insertGetId([
-            'svca_uuid' => Str::uuid(),
-            'svc_id' => $serviceId,
-            'uadd_id' => $request->uadd_id,
-            'svca_client_date' => $request->client_date,
-            'svca_client_time' => $request->client_time,
-            'svca_status' => 'REQUESTED',
-            'svca_approved_date' => null,
-            'svca_approved_time_from' => null,
-            'svca_approved_time_to' => null,
-            'svca_date_approved' => null,
-            'svca_approved_by' => null,
-            'svca_date_created' => now(),
-            'svca_created_by' => $user->usr_id,
-            'svca_date_modified' => null,
-            'svca_modified_by' => null,
-            'svca_active' => 1,
-        ]);
-
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $fileName = uniqid() . '_' . $image->getClientOriginalName();
-                $folderPath = public_path('images/client_images');
-
-                if (!file_exists($folderPath)) {
-                    mkdir($folderPath, 0755, true);
-                }
-
-                $path = $folderPath . '/' . $fileName;
-                $ext = strtolower($image->getClientOriginalExtension());
-
-                if (in_array($ext, ['jpg', 'jpeg'])) {
-                    $source = imagecreatefromjpeg($image->getPathname());
-                    imagejpeg($source, $path, 75);
-                    imagedestroy($source);
-                } elseif ($ext === 'png') {
-                    $source = imagecreatefrompng($image->getPathname());
-
-                    if ($source && imageistruecolor($source) === false) {
-                        imagepalettetotruecolor($source);
-                    }
-
-                    if ($source) {
-                        imagepng($source, $path, 7);
-                        imagedestroy($source);
-                    }
-                } elseif ($ext === 'webp') {
-                    $source = imagecreatefromwebp($image->getPathname());
-                    imagewebp($source, $path, 75);
-                    imagedestroy($source);
-                }
-
-                DB::table('service_appointment_images')->insert([
-                    'svcap_uuid' => Str::uuid(),
-                    'svca_id' => $appointmentId,
-                    'svcap_image' => $fileName,
-                    'svcap_date_created' => now(),
-                    'svcap_created_by' => $user->usr_id,
-                    'svcap_date_modified' => null,
-                    'svcap_modified_by' => null,
-                    'svcap_active' => 1,
-                ]);
-            }
-        }
-
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Service appointment request submitted successfully.',
-            'svc_id' => $serviceId,
-            'svca_id' => $appointmentId,
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Unable to submit service appointment.',
-            'error' => $e->getMessage(),
-        ], 500);
-    }
-}
+service_appointment_schedules
+svca_id
+svcas_assigned_to
+svcas_active
